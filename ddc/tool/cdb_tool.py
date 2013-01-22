@@ -18,44 +18,42 @@ from ddc.compat import with_metaclass
 from ddc.dbdef import cdb_definition
 
 
-class MMapFile(object):
-    '''
+########################################################################
+class MMapFile(mmap.mmap):
+    """
     memory-like file, based on mmap.
     The file does intentionally not support the standard file interface but
     only the methods that make sense for our purpose.
-    '''
-    def __init__(self, filename):
-        self.name = filename
+    """
+
+    #----------------------------------------------------------------------
+    def __new__(cls, filename):
+        """Constructor"""
+        
         with io.open(filename, 'r+b') as f:
-            self._map = mmap.mmap(f.fileno(), 0)
-
-    def close(self):
-        self._map.close()
-
-    @property
-    def closed(self):
-        return self._map.closed
-
+            self = super(MMapFile, cls).__new__(cls, f.fileno(), 0)  
+        self.name = filename
+        self.closed = False
+        return self
+    
     if sys.platform == 'win32':
+        # windows will return 0 if an error occured. Linux/Mac raise an error.
         def flush(self, *args, **kw):
-            ret = self._map.flush(*args, **kw)
+            ret = super(MMapFile, self).flush(*args, **kw)
             if ret == 0:
-                raise WindowsError('something wend wrong in flush().')
-    else:
-        def flush(self, *args, **kw):
-            ret = self._map.flush(*args, **kw)
-            # Unix will raise an error
-
-    def __len__(self):
-        return len(self._map)
-
-    def __getitem__(self, *args):
-        return self._map.__getitem__(*args)
-
-    def __setitem__(self, *args):
-        self._map.__setitem__(*args)
-
-    # XXX I cannot derive from mmap and therefore not support the buffer protocol
+                raise WindowsError('something went wrong in flush().')
+            return ret
+    
+    def close(self):
+        super(MMapFile, self).close()
+        self.closed = True
+    
+    def __getattribute__(self, name):
+        if name in ('__dict__', '__members__', '__methods__', '__class__',
+                    'flush', 'close', 'closed', 'name'):
+            return super(MMapFile, self).__getattribute__(name)
+        raise AttributeError("type object '{}' has no attribute '{}'"
+                             .format(self.__class__.__name__, name))
 
 
 class WithBinaryMeta(with_metaclass(BinaryMeta)):
@@ -76,7 +74,7 @@ class FormBatch(object):
 
     def __init__(self, batch_filename, delay_load=False):
         self.mmap_file = MMapFile(batch_filename)
-        self.batch_filecontent = self.mmap_file._map # bad hack :-(
+        self.batch_filecontent = self.mmap_file
 
         self.load_form_batch_header()
         self._load_delayed = delay_load
