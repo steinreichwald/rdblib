@@ -24,7 +24,6 @@ class MMapFile(object):
     The file does intentionally not support the standard file interface but
     only the methods that make sense for our purpose.
     '''
-
     def __init__(self, filename):
         self.name = filename
         with io.open(filename, 'r+b') as f:
@@ -74,19 +73,17 @@ class FormHeader(WithBinaryMeta):
 class FormBatch(object):
 
     def __init__(self, batch_filename, delay_load=False):
-        self.mmap_file = MMapFile(batch_filename)
+        self.batch_filename = batch_filename
 
-        self.batch_filecontent = self.mmap_file
+        with io.open(batch_filename, 'rb', buffering=5000000) as job_file:
+            self.batch_filecontent = bytearray(job_file.read())
+
         self.load_form_batch_header()
         self._load_delayed = delay_load
         self.load_forms()
 
     def close(self):
-        self.mmap_file.close()
-
-    @property
-    def batch_filename(self):
-        return self.mmap_file.name
+        pass # XXX
 
     @property
     def job_nummer(self):
