@@ -32,8 +32,8 @@ class MMapFile(mmap.mmap):
         
         with io.open(filename, 'r+b') as f:
             self = super(MMapFile, cls).__new__(cls, f.fileno(), 0)  
-        self.name = filename
-        self.closed = False
+        self._name = filename
+        self._closed = False
         return self
     
     if sys.platform == 'win32':
@@ -46,11 +46,18 @@ class MMapFile(mmap.mmap):
     
     def close(self):
         super(MMapFile, self).close()
-        self.closed = True
+        self._closed = True
+    
+    @property
+    def closed(self):
+        return self._closed
+    
+    @property
+    def name(self):
+        return self._name
     
     def __getattribute__(self, name):
-        if name in ('__dict__', '__members__', '__methods__', '__class__',
-                    'flush', 'close', 'closed', 'name'):
+        if name in ('flush', 'close', 'closed', 'name') or name.startswith('_'):
             return super(MMapFile, self).__getattribute__(name)
         raise AttributeError("type object '{}' has no attribute '{}'"
                              .format(self.__class__.__name__, name))
