@@ -55,6 +55,8 @@ class MMapFile(object):
     def __setitem__(self, *args):
         self._map.__setitem__(*args)
 
+    # XXX I cannot derive from mmap and therefore not support the buffer protocol
+
 
 class WithBinaryMeta(with_metaclass(BinaryMeta)):
     ''' helper class for python 2/3 compatibility '''
@@ -73,17 +75,19 @@ class FormHeader(WithBinaryMeta):
 class FormBatch(object):
 
     def __init__(self, batch_filename, delay_load=False):
-        self.batch_filename = batch_filename
-
-        with io.open(batch_filename, 'rb', buffering=5000000) as job_file:
-            self.batch_filecontent = bytearray(job_file.read())
+        self.mmap_file = MMapFile(batch_filename)
+        self.batch_filecontent = self.mmap_file._map # bad hack :-(
 
         self.load_form_batch_header()
         self._load_delayed = delay_load
         self.load_forms()
 
     def close(self):
-        pass # XXX
+        self.mmap_file.close()
+
+    @property
+    def batch_filename(self):
+        return self.mmap_file.name
 
     @property
     def job_nummer(self):
@@ -248,25 +252,15 @@ class Form(object):
 
     def write_back(self):
         ''' write the form data back to file and update the structure '''
-        fname = self.batch_filename
         buffer = self.batch_filecontent
-        write_start = len(buffer)
-        write_until = 0
         for index, field_name in enumerate(self.field_names):
             field = self.fields[field_name]
             if field.edited_fields:
                 data = field._get_binary()
                 offset = self.field_offsets[index] + self.offset
                 buffer[offset:offset + len(data)] = data
-                write_start = min(write_start, offset)
-                write_until = max(write_until, offset + len(data))
                 field.edited_fields.clear()
-        if write_until <= write_start:
-            return
-
-        with io.open(self.batch_filename, 'r+b') as f:
-            f.seek(write_start)
-            f.write(buffer[write_start:write_until])
+        self.parent.mmap_file.flush()
 
     def __getitem__(self, key):
         return self.fields[key]
