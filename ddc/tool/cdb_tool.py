@@ -81,7 +81,6 @@ class FormBatch(object):
 
     def __init__(self, batch_filename, delay_load=False):
         self.mmap_file = MMapFile(batch_filename)
-        self.batch_filecontent = self.mmap_file
 
         self.load_form_batch_header()
         self._load_delayed = delay_load
@@ -89,6 +88,10 @@ class FormBatch(object):
 
     def close(self):
         self.mmap_file.close()
+    
+    @property
+    def filecontent(self):
+        return self.mmap_file
 
     @property
     def batch_filename(self):
@@ -106,12 +109,12 @@ class FormBatch(object):
 
     def load_form_batch_header(self):
         self.form_batch_header = FormBatchHeader(
-            self.batch_filecontent)
+            self.filecontent)
 
     def load_forms(self):
         self.forms = []
         offset = self.form_batch_header.record_size
-        len_job_filecontent = len(self.batch_filecontent)
+        len_job_filecontent = len(self.filecontent)
         while offset < len_job_filecontent:
             prescription = Form(self, offset)
             self.forms.append(prescription)
@@ -217,11 +220,11 @@ class Form(object):
         return self.parent.batch_filename
 
     @property
-    def batch_filecontent(self):
-        return self.parent.batch_filecontent
+    def filecontent(self):
+        return self.parent.filecontent
 
     def load_form_header(self):
-        self.form_header = FormHeader(self.batch_filecontent, self.offset)
+        self.form_header = FormHeader(self.filecontent, self.offset)
         self.record_size = self.form_header.record_size
 
     def load_form_fields(self):
@@ -230,11 +233,11 @@ class Form(object):
         self.record_size = (self.form_header.record_size +
                             self._field_record_size
                             * self.form_header.rec.field_count)
-        if self.offset + self.record_size > len(self.batch_filecontent):
+        if self.offset + self.record_size > len(self.filecontent):
             raise ValueError('offset + record_size exceeds file size!\n'
                              'offset={} record_size={} file size={}'
                              .format(self.offset, self.record_size,
-                                     len(self.batch_filecontent)))
+                                     len(self.filecontent)))
         if not self._load_delayed:
             self._do_load_form_fields()
 
@@ -247,7 +250,7 @@ class Form(object):
         offset = self.offset + self.form_header.record_size
         # nota bene: range can break the machine when random data is read
         for _ in xrange(self.form_header.rec.field_count):
-            field = FormField(self.batch_filecontent, offset)
+            field = FormField(self.filecontent, offset)
             field_name = field.rec.name
             self.fields[field_name] = field
             self.field_names.append(field_name)
@@ -257,7 +260,7 @@ class Form(object):
 
     def write_back(self):
         ''' write the form data back to file and update the structure '''
-        buffer = self.batch_filecontent
+        buffer = self.filecontent
         for index, field_name in enumerate(self.field_names):
             field = self.fields[field_name]
             if field.edited_fields:
@@ -297,7 +300,6 @@ class FormImageBatch(object):
 
     def __init__(self, image_job_filename):
         self.mmap_file = MMapFile(image_job_filename)
-        self.filecontent = self.mmap_file
 
         self.load_header()
         self.load_directories()
@@ -307,6 +309,10 @@ class FormImageBatch(object):
 
     def load_header(self):
         self.header = FormImageBatchHeader(self.filecontent)
+
+    @property
+    def filecontent(self):
+        return self.mmap_file
 
     def load_directories(self):
         offset = self.header.rec.offset_first_index
