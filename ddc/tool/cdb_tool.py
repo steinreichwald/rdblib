@@ -296,16 +296,14 @@ class FormImageBatchIndexEntry(WithBinaryMeta):
 class FormImageBatch(object):
 
     def __init__(self, image_job_filename):
-        self.image_job_filename = image_job_filename
-
-        with io.open(image_job_filename, 'rb', buffering=5000000) as image_file:
-            self.filecontent = image_file.read()
+        self.mmap_file = MMapFile(image_job_filename)
+        self.filecontent = self.mmap_file
 
         self.load_header()
         self.load_directories()
 
     def close(self):
-        pass # XXX
+        self.mmap_file.close()
 
     def load_header(self):
         self.header = FormImageBatchHeader(self.filecontent)
