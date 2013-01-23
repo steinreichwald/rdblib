@@ -114,15 +114,29 @@ class FormBatch(object):
     def load_forms(self):
         self.forms = []
         offset = self.form_batch_header.record_size
-        len_job_filecontent = len(self.filecontent)
-        while offset < len_job_filecontent:
-            prescription = Form(self, offset)
+        # optimization:
+        # we calculate the record size only once.
+        first_header = FormHeader(self.filecontent, offset)
+        field_count = first_header.rec.field_count
+        record_size = (first_header.record_size + 
+                       Form._field_record_size * field_count)
+        while offset < len(self.filecontent):
+            prescription = self._build_form(offset, record_size)
             self.forms.append(prescription)
-            offset += prescription.record_size
+            offset += record_size
             if len(self.forms) > len(self):
                 raise ValueError('prescription count exceeds header info')
         if len(self.forms) != len(self):
             raise ValueError("read prescription count differs from header info")
+
+    def _build_form(self, offset, record_size):
+        if False and self._load_delayed:
+            pass # not yet
+        else:
+            form = Form(self, offset)
+            if form.record_size != record_size:
+                raise TypeError('wrong form record size, this is no CDB')
+        return form
 
     @property
     def _image_filename(self):
