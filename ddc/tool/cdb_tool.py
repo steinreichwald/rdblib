@@ -112,7 +112,7 @@ class FormBatch(object):
             self.filecontent)
 
     def load_forms(self):
-        self.forms = []
+        self.forms = LazyList()
         offset = self.form_batch_header.record_size
         # optimization:
         # we calculate the record size only once.
@@ -130,12 +130,13 @@ class FormBatch(object):
             raise ValueError("read prescription count differs from header info")
 
     def _build_form(self, offset, record_size):
-        if False and self._load_delayed:
-            pass # not yet
-        else:
+        def form(self=self, offset=offset, record_size = record_size):
             form = Form(self, offset)
             if form.record_size != record_size:
                 raise TypeError('wrong form record size, this is no CDB')
+            return form
+        if not self._load_delayed:
+            form = form()
         return form
 
     @property
@@ -212,6 +213,17 @@ class LazyDict(dict):
             raise KeyError(key)
         return self[key]
 
+
+class LazyList(list):
+    ''' initialize list entries that are callable '''
+    
+    def __getitem__(self, idx):
+        entry = super(LazyList, self).__getitem__(idx)
+        if callable(entry):
+            entry = entry()
+            self[idx] = entry
+        return entry
+    
 
 class Form(object):
     _field_record_size = FormField(None).record_size
