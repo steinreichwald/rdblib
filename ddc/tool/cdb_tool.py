@@ -6,8 +6,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 classes for dealing with prescription-files
 """
 
-import io
-import sys
+import os, sys, io
 import mmap
 import os.path
 from struct import pack, unpack_from, calcsize
@@ -16,7 +15,11 @@ from collections import namedtuple
 from ddc.tool.meta import BinaryMeta
 from ddc.compat import with_metaclass
 from ddc.dbdef import cdb_definition
+from timeit import default_timer as timer
 
+
+DEBUG_LEVEL = 0     # set to 1 for little output, 2 for all
+FORCE_LOAD = False  # set to True to effectively disable mmap
 
 ########################################################################
 class MMapFile(mmap.mmap):
@@ -30,12 +33,52 @@ class MMapFile(mmap.mmap):
     def __new__(cls, filename):
         """Constructor"""
         
+        if DEBUG_LEVEL:
+            tim = timer()
+
         with io.open(filename, 'r+b') as f:
-            self = super(MMapFile, cls).__new__(cls, f.fileno(), 0)  
+            self = super(MMapFile, cls).__new__(cls, f.fileno(), 0)
         self._name = filename
         self._closed = False
+
+        if DEBUG_LEVEL:
+            tim = timer() - tim
+            self._log('open file', None, tim)
+
+        if FORCE_LOAD:
+            # just to check the effect of mmap
+            print('preload:')
+            self[:]
+            print('--------')
         return self
-    
+
+    if DEBUG_LEVEL or FORCE_LOAD:
+        def _log(self, prefix, rng, tim):
+            if rng:
+                start, stop, step = rng.start, rng.stop, rng.step
+                assert step == None or step == 1
+                start = ('' if start is None else str(start))
+                stop = ('' if stop is None else str(stop))
+                rng = '[{:>7s}:{:>7s}]'.format(start, stop)
+            else:
+                rng = ''
+            print('{} {}{}: {:.3f}'.format(prefix, self._name, rng, tim))
+
+        def __getitem__(self, rng):
+            tim = timer()
+            data = super(MMapFile, self).__getitem__(rng)
+            tim = timer() - tim
+            if tim >= 0.0005 or DEBUG_LEVEL >= 2:
+                self._log('read access', rng, tim)
+            return data
+
+        def __setitem__(self, rng, data):
+            tim = timer()
+            super(MMapFile, self).__setitem__(rng, data)
+            tim = timer() - tim
+            if tim >= 0.0005 or DEBUG_LEVEL >= 2:
+                self._log('read access', rng, tim)
+
     if sys.platform == 'win32':
         # windows will return 0 if an error occured. Linux/Mac raise an error.
         def flush(self, *args, **kw):
@@ -43,19 +86,19 @@ class MMapFile(mmap.mmap):
             if ret == 0:
                 raise WindowsError('something went wrong in flush().')
             return ret
-    
+
     def close(self):
         super(MMapFile, self).close()
         self._closed = True
-    
+
     @property
     def closed(self):
         return self._closed
-    
+
     @property
     def name(self):
         return self._name
-    
+
     def __getattribute__(self, name):
         if name in ('flush', 'close', 'closed', 'name') or name.startswith('_'):
             return super(MMapFile, self).__getattribute__(name)
@@ -67,6 +110,7 @@ class WithBinaryMeta(with_metaclass(BinaryMeta)):
     ''' helper class for python 2/3 compatibility '''
 
     _encoding = cdb_definition.encoding
+    _debug = DEBUG_LEVEL > 0
 
 
 class FormBatchHeader(WithBinaryMeta):
@@ -88,7 +132,7 @@ class FormBatch(object):
 
     def close(self):
         self.mmap_file.close()
-    
+
     @property
     def filecontent(self):
         return self.mmap_file
@@ -118,7 +162,7 @@ class FormBatch(object):
         # we calculate the record size only once.
         first_header = FormHeader(self.filecontent, offset)
         field_count = first_header.rec.field_count
-        record_size = (first_header.record_size + 
+        record_size = (first_header.record_size +
                        Form._field_record_size * field_count)
         while offset < len(self.filecontent):
             prescription = self._build_form(offset, record_size)
@@ -216,14 +260,14 @@ class LazyDict(dict):
 
 class LazyList(list):
     ''' initialize list entries that are callable '''
-    
+
     def __getitem__(self, idx):
         entry = super(LazyList, self).__getitem__(idx)
         if callable(entry):
             entry = entry()
             self[idx] = entry
         return entry
-    
+
 
 class Form(object):
     _field_record_size = FormField(None).record_size
@@ -324,10 +368,11 @@ class FormImageBatchIndexEntry(WithBinaryMeta):
 
 class FormImageBatch(object):
 
-    def __init__(self, image_job_filename):
+    def __init__(self, image_job_filename, delay_load=False):
         self.mmap_file = MMapFile(image_job_filename)
 
         self.load_header()
+        self._load_delayed = delay_load # unused so far
         self.load_directories()
 
     def close(self):
@@ -368,7 +413,7 @@ class FormImageBatch(object):
 
     def tiff_data_4_entry(self, entry):
         return self.filecontent[entry.rec.image_offset:
-                                entry.rec.image_offset+entry.rec.image_size]
+                                entry.rec.image_offset + entry.rec.image_size]
 
     def image_count(self):
         return len(self.image_entries)
