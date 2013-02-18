@@ -10,7 +10,6 @@ import os, sys, io
 import mmap
 import os.path
 from struct import pack, unpack_from, calcsize
-from collections import namedtuple
 
 from ddc.tool.meta import BinaryMeta
 from ddc.compat import with_metaclass
