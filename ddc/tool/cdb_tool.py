@@ -29,14 +29,27 @@ class MMapFile(mmap.mmap):
     """
 
     #----------------------------------------------------------------------
-    def __new__(cls, filename):
-        """Constructor"""
-        
+    def __new__(cls, filename, access):
+        """
+        Simplified constructor
+        ----------------------
+
+        MMapFile supports array-like access, only. All file-like methods
+        are removed.
+
+        access is "read", "write", or "copy".
+
+        "copy" means copy_on_write: Data ist written to memory, only.
+
+        """
+        access = getattr(mmap, 'ACCESS_' + access.upper())
+
         if DEBUG_LEVEL:
             tim = timer()
 
         with io.open(filename, 'r+b') as f:
-            self = super(MMapFile, cls).__new__(cls, f.fileno(), 0)
+            self = super(MMapFile, cls).__new__(cls, f.fileno(), 0,
+                                                access=access)
         self._name = filename
         self._closed = False
 
@@ -122,8 +135,8 @@ class FormHeader(WithBinaryMeta):
 
 class FormBatch(object):
 
-    def __init__(self, batch_filename, delay_load=False):
-        self.mmap_file = MMapFile(batch_filename)
+    def __init__(self, batch_filename, delay_load=False, access='write'):
+        self.mmap_file = MMapFile(batch_filename, access=access)
 
         self.load_form_batch_header()
         self._load_delayed = delay_load
@@ -367,8 +380,8 @@ class FormImageBatchIndexEntry(WithBinaryMeta):
 
 class FormImageBatch(object):
 
-    def __init__(self, image_job_filename, delay_load=False):
-        self.mmap_file = MMapFile(image_job_filename)
+    def __init__(self, image_job_filename, delay_load=False, access='write'):
+        self.mmap_file = MMapFile(image_job_filename, access=access)
 
         self.load_header()
         self._load_delayed = delay_load # unused so far
