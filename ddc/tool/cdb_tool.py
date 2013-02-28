@@ -229,9 +229,6 @@ class FormBatch(object):
     def __ne__(self, other):
         return not(self == other)
 
-    def __hash__(self):
-        return super(FormBatch, self).__hash__()
-
 
 class FormField(WithBinaryMeta):
     _struc = cdb_definition.Form_Defn.field_struc
@@ -361,9 +358,6 @@ class Form(object):
 
     def __ne__(self, other):
         return not(self == other)
-
-    def __hash__(self):
-        return super(Form, self).__hash__()
 
     @property
     def pic_nr(self):
