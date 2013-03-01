@@ -177,8 +177,8 @@ class FormBatch(object):
         record_size = (first_header.record_size +
                        Form._field_record_size * field_count)
         while offset < len(self.filecontent):
-            prescription = self._build_form(offset, record_size)
-            self.forms.append(prescription)
+            form = self._build_form(offset, record_size)
+            self.forms.append(form)
             offset += record_size
             if len(self.forms) > len(self):
                 raise ValueError('prescription count exceeds header info')
@@ -368,7 +368,7 @@ class FormImageBatchHeader(WithBinaryMeta):
     _struc = cdb_definition.Image_Defn.header_struc
 
 
-class FormImageBatchIndexEntry(WithBinaryMeta):
+class FormImage(WithBinaryMeta):
     _struc = cdb_definition.Image_Defn.index_struc
 
 
@@ -392,13 +392,24 @@ class FormImageBatch(object):
         return self.mmap_file
 
     def load_directories(self):
+        def _get_subindex(offset):
+            entries = []
+            image_count = -1
+            while image_count != 0:
+                entry = FormImage(self.filecontent, offset)
+                entries.append(entry)
+                if image_count == -1:
+                    offset_next_index = entry.rec.offset_next_index
+                    image_count = entry.rec.indexblock_len
+                image_count -= 1
+                offset += len(entry)
+            return entries, offset_next_index
+
         offset = self.header.rec.offset_first_index
         self.image_entries = []
         while offset != 0:
-            directory = FormImageBatchIndexDirectory(self.filecontent, offset)
-            for entry in directory:
-                self.image_entries.append(entry)
-            offset = directory.offset_next_index
+            directory, offset = _get_subindex(offset)
+            self.image_entries += directory
         self.build_codnr_index()
 
     def build_codnr_index(self):
@@ -424,21 +435,3 @@ class FormImageBatch(object):
     def image_count(self):
         return len(self.image_entries)
 
-
-class FormImageBatchIndexDirectory(object):
-
-    def __init__(self, filecontent, offset):
-        self.entries = []
-
-        image_count = -1
-        while image_count != 0:
-            entry = FormImageBatchIndexEntry(filecontent, offset)
-            self.entries.append(entry)
-            if image_count == -1:
-                self.offset_next_index = entry.rec.offset_next_index
-                image_count = entry.rec.indexblock_len
-            image_count -= 1
-            offset += len(entry)
-
-    def __iter__(self):
-        return iter(self.entries)
