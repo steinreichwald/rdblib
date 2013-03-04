@@ -286,6 +286,8 @@ class Form(object):
         self.parent = parent
         self.offset = offset
 
+        self.field_names = []
+        self.field_offsets = []
         self.load_form_header()
         self.load_form_fields()
         self.is_dirty = False
@@ -324,8 +326,6 @@ class Form(object):
         # key could be used, but we need to create all fields in order
         if self._fields_loaded:
             return
-        self.field_names = []
-        self.field_offsets = []
         offset = self.offset + self.form_header.record_size
         # nota bene: range can break the machine when random data is read
         for _ in xrange(self.form_header.rec.field_count):
@@ -338,7 +338,7 @@ class Form(object):
         self._fields_loaded = True
 
     def write_back(self):
-        ''' write the form data back to file and update the structure '''
+        ''' write the form data and header back to file and update the structure '''
         buffer = self.filecontent
         for index, field_name in enumerate(self.field_names):
             field = self.fields[field_name]
@@ -347,6 +347,12 @@ class Form(object):
                 offset = self.field_offsets[index] + self.offset
                 buffer[offset:offset + len(data)] = data
                 field.edited_fields.clear()
+        if self.form_header.edited_fields:
+            data = self.form_header._get_binary()
+            offset = self.offset
+            buffer[offset:offset + len(data)] = data
+            self.form_header.edited_fields.clear()
+
         self.parent.mmap_file.flush()
 
     def __getitem__(self, key):
