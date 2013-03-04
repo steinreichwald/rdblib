@@ -290,7 +290,6 @@ class Form(object):
         self.field_offsets = []
         self.load_form_header()
         self.load_form_fields()
-        self.is_dirty = False
 
     @property
     def _load_delayed(self):
@@ -364,10 +363,6 @@ class Form(object):
 
     def __ne__(self, other):
         return not(self == other)
-
-    @property
-    def pic_nr(self):
-        return self.form_header.rec.imprint_line_short
 
 
 class FormImageBatchHeader(WithBinaryMeta):
