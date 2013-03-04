@@ -339,6 +339,7 @@ class Form(object):
     def write_back(self):
         ''' write the form data and header back to file and update the structure '''
         buffer = self.filecontent
+        written = False
         for index, field_name in enumerate(self.field_names):
             field = self.fields[field_name]
             if field.edited_fields:
@@ -346,13 +347,16 @@ class Form(object):
                 offset = self.field_offsets[index] + self.offset
                 buffer[offset:offset + len(data)] = data
                 field.edited_fields.clear()
+                written = True
         if self.form_header.edited_fields:
             data = self.form_header._get_binary()
             offset = self.offset
             buffer[offset:offset + len(data)] = data
             self.form_header.edited_fields.clear()
+            written = True
 
-        self.parent.mmap_file.flush()
+        if written:
+            self.parent.mmap_file.flush()
 
     def __getitem__(self, key):
         return self.fields[key]
@@ -436,3 +440,18 @@ class FormImageBatch(object):
     def image_count(self):
         return len(self.image_entries)
 
+    # XXX this is right now a bit ugly, since we need to go though this structure
+    # and not the image struc, directly. Will change...
+    def update_entry(self, entry):
+        ''' write a changed index entry '''
+        assert isinstance(entry, FormImage)
+        buffer = self.filecontent
+        if entry.edited_fields:
+            data = entry._get_binary()
+            offset = entry.offset
+            buffer[offset:offset + len(data)] = data
+            entry.edited_fields.clear()
+            self.mmap_file.flush()
+
+            # this will go away
+            self.build_codnr_index()
