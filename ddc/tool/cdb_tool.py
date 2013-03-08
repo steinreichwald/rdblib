@@ -340,6 +340,17 @@ class Form(object):
         ''' write the form data and header back to file and update the structure '''
         buffer = self.filecontent
         written = False
+        # for user editable fields, we check first and then write back.
+        # Pass one: check if the encoding works
+        for index, field_name in enumerate(self.field_names):
+            field = self.fields[field_name]
+            if field.edited_fields:
+                try:
+                    data = field._get_binary()
+                except UnicodeError as e:
+                    e.field = field
+                    raise e
+        # Pass Two: we are now safe to write
         for index, field_name in enumerate(self.field_names):
             field = self.fields[field_name]
             if field.edited_fields:
@@ -348,6 +359,7 @@ class Form(object):
                 buffer[offset:offset + len(data)] = data
                 field.edited_fields.clear()
                 written = True
+
         if self.form_header.edited_fields:
             data = self.form_header._get_binary()
             offset = self.offset
