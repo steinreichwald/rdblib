@@ -474,3 +474,41 @@ def image_filename(cdb_name):
     pathname, filename = os.path.split(cdb_name)
     filename, _ = os.path.splitext(filename)
     return os.path.join(pathname, '00000001', '%s.IBF' % filename)
+
+
+# -------------------------------------------------------
+# rudimentary Tiff support
+
+class TiffHandler(object):
+
+    class Header(WithBinaryMeta):
+        _struc = cdb_definition.Tiff_Defn.header_struc
+
+    class IfdStruc(WithBinaryMeta):
+        _struc = cdb_definition.Tiff_Defn.ifd_struc
+
+    class TagStruc(WithBinaryMeta):
+        _struc = cdb_definition.Tiff_Defn.tag_struc
+
+    class LongData(WithBinaryMeta):
+        _struc = cdb_definition.Tiff_Defn.long_data_struc
+
+
+    def __init__(self, image_batch, index):
+        assert isinstance(image_batch, FormImageBatch)
+        self.filecontent = image_batch.filecontent
+        entry = image_batch.image_entries[index]
+        self.offset = entry.rec.image_offset
+        self.image_size = entry.rec.image_size
+        header = self.__class__.Header(self.filecontent, self.offset)
+        assert header.rec.byte_order == 0x4949 # 'II'
+        ifd_ofs = self.offset + header.rec.first_ifd
+        self.ifd = self.__class__.IfdStruc(self.filecontent, ifd_ofs)
+        # tags ignored for now, just asssuming a fixed offset
+        ext_ofs = ifd_ofs + self.ifd.record_size
+        self.long_data = self.__class__.LongData(self.filecontent, ext_ofs)
+
+        ifd2_ofs = self.offset + self.ifd.rec.next_ifd
+        self.ifd2 = self.__class__.IfdStruc(self.filecontent, ifd2_ofs)
+        ext_ofs2 = ifd2_ofs + self.ifd2.record_size
+        self.long_data2 = self.__class__.LongData(self.filecontent, ext_ofs2)
