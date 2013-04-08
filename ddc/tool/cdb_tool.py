@@ -410,19 +410,6 @@ class FormImageBatch(object):
         while offset != 0:
             directory, offset = _get_subindex(offset)
             self.image_entries += directory
-        self.build_codnr_index()
-
-    def build_codnr_index(self):
-        self.codnr_index = {}
-        for entry in self.image_entries:
-            self.codnr_index[entry.rec.codnr] = entry
-
-    def get_tiff_image_4_codnr(self, codnr):
-        if codnr in self.codnr_index:
-            entry = self.codnr_index[codnr]
-            return self.tiff_data_4_entry(entry)
-        else:
-            return None
 
     def get_tiff_image_4_nr(self, index):
         entry = self.image_entries[index]
