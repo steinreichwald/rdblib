@@ -411,11 +411,8 @@ class FormImageBatch(object):
             directory, offset = _get_subindex(offset)
             self.image_entries += directory
 
-    def get_tiff_image_4_nr(self, index):
+    def get_tiff_image(self, index):
         entry = self.image_entries[index]
-        return self.tiff_data_4_entry(entry)
-
-    def tiff_data_4_entry(self, entry):
         return self.filecontent[entry.rec.image_offset:
                                 entry.rec.image_offset + entry.rec.image_size]
 
