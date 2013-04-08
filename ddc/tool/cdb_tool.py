@@ -432,9 +432,6 @@ class FormImageBatch(object):
             entry.edited_fields.clear()
             self.mmap_file.flush()
 
-            # this will go away
-            self.build_codnr_index()
-
 
 # -------------------------------------------------------
 # Helper functions
