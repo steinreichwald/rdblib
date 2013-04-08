@@ -512,3 +512,14 @@ class TiffHandler(object):
         self.ifd2 = self.__class__.IfdStruc(self.filecontent, ifd2_ofs)
         ext_ofs2 = ifd2_ofs + self.ifd2.record_size
         self.long_data2 = self.__class__.LongData(self.filecontent, ext_ofs2)
+
+    def update(self):
+        ''' write changed tiff data '''
+        buffer = self.filecontent
+        long_data = self.long_data
+        if long_data.edited_fields:
+            data = long_data._get_binary()
+            offset = long_data.offset
+            buffer[offset:offset + len(data)] = data
+            long_data.edited_fields.clear()
+            self.filecontent.flush()
