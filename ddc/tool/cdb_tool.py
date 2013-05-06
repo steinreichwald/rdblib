@@ -269,7 +269,7 @@ class Form(object):
         self.parent = parent
         self.offset = offset
 
-        self.field_names = []
+        self._field_names = []
         self.field_offsets = []
         self.load_form_header()
         self.load_form_fields()
@@ -277,6 +277,13 @@ class Form(object):
     @property
     def _load_delayed(self):
         return self.parent._load_delayed
+
+    @property
+    def field_names(self):
+        # we need to trigger loading of the fields
+        if not self._fields_loaded:
+            self._do_load_form_fields()
+        return self._field_names
 
     @property
     def batch_filename(self):
@@ -314,7 +321,7 @@ class Form(object):
             field = FormField(self.filecontent, offset)
             field_name = field.rec.name
             self.fields[field_name] = field
-            self.field_names.append(field_name)
+            self._field_names.append(field_name)
             self.field_offsets.append(offset - self.offset)
             offset += field.record_size
         self._fields_loaded = True
@@ -325,7 +332,7 @@ class Form(object):
         written = False
         # for user editable fields, we check first and then write back.
         # Pass one: check if the encoding works
-        for index, field_name in enumerate(self.field_names):
+        for index, field_name in enumerate(self._field_names):
             field = self.fields[field_name]
             if field.edited_fields:
                 try:
@@ -334,7 +341,7 @@ class Form(object):
                     e.field = field
                     raise e
         # Pass Two: we are now safe to write
-        for index, field_name in enumerate(self.field_names):
+        for index, field_name in enumerate(self._field_names):
             field = self.fields[field_name]
             if field.edited_fields:
                 data = field._get_binary()
