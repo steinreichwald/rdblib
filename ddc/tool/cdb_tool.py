@@ -232,6 +232,15 @@ class FormField(WithBinaryMeta):
     def valid(self):
         return self.rec.valid
 
+    # alias for field checking
+    @property
+    def corrected_result(self):
+        return self.rec.corrected_result
+
+    @property
+    def recognizer_result(self):
+        return self.rec.recognizer_result
+
 
 class LazyDict(dict):
     ''' initializes the dict at the first key access '''
