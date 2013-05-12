@@ -241,6 +241,20 @@ class FormField(WithBinaryMeta):
     def recognizer_result(self):
         return self.rec.recognizer_result
 
+    # hack to allow for mangling, see ascii.get_error_1
+    @recognizer_result.setter
+    def recognizer_result(self, newval):
+        self.update_rec(recognizer_result=newval)
+
+    @property
+    def rejects(self):
+        return self.rec.rejects
+
+    # computation of rejects, see ascii.get_error_1
+    @rejects.setter
+    def rejects(self, newval):
+        self.update_rec(rejects=newval)
+
 
 class LazyDict(dict):
     ''' initializes the dict at the first key access '''
