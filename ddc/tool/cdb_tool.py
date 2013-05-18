@@ -316,6 +316,10 @@ class Form(object):
     def filecontent(self):
         return self.parent.filecontent
 
+    @property
+    def pic_nr(self):
+        return self.form_header.rec.imprint_line_short
+
     def load_form_header(self):
         self.form_header = FormHeader(self.filecontent, self.offset)
         self.record_size = self.form_header.record_size
