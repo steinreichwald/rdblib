@@ -13,6 +13,7 @@ Subclasses need to do their own pickling, again.
 
 from operator import itemgetter as _itemgetter
 from keyword import iskeyword as _iskeyword
+from ddc.compat import exec_
 
 _refmodule = 'ddc.tool.tupletool'
 
@@ -164,7 +165,7 @@ def namelesstuple(field_names, verbose=False, rename=False, typename='_'):
     else:
         namespace = dict(__name__='namedtuple_%s' % typename)
     try:
-        exec(class_definition, namespace)
+        exec_(class_definition, namespace)
     except SyntaxError as e:
         raise SyntaxError(e.msg + ':\n\n' + class_definition)
     result = namespace[typename]
