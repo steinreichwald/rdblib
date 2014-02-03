@@ -490,6 +490,12 @@ def image_filename(cdb_name):
     filename, _ = os.path.splitext(filename)
     return os.path.join(pathname, '00000001', '%s.IBF' % filename)
 
+def image_dirname(cdb_name):
+    """
+    helper function to obtain the dirname of an ibf file
+    """
+    pathname, filename = os.path.split(cdb_name)
+    return os.path.join(pathname, '00000001')
 
 # -------------------------------------------------------
 # rudimentary Tiff support
