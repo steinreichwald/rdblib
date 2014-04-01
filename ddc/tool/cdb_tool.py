@@ -39,7 +39,7 @@ class MMapFile(mmap.mmap):
 
         access is "read", "write", or "copy".
 
-        "copy" means copy_on_write: Data ist written to memory, only.
+        "copy" means copy_on_write: Data is written to memory, only.
 
         """
         access = getattr(mmap, 'ACCESS_' + access.upper())
@@ -480,7 +480,7 @@ def image_filename(cdb_name):
 
     Doing this it's not possible to move the files (especially the IBF-file)
     to another location (for testing or backup), because the basepath to
-    the IBF-file is aboslute and hard coded in the RDB-file.
+    the IBF-file is absolute and hard coded in the RDB-file.
 
     In real life the IBF-file always resides in a subdirectory with the name
     "00000001" below the RDB-file, that's why we can safely calculate the
