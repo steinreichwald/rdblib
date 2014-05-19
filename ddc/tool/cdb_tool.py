@@ -92,7 +92,7 @@ class MMapFile(mmap.mmap):
                 self._log('read access', rng, tim)
 
     if sys.platform == 'win32':
-        # windows will return 0 if an error occured. Linux/Mac raise an error.
+        # windows will return 0 if an error occurred. Linux/Mac raise an error.
         def flush(self, *args, **kw):
             ret = super(MMapFile, self).flush(*args, **kw)
             if ret == 0:
