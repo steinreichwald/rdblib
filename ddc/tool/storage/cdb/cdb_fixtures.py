@@ -6,6 +6,7 @@ from io import BytesIO
 import struct
 
 from ddc.dbdef import cdb_definition
+from ddc.compat import string_types
 
 
 __all__ = ['CDBField', 'CDBFile', 'CDBForm']
@@ -40,7 +41,7 @@ class CDBFixture(object):
                 value = 0
             else:
                 raise AssertionError('unexpected binary format')
-            if isinstance(value, basestring):
+            if isinstance(value, string_types):
                 value = value.encode(self.encoding)
             bin_ = struct.pack(format_, value)
             buffer_.write(bin_)
