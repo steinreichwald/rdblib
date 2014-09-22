@@ -23,14 +23,17 @@ def ibf_path(cdb_dir, cdb_basename):
     ibf_dir = os.path.join(cdb_dir, '00000001')
     return look_for_file(ibf_dir, cdb_basename, 'ibf')
 
-def databunch_for_cdb(cdb_path):
+def databunch_for_cdb(cdb_path, add_missing_durus_path=False):
     dirpath = os.path.dirname(cdb_path)
     cdb_filename = os.path.basename(cdb_path)
     file_basename = os.path.splitext(cdb_filename)[0]
+    durus_filepath = durus_path(dirpath, file_basename)
+    if (durus_filepath is None) and add_missing_durus_path:
+        durus_filepath = expected_durus_path(cdb_path)
     data = DataBunch(
         cdb=cdb_path,
         ibf=ibf_path(dirpath, file_basename),
-        durus=durus_path(dirpath, file_basename),
+        durus=durus_filepath,
         relpath=dirpath,
     )
     return data
