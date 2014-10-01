@@ -133,10 +133,23 @@ class FormHeader(WithBinaryMeta):
     _struc = cdb_definition.Form_Defn.header_struc
 
 
+def filecontent(mmap_or_filelike):
+        if isinstance(mmap_or_filelike, mmap.mmap):
+            return mmap_or_filelike
+        fp = mmap_or_filelike
+        old_pos = fp.tell()
+        fp.seek(0)
+        content = fp.read()
+        fp.seek(old_pos)
+        return content
+
 class FormBatch(object):
 
-    def __init__(self, batch_filename, delay_load=False, access='write'):
-        self.mmap_file = MMapFile(batch_filename, access=access)
+    def __init__(self, batch_file, delay_load=False, access='write'):
+        if hasattr(batch_file, 'close'):
+            self.mmap_file = batch_file
+        else:
+            self.mmap_file = MMapFile(batch_file, access=access)
 
         self.load_form_batch_header()
         self._load_delayed = delay_load
@@ -147,7 +160,7 @@ class FormBatch(object):
 
     @property
     def filecontent(self):
-        return self.mmap_file
+        return filecontent(self.mmap_file)
 
     @property
     def batch_filename(self):
@@ -408,8 +421,11 @@ class FormImage(WithBinaryMeta):
 
 class FormImageBatch(object):
 
-    def __init__(self, image_job_filename, delay_load=False, access='write'):
-        self.mmap_file = MMapFile(image_job_filename, access=access)
+    def __init__(self, image_job, delay_load=False, access='write'):
+        if hasattr(image_job, 'close'):
+            self.mmap_file = image_job
+        else:
+            self.mmap_file = MMapFile(image_job, access=access)
 
         self.load_header()
         self._load_delayed = delay_load # unused so far
@@ -423,7 +439,7 @@ class FormImageBatch(object):
 
     @property
     def filecontent(self):
-        return self.mmap_file
+        return filecontent(self.mmap_file)
 
     def load_directories(self):
         def _get_subindex(offset):
