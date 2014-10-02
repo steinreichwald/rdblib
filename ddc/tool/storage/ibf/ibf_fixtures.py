@@ -11,11 +11,31 @@ FormImageBatch.load_directories() for the complete parsing implementation).
 """
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+from io import BytesIO
+
 from ddc.dbdef import cdb_definition
 from ddc.tool.storage.fixture_helpers import BinaryFixture
 
 
-__all__ = ['IBFFile', 'IBFImage']
+__all__ = ['create_ibf', 'IBFFile', 'IBFImage']
+
+def create_ibf(nr_images=1):
+    # tiffany can not create tiff images and we should try not to add new
+    # dependencies. Currently there is no test at all which relies on having
+    # actual tiff data so we can just use some random binary data.
+    # We might have to reconsider this decision once we need to test
+    # tiff-related functionality.
+    def _fake_tiff_image():
+        return b'\x00' * 200
+
+    ibf_images = [IBFImage(_fake_tiff_image()) for i in range(nr_images)]
+    ibf_batch = IBFFile(ibf_images)
+
+    batch_fp = BytesIO()
+    ibf_batch.as_bytes(batch_fp)
+    batch_fp.seek(0)
+    return batch_fp
+
 
 ibf_format = cdb_definition.Image_Defn
 
