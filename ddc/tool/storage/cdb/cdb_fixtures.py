@@ -37,11 +37,13 @@ class CDBFile(BinaryFixture):
 class CDBForm(BinaryFixture):
     def __init__(self, fields, batch_position=None, encoding=None, **values):
         self.fields = fields
-        values.update(dict(
-            number_in_batch=batch_position, field_count=len(fields)
-        ))
+        values_ = dict(
+            number_in_batch=batch_position,
+            field_count=len(fields),
+        )
+        values_.update(values)
         bin_structure = cdb_format.header_struc
-        super(CDBForm, self).__init__(values, bin_structure, encoding=encoding)
+        super(CDBForm, self).__init__(values_, bin_structure, encoding=encoding)
 
     def as_bytes(self, batch_position=None):
         values_ = self.values.copy()
