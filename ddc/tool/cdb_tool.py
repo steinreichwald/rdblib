@@ -8,8 +8,6 @@ classes for dealing with prescription-files
 
 import os, sys, io
 import mmap
-import os.path
-from struct import pack, unpack_from, calcsize
 
 from ddc.tool.meta import BinaryMeta
 from ddc.compat import with_metaclass
