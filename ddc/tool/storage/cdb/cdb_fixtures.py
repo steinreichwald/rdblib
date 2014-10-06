@@ -17,7 +17,8 @@ class CDBFile(BinaryFixture):
     def __init__(self, forms, encoding=None):
         self.forms = forms
         values = dict(form_count=len(forms))
-        super(CDBFile, self).__init__(values, cdb_format.batchheader_struc, encoding=encoding)
+        bin_structure = cdb_format.batchheader_struc
+        super(CDBFile, self).__init__(values, bin_structure, encoding=encoding)
 
     def as_bytes(self):
         buffer_ = BytesIO()
@@ -39,7 +40,8 @@ class CDBForm(BinaryFixture):
         values.update(dict(
             number_in_batch=batch_position, field_count=len(fields)
         ))
-        super(CDBForm, self).__init__(values, cdb_format.header_struc, encoding=encoding)
+        bin_structure = cdb_format.header_struc
+        super(CDBForm, self).__init__(values, bin_structure, encoding=encoding)
 
     def as_bytes(self, batch_position=None):
         values_ = self.values.copy()
@@ -63,7 +65,8 @@ class CDBField(BinaryFixture):
         # I think it's a convenient API to use have name/"value" also as
         # positional parameters.
         values.update(dict(name=name, corrected_result=corrected_result))
-        super(CDBField, self).__init__(values, cdb_format.field_struc, encoding=encoding)
+        bin_structure = cdb_format.field_struc
+        super(CDBField, self).__init__(values, bin_structure, encoding=encoding)
 
     def as_bytes(self):
         return super(CDBField, self).as_bytes(self.values)
