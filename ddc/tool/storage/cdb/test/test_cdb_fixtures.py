@@ -13,7 +13,7 @@ from ddc.tool.storage.cdb.cdb_fixtures import CDBFile, CDBForm
 
 class CDBFileTest(TestCase):
     def test_can_generate_cdb_file_with_single_form(self):
-        field_names = [field_class.field_name.upper() for field_class in FieldList(None)]
+        field_names = [field_class.link_name for field_class in FieldList(None)]
         fields = []
         for field_name in field_names:
             fields.append({'name': field_name, 'corrected_result': 'baz'})
