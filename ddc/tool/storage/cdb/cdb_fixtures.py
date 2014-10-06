@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+from io import BytesIO
+
 from ddc.dbdef import cdb_definition
 from ddc.tool.storage.fixture_helpers import BinaryFixture
 
@@ -17,14 +19,18 @@ class CDBFile(BinaryFixture):
         values = dict(form_count=len(forms))
         super(CDBFile, self).__init__(values, cdb_format.batchheader_struc, encoding=encoding)
 
-    def as_bytes(self, buffer_=None):
-        buffer_ = super(CDBFile, self).as_bytes(self.values, buffer_=buffer_)
+    def as_bytes(self):
+        buffer_ = BytesIO()
+        cdb_data = super(CDBFile, self).as_bytes(self.values)
+        buffer_.write(cdb_data)
         for i, form in enumerate(self.forms):
             cdb_form = form
             if isinstance(form, dict):
                 cdb_form = CDBForm(form, encoding=self.encoding)
-            cdb_form.as_bytes(buffer_, batch_position=i)
-        return buffer_
+            form_data = cdb_form.as_bytes(batch_position=i)
+            buffer_.write(form_data)
+        buffer_.seek(0)
+        return buffer_.read()
 
 
 class CDBForm(BinaryFixture):
@@ -35,16 +41,21 @@ class CDBForm(BinaryFixture):
         ))
         super(CDBForm, self).__init__(values, cdb_format.header_struc, encoding=encoding)
 
-    def as_bytes(self, buffer_=None, batch_position=None):
+    def as_bytes(self, batch_position=None):
         values_ = self.values.copy()
         if batch_position is not None:
             values_['number_in_batch'] = batch_position
         self._assert_caller_used_only_known_fields(values_, self.bin_structure)
-        buffer_ = super(CDBForm, self).as_bytes(values_, buffer_=buffer_)
+
+        buffer_ = BytesIO()
+        form_data = super(CDBForm, self).as_bytes(values_)
+        buffer_.write(form_data)
         for field in self.fields:
             cdb_field = CDBField(encoding=self.encoding, **field)
-            cdb_field.as_bytes(buffer_)
-        return buffer_
+            field_data = cdb_field.as_bytes()
+            buffer_.write(field_data)
+        buffer_.seek(0)
+        return buffer_.read()
 
 
 class CDBField(BinaryFixture):
@@ -54,6 +65,6 @@ class CDBField(BinaryFixture):
         values.update(dict(name=name, corrected_result=corrected_result))
         super(CDBField, self).__init__(values, cdb_format.field_struc, encoding=encoding)
 
-    def as_bytes(self, buffer_=None):
-        return super(CDBField, self).as_bytes(self.values, buffer_=buffer_)
+    def as_bytes(self):
+        return super(CDBField, self).as_bytes(self.values)
 

@@ -31,9 +31,7 @@ def create_ibf(nr_images=1):
     ibf_images = [IBFImage(_fake_tiff_image()) for i in range(nr_images)]
     ibf_batch = IBFFile(ibf_images)
 
-    batch_fp = BytesIO()
-    ibf_batch.as_bytes(batch_fp)
-    batch_fp.seek(0)
+    batch_fp = BytesIO(ibf_batch.as_bytes())
     return batch_fp
 
 
@@ -57,11 +55,8 @@ class IBFFile(BinaryFixture):
         bin_structure = ibf_format.header_struc
         super(IBFFile, self).__init__(values, bin_structure, encoding=encoding)
 
-    def as_bytes(self, buffer_=None):
-        if buffer_ is not None:
-            # all offsets are absolute numbers, it would be strange to have some
-            # binary junk before the global ibf header
-            assert (buffer_.tell() == 0)
+    def as_bytes(self):
+        buffer_ = BytesIO()
         header_size = 252 # size of ibf_format.header_struc
         index_size = 256
         max_index = self.values['image_count'] - 1
@@ -79,7 +74,8 @@ class IBFFile(BinaryFixture):
             offset_last_index=offset_last_index,
             file_size=file_size,
         )
-        buffer_ = super(IBFFile, self).as_bytes(values, buffer_=buffer_)
+        ibf_data = super(IBFFile, self).as_bytes(values)
+        buffer_.write(ibf_data)
 
         # --- writing index entries for all images ----------------------------
         for i, ibf_form_image in enumerate(self.images):
@@ -87,16 +83,19 @@ class IBFFile(BinaryFixture):
             is_last_index = (i + 1 == len(self.images))
             current_offset = buffer_.tell()
             offset_next_index = 0 if is_last_index else (current_offset + index_size)
-            ibf_form_image.index_as_bytes(buffer_,
+            index_data = ibf_form_image.index_as_bytes(
                 offset_next_index=offset_next_index,
                 image_nr=1,
                 image_offset=image_offset
             )
+            buffer_.write(index_data)
 
         # --- writing the actual binary image data ----------------------------
         for ibf_form_image in self.images:
-            ibf_form_image.img_as_bytes(buffer_)
-        return buffer_
+            img_data = ibf_form_image.img_as_bytes()
+            buffer_.write(img_data)
+        buffer_.seek(0)
+        return buffer_.read()
 
 
 class IBFImage(BinaryFixture):
@@ -119,17 +118,16 @@ class IBFImage(BinaryFixture):
         bin_structure = ibf_format.index_struc
         super(IBFImage, self).__init__(values_, bin_structure, encoding=encoding)
 
-    def index_as_bytes(self, buffer_, **values):
+    def index_as_bytes(self, **values):
         values_ = self.values.copy()
-        self._assert_caller_used_only_known_fields(values, self.bin_structure)
         values_.update(values)
-        buffer_ = super(IBFImage, self).as_bytes(values_, buffer_=buffer_)
-        return buffer_
+        self._assert_caller_used_only_known_fields(values, self.bin_structure)
+        index_data = super(IBFImage, self).as_bytes(values_)
+        return index_data
 
-    def img_as_bytes(self, buffer_):
-        buffer_.write(self.img_data)
-        return buffer_
+    def img_as_bytes(self):
+        return self.img_data
 
-    def as_bytes(self, buffer_=None, **values):
+    def as_bytes(self, **values):
         raise NotImplementedError('not implemented for IBFImage, please use index_as_bytes() or img_as_bytes()')
 

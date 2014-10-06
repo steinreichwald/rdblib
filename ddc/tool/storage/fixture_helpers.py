@@ -25,9 +25,8 @@ class BinaryFixture(object):
             unknown_field = unknown_values.pop()
             raise TypeError('unknown field %r' % unknown_field)
 
-    def as_bytes(self, values, buffer_=None):
-        if buffer_ is None:
-            buffer_ = BytesIO()
+    def as_bytes(self, values):
+        buffer_ = BytesIO()
         for i, (key, format_) in enumerate(self.bin_structure):
             if key in values:
                 value = values[key]
@@ -43,5 +42,6 @@ class BinaryFixture(object):
                 value = value.encode(self.encoding)
             bin_ = struct.pack(format_, value)
             buffer_.write(bin_)
-        return buffer_
+        buffer_.seek(0)
+        return buffer_.read()
 
