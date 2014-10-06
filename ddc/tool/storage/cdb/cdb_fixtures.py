@@ -26,7 +26,7 @@ class CDBFile(BinaryFixture):
         buffer_.write(cdb_data)
         for i, form in enumerate(self.forms):
             cdb_form = form
-            if isinstance(form, dict):
+            if not hasattr(form, 'as_bytes'):
                 cdb_form = CDBForm(form, encoding=self.encoding)
             form_data = cdb_form.as_bytes(batch_position=i)
             buffer_.write(form_data)
@@ -52,8 +52,9 @@ class CDBForm(BinaryFixture):
         buffer_ = BytesIO()
         form_data = super(CDBForm, self).as_bytes(values_)
         buffer_.write(form_data)
-        for field in self.fields:
-            cdb_field = CDBField(encoding=self.encoding, **field)
+        for cdb_field in self.fields:
+            if not hasattr(cdb_field, 'as_bytes'):
+                cdb_field = CDBField(encoding=self.encoding, **cdb_field)
             field_data = cdb_field.as_bytes()
             buffer_.write(field_data)
         buffer_.seek(0)
