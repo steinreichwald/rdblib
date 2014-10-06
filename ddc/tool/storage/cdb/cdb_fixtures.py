@@ -36,9 +36,11 @@ class CDBForm(BinaryFixture):
         super(CDBForm, self).__init__(values, cdb_format.header_struc, encoding=encoding)
 
     def as_bytes(self, buffer_=None, batch_position=None):
+        values_ = self.values.copy()
         if batch_position is not None:
-            self.values['number_in_batch'] = batch_position
-        buffer_ = super(CDBForm, self).as_bytes(self.values, buffer_=buffer_)
+            values_['number_in_batch'] = batch_position
+        self._assert_caller_used_only_known_fields(values_, self.bin_structure)
+        buffer_ = super(CDBForm, self).as_bytes(values_, buffer_=buffer_)
         for field in self.fields:
             cdb_field = CDBField(encoding=self.encoding, **field)
             cdb_field.as_bytes(buffer_)
