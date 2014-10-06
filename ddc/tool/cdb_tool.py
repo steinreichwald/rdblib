@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import division, absolute_import, print_function, unicode_literals
-
 """
 classes for dealing with prescription-files
 """
+from __future__ import division, absolute_import, print_function, unicode_literals
 
 import os, sys, io
 import mmap
