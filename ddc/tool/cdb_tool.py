@@ -204,7 +204,7 @@ class FormBatch(object):
             known_fields = [field_class.link_name for field_class in FieldList(None)]
             unknown_fields = set(form._field_names).difference(set(known_fields))
             # The old software sometimes writes junk for some form fields. That
-            # seems to happen in the old software if a user entered more charcters
+            # seems to happen in the old software if a user entered more characters
             # than the field definition actually allows. The extra character will
             # overflow in a new "field".
             # We can catch that by ensuring that we only accept known field names.
