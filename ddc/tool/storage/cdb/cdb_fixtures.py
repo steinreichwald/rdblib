@@ -6,9 +6,20 @@ from io import BytesIO
 
 from ddc.dbdef import cdb_definition
 from ddc.tool.storage.fixture_helpers import BinaryFixture
+from ddc.client.config.config_base import FieldList
 
 
 __all__ = ['CDBField', 'CDBFile', 'CDBForm']
+
+
+def create_cdb(nr_forms=1):
+    field_names = [field_class.link_name for field_class in FieldList(None)]
+    field = {'name': field_names[0], 'corrected_result': 'baz'}
+
+    forms = [CDBForm([field]) for i in range(nr_forms)]
+    cdb_data = CDBFile(forms).as_bytes()
+    return BytesIO(cdb_data)
+
 
 cdb_format = cdb_definition.Form_Defn
 

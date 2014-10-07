@@ -7,8 +7,7 @@ from unittest.case import TestCase
 
 from ddc.client.config.config_base import FieldList
 from ddc.tool.cdb_tool import FormBatch
-from ddc.tool.storage.cdb.cdb_fixtures import CDBFile, CDBForm
-
+from ddc.tool.storage.cdb.cdb_fixtures import create_cdb, CDBFile, CDBForm
 
 
 class CDBFileTest(TestCase):
@@ -25,4 +24,9 @@ class CDBFileTest(TestCase):
         self.assertEqual(1, batch.count())
         form = batch.forms[0]
         self.assertEqual('baz', form['STRASSE'].corrected_result)
+
+    def test_create_cdb_helper_function(self):
+        cdb_fp = create_cdb(nr_forms=3)
+        cdb_batch = FormBatch(cdb_fp, access='read')
+        self.assertEqual(3, len(cdb_batch))
 
