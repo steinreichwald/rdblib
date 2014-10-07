@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 IBF Fixtures can generate IBF binary structures completely in memory for
