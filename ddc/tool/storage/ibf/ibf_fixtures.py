@@ -13,7 +13,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from io import BytesIO
 
 from ddc.dbdef import cdb_definition
-from ddc.tool.storage.fixture_helpers import BinaryFixture
+from ddc.tool.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 
 __all__ = ['create_ibf', 'IBFFile', 'IBFImage']
@@ -30,8 +30,7 @@ def create_ibf(nr_images=1):
     ibf_images = [IBFImage(_fake_tiff_image()) for i in range(nr_images)]
     ibf_batch = IBFFile(ibf_images)
 
-    batch_fp = BytesIO(ibf_batch.as_bytes())
-    return batch_fp
+    return UnclosableBytesIO(ibf_batch.as_bytes())
 
 
 ibf_format = cdb_definition.Image_Defn

@@ -4,7 +4,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from io import BytesIO
 
 from ddc.dbdef import cdb_definition
-from ddc.tool.storage.fixture_helpers import BinaryFixture
+from ddc.tool.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 from ddc.client.config.config_base import FieldList
 
 
@@ -17,7 +17,7 @@ def create_cdb(nr_forms=1):
 
     forms = [CDBForm([field]) for i in range(nr_forms)]
     cdb_data = CDBFile(forms).as_bytes()
-    return BytesIO(cdb_data)
+    return UnclosableBytesIO(cdb_data)
 
 
 cdb_format = cdb_definition.Form_Defn

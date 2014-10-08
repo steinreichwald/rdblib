@@ -8,7 +8,7 @@ from ddc.dbdef import cdb_definition
 from ddc.compat import string_types
 
 
-__all__ = ['BinaryFixture']
+__all__ = ['BinaryFixture', 'UnclosableBytesIO']
 
 class BinaryFixture(object):
     def __init__(self, values, bin_structure, encoding=None):
@@ -43,4 +43,17 @@ class BinaryFixture(object):
             buffer_.write(bin_)
         buffer_.seek(0)
         return buffer_.read()
+
+
+class UnclosableBytesIO(BytesIO):
+    """
+    Behaves like a regular BytesIO instance but does not anything on .close()
+    unless force=True is specified.
+    This is useful for testing when we need to open/close binary files multiple
+    times which is no problem with regular files but with BytesIO-backed data.
+    """
+    def close(self, force=False):
+        if not force:
+            return
+        super(UnclosableBytesIO, self).close()
 
