@@ -41,3 +41,25 @@ def expected_durus_path(cdb_path):
     basename, extension = os.path.splitext(cdb_path)
     return basename + '.durus'
 
+def databunch_for_durus(some_file_path):
+    '''
+    this is a simplified and more general version of databunch_for_cdb that
+    works better for the GUI.
+
+    XXX we should provide a default behavior that checks for RDB/CDB and
+    provides the right default behavior
+    '''
+    dirpath = os.path.dirname(some_file_path)
+    durus_filename = os.path.basename(some_file_path)
+    file_basename = os.path.splitext(durus_filename)[0]
+    durus_filepath = durus_path(dirpath, file_basename)
+    cdb_filepath = cdb_path(dirpath, file_basename)
+    ibf_filepath = ibf_path(dirpath, file_basename)
+    data = DataBunch(
+        cdb=cdb_filepath,
+        ibf=ibf_filepath,
+        durus=durus_filepath,
+        relpath=dirpath,
+    )
+    return data
+
