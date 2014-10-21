@@ -59,6 +59,10 @@ def calculate_durus_path(base_dir, basename):
     return os.path.join(base_dir, basename+'.durus')
 
 
+# ----------------------------------------------------------------------------
+# all functionality below should be considered deprecated.
+# Please use DiscoverLib + BunchManager instead.
+
 def cdb_path(cdb_dir, cdb_basename):
     # use look_for_file to check for unique .cdb names, too
     return look_for_file(cdb_dir, cdb_basename, 'cdb')
