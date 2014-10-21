@@ -9,7 +9,13 @@ from .filesystem_utils import look_for_file
 
 __all__ = ['databunch_for_cdb', 'expected_durus_path', 'DataBunch']
 
-DataBunch = namedtuple('DataBunch', 'cdb ibf durus')
+class DataBunch(namedtuple('DataBunch', 'cdb ibf durus')):
+    def __init__(self, cdb=None, ibf=None, durus=None):
+        super(DataBunch, self).__init__(cdb=cdb, ibf=ibf, durus=durus)
+
+    def is_complete(self):
+        return (None not in self)
+
 
 def cdb_path(cdb_dir, cdb_basename):
     # use look_for_file to check for unique .cdb names, too
