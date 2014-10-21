@@ -7,7 +7,17 @@ import os
 from .filesystem_utils import look_for_file
 
 
-__all__ = ['databunch_for_cdb', 'expected_durus_path', 'DataBunch']
+__all__ = [
+    'databunch_for_cdb',
+    'expected_durus_path',
+    'path_info_from_cdb',
+    'path_info_from_ibf',
+    'path_info_from_durus',
+    'calculate_cdb_path',
+    'calculate_ibf_path',
+    'calculate_durus_path',
+    'DataBunch',
+]
 
 class DataBunch(namedtuple('DataBunch', 'cdb ibf durus')):
     def __init__(self, cdb=None, ibf=None, durus=None):
@@ -15,6 +25,38 @@ class DataBunch(namedtuple('DataBunch', 'cdb ibf durus')):
 
     def is_complete(self):
         return (None not in self)
+
+
+def path_info_from_cdb(cdb_path):
+    if cdb_path is None:
+        return (None, None)
+    dirname = os.path.dirname(cdb_path)
+    cdb_filename = os.path.basename(cdb_path)
+    cdb_basename, extension = os.path.splitext(cdb_filename)
+    return dirname, cdb_basename
+
+def path_info_from_ibf(ibf_path):
+    if ibf_path is None:
+        return (None, None)
+    img_dirname = os.path.dirname(ibf_path)
+    if not img_dirname.endswith(os.path.sep+'00000001'):
+        raise ValueError('IBF not in default image dir')
+    base_dirname = os.path.dirname(img_dirname)
+    ibf_filename = os.path.basename(ibf_path)
+    ibf_basename, extension = os.path.splitext(ibf_filename)
+    return base_dirname, ibf_basename
+
+def path_info_from_durus(durus_path):
+    return path_info_from_cdb(durus_path)
+
+def calculate_cdb_path(base_dir, basename):
+    return os.path.join(base_dir, basename+'.cdb')
+
+def calculate_ibf_path(base_dir, basename):
+    return os.path.join(base_dir, '00000001', basename+'.ibf')
+
+def calculate_durus_path(base_dir, basename):
+    return os.path.join(base_dir, basename+'.durus')
 
 
 def cdb_path(cdb_dir, cdb_basename):
@@ -43,8 +85,7 @@ def databunch_for_cdb(cdb_path, add_missing_durus_path=False):
     return data
 
 def expected_durus_path(cdb_path):
-    basename, extension = os.path.splitext(cdb_path)
-    return basename + '.durus'
+    return calculate_durus_path(*path_info_from_cdb(cdb_path))
 
 def databunch_for_durus(some_file_path):
     '''
