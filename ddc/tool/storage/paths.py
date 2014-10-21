@@ -9,7 +9,7 @@ from .filesystem_utils import look_for_file
 
 __all__ = ['databunch_for_cdb', 'expected_durus_path', 'DataBunch']
 
-DataBunch = namedtuple('DataBunch', 'cdb ibf durus relpath')
+DataBunch = namedtuple('DataBunch', 'cdb ibf durus')
 
 def cdb_path(cdb_dir, cdb_basename):
     # use look_for_file to check for unique .cdb names, too
@@ -33,7 +33,6 @@ def databunch_for_cdb(cdb_path, add_missing_durus_path=False):
         cdb=cdb_path,
         ibf=ibf_path(dirpath, file_basename),
         durus=durus_filepath,
-        relpath=dirpath,
     )
     return data
 
@@ -59,7 +58,6 @@ def databunch_for_durus(some_file_path):
         cdb=cdb_filepath,
         ibf=ibf_filepath,
         durus=durus_filepath,
-        relpath=dirpath,
     )
     return data
 
