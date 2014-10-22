@@ -27,6 +27,7 @@ class DataBunch(namedtuple('DataBunch', 'cdb ibf durus')):
     def is_complete(self):
         return (None not in self)
 
+ibf_subdir = '00000001'
 
 def path_info_from_cdb(cdb_path):
     if cdb_path is None:
@@ -40,7 +41,7 @@ def path_info_from_ibf(ibf_path):
     if ibf_path is None:
         return (None, None)
     img_dirname = os.path.dirname(ibf_path)
-    if not img_dirname.endswith(os.path.sep+'00000001'):
+    if not img_dirname.endswith(ibf_subdir) and (img_dirname != ibf_subdir):
         raise ValueError('IBF not in default image dir')
     base_dirname = os.path.dirname(img_dirname)
     ibf_filename = os.path.basename(ibf_path)
@@ -54,7 +55,7 @@ def guess_cdb_path(base_dir, basename):
     return os.path.join(base_dir, basename+'.cdb')
 
 def guess_ibf_path(base_dir, basename):
-    return os.path.join(base_dir, '00000001', basename+'.ibf')
+    return os.path.join(base_dir, ibf_subdir, basename+'.ibf')
 
 def guess_durus_path(base_dir, basename):
     return os.path.join(base_dir, basename+'.durus')
@@ -94,7 +95,7 @@ def durus_path(cdb_dir, cdb_basename):
     return look_for_file(cdb_dir, cdb_basename, 'durus')
 
 def ibf_path(cdb_dir, cdb_basename):
-    ibf_dir = os.path.join(cdb_dir, '00000001')
+    ibf_dir = os.path.join(cdb_dir, ibf_subdir)
     return look_for_file(ibf_dir, cdb_basename, 'ibf')
 
 def databunch_for_cdb(cdb_path, add_missing_durus_path=False):
