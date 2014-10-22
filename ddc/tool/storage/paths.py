@@ -10,12 +10,12 @@ from .filesystem_utils import look_for_file
 __all__ = [
     'databunch_for_cdb',
     'expected_durus_path',
+    'guess_cdb_path',
+    'guess_durus_path',
+    'guess_ibf_path',
     'path_info_from_cdb',
     'path_info_from_ibf',
     'path_info_from_durus',
-    'calculate_cdb_path',
-    'calculate_ibf_path',
-    'calculate_durus_path',
     'DataBunch',
 ]
 
@@ -49,13 +49,13 @@ def path_info_from_ibf(ibf_path):
 def path_info_from_durus(durus_path):
     return path_info_from_cdb(durus_path)
 
-def calculate_cdb_path(base_dir, basename):
+def guess_cdb_path(base_dir, basename):
     return os.path.join(base_dir, basename+'.cdb')
 
-def calculate_ibf_path(base_dir, basename):
+def guess_ibf_path(base_dir, basename):
     return os.path.join(base_dir, '00000001', basename+'.ibf')
 
-def calculate_durus_path(base_dir, basename):
+def guess_durus_path(base_dir, basename):
     return os.path.join(base_dir, basename+'.durus')
 
 
@@ -89,7 +89,7 @@ def databunch_for_cdb(cdb_path, add_missing_durus_path=False):
     return data
 
 def expected_durus_path(cdb_path):
-    return calculate_durus_path(*path_info_from_cdb(cdb_path))
+    return guess_durus_path(*path_info_from_cdb(cdb_path))
 
 def databunch_for_durus(some_file_path):
     '''
