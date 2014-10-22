@@ -21,8 +21,6 @@ __all__ = [
 ]
 
 class DataBunch(namedtuple('DataBunch', 'cdb ibf durus')):
-    def __init__(self, cdb=None, ibf=None, durus=None):
-        super(DataBunch, self).__init__(cdb=cdb, ibf=ibf, durus=durus)
 
     def is_complete(self):
         return (None not in self)
