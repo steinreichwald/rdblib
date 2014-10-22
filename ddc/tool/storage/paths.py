@@ -10,6 +10,7 @@ from .filesystem_utils import look_for_file
 __all__ = [
     'databunch_for_cdb',
     'expected_durus_path',
+    'guess_bunch_from_path',
     'guess_cdb_path',
     'guess_durus_path',
     'guess_ibf_path',
@@ -57,6 +58,28 @@ def guess_ibf_path(base_dir, basename):
 
 def guess_durus_path(base_dir, basename):
     return os.path.join(base_dir, basename+'.durus')
+
+def guess_bunch_from_path(path, file_casing_map):
+    dot_extension = (os.path.splitext(path)[-1]).lower()
+    cdb_path = path if (dot_extension == '.cdb') else None
+    ibf_path = path if (dot_extension == '.ibf') else None
+    durus_path = path if (dot_extension == '.durus') else None
+    if cdb_path is not None:
+        base_dir, basename = path_info_from_cdb(cdb_path)
+    elif ibf_path is not None:
+        base_dir, basename = path_info_from_ibf(ibf_path)
+    elif durus_path is not None:
+        base_dir, basename = path_info_from_durus(durus_path)
+    else:
+        raise ValueError('please specify at least one path')
+
+    if cdb_path is None:
+        cdb_path = file_casing_map.get(guess_cdb_path(base_dir, basename).lower())
+    if ibf_path is None:
+        ibf_path = file_casing_map.get(guess_ibf_path(base_dir, basename).lower())
+    if durus_path is None:
+        durus_path = file_casing_map.get(guess_durus_path(base_dir, basename).lower())
+    return DataBunch(cdb=cdb_path, ibf=ibf_path, durus=durus_path)
 
 
 # ----------------------------------------------------------------------------
