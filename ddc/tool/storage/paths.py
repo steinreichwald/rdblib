@@ -115,11 +115,8 @@ def expected_durus_path(cdb_path):
 
 def databunch_for_durus(some_file_path):
     '''
-    this is a simplified and more general version of databunch_for_cdb that
-    works better for the GUI.
-
-    XXX we should provide a default behavior that checks for RDB/CDB and
-    provides the right default behavior
+    this is a simplified and more general version of databunch_for_cdb
+    for the current needs of the GUI.
     '''
     dirpath = os.path.dirname(some_file_path)
     durus_filename = os.path.basename(some_file_path)
