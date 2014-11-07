@@ -143,10 +143,14 @@ def filecontent(mmap_or_filelike):
 class FormBatch(object):
 
     def __init__(self, batch_file, delay_load=False, access='write'):
-        if hasattr(batch_file, 'close'):
-            self.mmap_file = batch_file
+        if not hasattr(batch_file, 'close'):
+            # the regular case, given a file name.
+            batch_filename = batch_file
+            self.mmap_file = MMapFile(batch_filename, access=access)
         else:
-            self.mmap_file = MMapFile(batch_file, access=access)
+            # an already opened file, mostly meant for testing.
+            # XXX should be cleaned: access is always passed, but ignored.
+            self.mmap_file = batch_file
 
         self.load_form_batch_header()
         self._load_delayed = delay_load
