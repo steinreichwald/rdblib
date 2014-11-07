@@ -83,7 +83,7 @@ def guess_bunch_from_path(path, file_casing_map):
 
 # ----------------------------------------------------------------------------
 # all functionality below should be considered deprecated.
-# Please use DiscoverLib + BunchManager instead.
+# Please use DiscoverLib + BunchAssembler instead.
 
 def cdb_path(cdb_dir, cdb_basename):
     # use look_for_file to check for unique .cdb names, too
