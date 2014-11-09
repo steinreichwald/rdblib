@@ -253,10 +253,6 @@ class FormField(WithBinaryMeta):
     def value(self, newval):
         self.update_rec(corrected_result=newval)
 
-    @property
-    def valid(self):
-        return self.rec.valid
-
     # alias for field checking
     @property
     def corrected_result(self):
