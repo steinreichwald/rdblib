@@ -1,0 +1,2 @@
+--index-url=http://www.pydica.org/dependencies/
+durus >= 3.9.3
