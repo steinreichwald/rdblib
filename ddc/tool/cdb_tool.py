@@ -197,7 +197,7 @@ class FormBatch(object):
             if len(self.forms) > len(self):
                 raise ValueError('prescription count exceeds header info')
         if len(self.forms) != len(self):
-            raise ValueError("read prescription count differs from header info")
+            raise ValueError("read prescription count (%d) differs from header info (%d)" % (len(self.forms), len(self)))
 
     def _build_form(self, offset, record_size):
         def form(self=self, offset=offset, record_size = record_size):
