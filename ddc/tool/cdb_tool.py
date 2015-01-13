@@ -40,11 +40,15 @@ class MMapFile(mmap.mmap):
 
         """
         access = getattr(mmap, 'ACCESS_' + access.upper())
+        if access == 'ACCESS_READ':
+            aflags = 'rb'
+        else:
+            aflags = 'r+b'
 
         if DEBUG_LEVEL:
             tim = timer()
 
-        with io.open(filename, 'r+b') as f:
+        with io.open(filename, aflags) as f:
             self = super(MMapFile, cls).__new__(cls, f.fileno(), 0,
                                                 access=access)
         self._name = filename
