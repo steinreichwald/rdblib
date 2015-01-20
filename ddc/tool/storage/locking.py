@@ -13,12 +13,12 @@ else:
     import fcntl
 
 
-__all__ = ['is_locked', 'is_windows', 'lock', 'unlock']
+__all__ = ['is_locked', 'is_windows', 'acquire_lock', 'unlock']
 
 # -----------------------------------------------------------------------------
 # initial locking code copied from Durus (durus/file.py) but with custom
 # modifications
-def lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
+def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
     """Lock the given file-like object to prevent other processes from
     accessing is.
 
@@ -98,7 +98,7 @@ def is_locked(file_or_filename):
                 # file as locked.
                 return True
             raise
-    acquired_lock = lock(file_, raise_on_error=False)
+    acquired_lock = acquire_lock(file_, raise_on_error=False)
     if acquired_lock:
         unlock(file_)
         return False
