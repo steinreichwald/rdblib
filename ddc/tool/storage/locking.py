@@ -16,26 +16,48 @@ else:
 __all__ = ['is_locked', 'is_windows', 'lock', 'unlock']
 
 # -----------------------------------------------------------------------------
-# initial locking code copied from Durus (durus/file.py)
-def lock(file_, raise_on_error=True, log=None):
+# initial locking code copied from Durus (durus/file.py) but with custom
+# modifications
+def lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
+    """Lock the given file-like object to prevent other processes from
+    accessing is.
+
+    Parameters
+      exclusive_lock [default: True]
+          acquire an exclusive lock so no other process can read or write from
+          the file (if False: only prevent others from writing to the file)
+      raise_on_error [default: True]
+          if True, raise an exception if the file can not be locked (return a
+          boolean indicating success/failure otherwise)
+      log [default None]
+          logger instance used for optional log messages (if None nothing will
+          be logging)
+    """
     if log:
         lock_msg = '[%d] locking %r' % (os.getpid(), file_.name)
         log.debug(lock_msg)
     if is_windows():
+        fd = win32file._get_osfhandle(file_.fileno())
+        lock_flags = win32con.LOCKFILE_FAIL_IMMEDIATELY
+        if exclusive_lock:
+            lock_flags |= win32con.LOCKFILE_EXCLUSIVE_LOCK
         try:
-            win32file.LockFileEx(
-                win32file._get_osfhandle(file_.fileno()),
-                (win32con.LOCKFILE_EXCLUSIVE_LOCK |
-                 win32con.LOCKFILE_FAIL_IMMEDIATELY),
-                0, -65536, pywintypes.OVERLAPPED())
-        except pywintypes.error:
+            win32file.LockFileEx(fd, lock_flags, 0, -65536, pywintypes.OVERLAPPED())
+        except pywintypes.error as e:
+            if log:
+                log.warn('[%d] error while trying to lock %r: %r' % (os.getpid(), file_.name, e))
             if raise_on_error:
                 raise IOError("Unable to obtain lock")
             return False
     else:
+        lock_flags = fcntl.LOCK_NB
+        if exclusive_lock:
+            lock_flags |= fcntl.LOCK_EX
         try:
-            fcntl.flock(file_, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(file_, lock_flags)
         except IOError:
+            if log:
+                log.warn('[%d] error while trying to lock %r: %r' % (os.getpid(), file_.name, e))
             if raise_on_error:
                 raise
             return False
