@@ -40,7 +40,7 @@ class MMapFile(mmap.mmap):
 
         """
         access = getattr(mmap, 'ACCESS_' + access.upper())
-        if access == 'ACCESS_READ':
+        if access == mmap.ACCESS_READ:
             aflags = 'rb'
         else:
             aflags = 'r+b'
