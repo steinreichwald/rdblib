@@ -70,9 +70,8 @@ def unlock(file_, log=None):
         lock_msg = '[%d] unlocking %r' % (os.getpid(), file_.name)
         log.debug(lock_msg)
     if is_windows():
-        win32file.UnlockFileEx(
-            win32file._get_osfhandle(file_.fileno()),
-            0, -65536, pywintypes.OVERLAPPED())
+        fd = win32file._get_osfhandle(file_.fileno())
+        win32file.UnlockFileEx(fd, 0, -65536, pywintypes.OVERLAPPED())
     else:
         fcntl.flock(file_, fcntl.LOCK_UN)
 # -----------------------------------------------------------------------------
