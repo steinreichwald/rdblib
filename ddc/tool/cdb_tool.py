@@ -5,6 +5,7 @@ classes for dealing with prescription-files
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import os, sys, io
+import logging
 import mmap
 
 from ddc.tool.meta import BinaryMeta
@@ -12,6 +13,8 @@ from ddc.compat import with_metaclass
 from ddc.client.config.config_base import FieldList
 from ddc.dbdef import cdb_definition
 from timeit import default_timer as timer
+
+from .storage.locking import acquire_lock
 
 
 DEBUG_LEVEL = 0     # set to 1 for little output, 2 for all
@@ -48,9 +51,14 @@ class MMapFile(mmap.mmap):
         if DEBUG_LEVEL:
             tim = timer()
 
-        with io.open(filename, aflags) as f:
-            self = super(MMapFile, cls).__new__(cls, f.fileno(), 0,
-                                                access=access)
+        # Locking requires file descriptors/handles. mmap.mmap creates an
+        # internal file descriptor which we can not access. Therefore we have
+        # to save a reference to the underlying file ourself.
+        f = io.open(filename, aflags)
+        log = logging.getLogger(__name__)
+        acquire_lock(f, exclusive_lock=(access == mmap.ACCESS_WRITE), log=log)
+        self = super(MMapFile, cls).__new__(cls, f.fileno(), 0, access=access)
+        self._file = f
         self._name = filename
         self._closed = False
 
@@ -102,6 +110,8 @@ class MMapFile(mmap.mmap):
 
     def close(self):
         super(MMapFile, self).close()
+        # Closing the file will also release the lock implicitely...
+        self._file.close()
         self._closed = True
 
     @property
