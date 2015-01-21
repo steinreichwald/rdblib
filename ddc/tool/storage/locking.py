@@ -38,9 +38,10 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
         log.debug(lock_msg)
     if is_windows():
         fd = win32file._get_osfhandle(file_.fileno())
-        lock_flags = win32con.LOCKFILE_FAIL_IMMEDIATELY
         if exclusive_lock:
-            lock_flags |= win32con.LOCKFILE_EXCLUSIVE_LOCK
+            lock_flags = (win32con.LOCKFILE_EXCLUSIVE_LOCK | win32con.LOCKFILE_FAIL_IMMEDIATELY)
+        else:
+            lock_flags = win32con.LOCKFILE_FAIL_IMMEDIATELY
         try:
             win32file.LockFileEx(fd, lock_flags, 0, -65536, pywintypes.OVERLAPPED())
         except pywintypes.error as e:
@@ -50,9 +51,10 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
                 raise IOError("Unable to obtain lock")
             return False
     else:
-        lock_flags = fcntl.LOCK_NB
         if exclusive_lock:
-            lock_flags |= fcntl.LOCK_EX
+            lock_flags = (fcntl.LOCK_EX | fcntl.LOCK_NB)
+        else:
+            lock_flags = (fcntl.LOCK_SH | fcntl.LOCK_NB)
         try:
             fcntl.flock(file_, lock_flags)
         except IOError as e:
@@ -75,7 +77,7 @@ def unlock(file_, log=None):
         fcntl.flock(file_, fcntl.LOCK_UN)
 # -----------------------------------------------------------------------------
 
-def is_locked(file_or_filename):
+def is_locked(file_or_filename, exclusive_lock=True):
     """Returns True if the file-like object is locked BY ANOTHER PROCESS!
 
     Attention: Do NOT call this method directly if your process already has
@@ -98,7 +100,7 @@ def is_locked(file_or_filename):
                 # file as locked.
                 return True
             raise
-    acquired_lock = acquire_lock(file_, raise_on_error=False)
+    acquired_lock = acquire_lock(file_, exclusive_lock=exclusive_lock, raise_on_error=False)
     if acquired_lock:
         unlock(file_)
         return False
