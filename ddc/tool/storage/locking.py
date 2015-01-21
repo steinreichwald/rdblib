@@ -55,7 +55,7 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
             lock_flags |= fcntl.LOCK_EX
         try:
             fcntl.flock(file_, lock_flags)
-        except IOError:
+        except IOError as e:
             if log:
                 log.warn('[%d] error while trying to lock %r: %r' % (os.getpid(), file_.name, e))
             if raise_on_error:
