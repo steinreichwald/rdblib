@@ -9,6 +9,7 @@ import logging
 import mmap
 
 from ddc.tool.meta import BinaryMeta
+from ddc.tool.storage.paths import ibf_subdir
 from ddc.compat import with_metaclass
 from ddc.client.config.config_base import FieldList
 from ddc.dbdef import cdb_definition
@@ -526,14 +527,16 @@ def image_filename(cdb_name):
     """
     pathname, filename = os.path.split(cdb_name)
     filename, _ = os.path.splitext(filename)
-    return os.path.join(pathname, '00000001', '%s.IBF' % filename)
+    return os.path.join(pathname, ibf_subdir, '%s.IBF' % filename)
 
 def image_dirname(cdb_name):
     """
     helper function to obtain the dirname of an ibf file
     """
     pathname, filename = os.path.split(cdb_name)
-    return os.path.join(pathname, '00000001')
+    return os.path.join(pathname, ibf_subdir)
+# note: this constant is a bit of "eves-dropping". It's name is pseudo-variable,
+# but the fact that it has to be a directory cannot be easily abstracted this way.
 
 # -------------------------------------------------------
 # rudimentary Tiff support
