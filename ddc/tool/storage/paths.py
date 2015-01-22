@@ -25,6 +25,9 @@ class DataBunch(namedtuple('DataBunch', 'cdb ibf durus ask')):
     def is_complete(self):
         return (None not in self[:3])
 
+    def is_processed(self):
+        return self.ask is not None
+
 ibf_subdir = '00000001'
 
 def path_info_from_cdb(cdb_path):
