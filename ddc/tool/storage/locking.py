@@ -13,7 +13,7 @@ else:
     import fcntl
 
 
-__all__ = ['is_locked', 'is_windows', 'acquire_lock', 'unlock']
+__all__ = ['is_windows', 'acquire_lock', 'unlock']
 
 # -----------------------------------------------------------------------------
 # initial locking code copied from Durus (durus/file.py) but with custom
@@ -76,7 +76,7 @@ def unlock(file_, log=None):
         fcntl.flock(file_, fcntl.LOCK_UN)
 # -----------------------------------------------------------------------------
 
-def is_locked(file_or_filename, exclusive_lock=True):
+def _is_locked(file_or_filename, exclusive_lock=True):
     """Returns True if the file-like object is locked BY ANOTHER PROCESS!
 
     Attention: Do NOT call this method directly if your process already has
@@ -104,4 +104,3 @@ def is_locked(file_or_filename, exclusive_lock=True):
         unlock(file_)
         return False
     return True
-
