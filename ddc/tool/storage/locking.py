@@ -2,18 +2,15 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import os
+from ddc.platf.platform_quirks import is_windows
 
-
-def is_windows():
-    return (os.name == 'nt')
-
-if is_windows():
+if is_windows:
     import win32con, win32file, pywintypes # http://sf.net/projects/pywin32/
 else:
     import fcntl
 
 
-__all__ = ['is_windows', 'acquire_lock', 'unlock']
+__all__ = ['acquire_lock', 'unlock']
 
 # -----------------------------------------------------------------------------
 # initial locking code copied from Durus (durus/file.py) but with custom
@@ -36,7 +33,7 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
     if log:
         lock_msg = '[%d] locking %r' % (os.getpid(), file_.name)
         log.debug(lock_msg)
-    if is_windows():
+    if is_windows:
         fd = win32file._get_osfhandle(file_.fileno())
         if exclusive_lock:
             lock_flags = (win32con.LOCKFILE_EXCLUSIVE_LOCK | win32con.LOCKFILE_FAIL_IMMEDIATELY)
@@ -69,7 +66,7 @@ def unlock(file_, log=None):
     if log:
         lock_msg = '[%d] unlocking %r' % (os.getpid(), file_.name)
         log.debug(lock_msg)
-    if is_windows():
+    if is_windows:
         fd = win32file._get_osfhandle(file_.fileno())
         win32file.UnlockFileEx(fd, 0, -65536, pywintypes.OVERLAPPED())
     else:
@@ -93,7 +90,7 @@ def _is_locked(file_or_filename, exclusive_lock=True):
         try:
             file_ = open(file_or_filename)
         except PermissionError:
-            if is_windows():
+            if is_windows:
                 # on Windows opening a file means we can not open it a second
                 # time (open will raise a PermissionError instead) so treat the
                 # file as locked.
