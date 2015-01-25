@@ -4,10 +4,11 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import sys
 
 # a little helper for mapping font sizes
-is_windows = sys.platform == 'win32'
+def is_windows():
+    return sys.platform == 'win32'
 
 def map_fontsize(size):
-    if is_windows:
+    if is_windows():
         size = size * 3 / 4
     return size
 
