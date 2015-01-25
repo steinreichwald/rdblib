@@ -45,7 +45,7 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
             if log:
                 log.warn('[%d] error while trying to lock %r: %r' % (os.getpid(), file_.name, e))
             if raise_on_error:
-                raise IOError("Unable to obtain lock")
+                raise OSError(e)
             return False
     else:
         if exclusive_lock:
