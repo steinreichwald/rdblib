@@ -104,7 +104,7 @@ class MMapFile(mmap.mmap):
 
     if sys.platform == 'win32':
         # windows will return 0 if an error occurred. Linux/Mac raise an error.
-        # this description is misleading. It is actually the behavior of 
+        # this description is misleading. It is actually the behavior of
         # FlushViewOfFile that returns 0 on error.
         # But the behavior on access_read or access_copy is explicitly
         # inserted by Python's C implementation.
@@ -114,7 +114,7 @@ class MMapFile(mmap.mmap):
             ret = super(MMapFile, self).flush(*args, **kw)
             if ret == 0:
                 if self._access == mmap.ACCESS_WRITE:
-                    # this is a real error. 
+                    # this is a real error.
                     # ACCESS_READ or ACCESS_COPY return 0 as a no-op.
                     raise WindowsError('something went wrong in flush().')
             return ret
