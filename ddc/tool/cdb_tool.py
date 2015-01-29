@@ -444,15 +444,15 @@ class Form(object):
         return not(self == other)
 
 
-class FormImageBatchHeader(WithBinaryMeta):
+class ImageBatchHeader(WithBinaryMeta):
     _struc = cdb_definition.Image_Defn.header_struc
 
 
-class FormImage(WithBinaryMeta):
+class Image(WithBinaryMeta):
     _struc = cdb_definition.Image_Defn.index_struc
 
 
-class FormImageBatch(object):
+class ImageBatch(object):
 
     def __init__(self, image_job, delay_load=False, access='write'):
         if hasattr(image_job, 'close'):
@@ -468,7 +468,7 @@ class FormImageBatch(object):
         self.mmap_file.close()
 
     def load_header(self):
-        self.header = FormImageBatchHeader(self.filecontent)
+        self.header = ImageBatchHeader(self.filecontent)
 
     @property
     def filecontent(self):
@@ -479,7 +479,7 @@ class FormImageBatch(object):
             entries = []
             image_count = -1
             while image_count != 0:
-                entry = FormImage(self.filecontent, offset)
+                entry = Image(self.filecontent, offset)
                 entries.append(entry)
                 if image_count == -1:
                     offset_next_index = entry.rec.offset_next_index
@@ -506,7 +506,7 @@ class FormImageBatch(object):
     # and not the image struc, directly. Will change...
     def update_entry(self, entry):
         ''' write a changed index entry '''
-        assert isinstance(entry, FormImage)
+        assert isinstance(entry, Image)
         buffer = self.filecontent
         if entry.edited_fields:
             data = entry._get_binary()
@@ -567,7 +567,7 @@ class TiffHandler(object):
 
 
     def __init__(self, image_batch, index):
-        assert isinstance(image_batch, FormImageBatch)
+        assert isinstance(image_batch, ImageBatch)
         self.filecontent = image_batch.filecontent
         entry = image_batch.image_entries[index]
         self.offset = entry.rec.image_offset

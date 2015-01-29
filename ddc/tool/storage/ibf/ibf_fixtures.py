@@ -6,7 +6,7 @@ testing purposes.
 Limitations:
 Currently we only write a single image entry per index group while real-world
 IBF files group images in blocks of 64 entries (see
-FormImageBatch.load_directories() for the complete parsing implementation).
+ImageBatch.load_directories() for the complete parsing implementation).
 """
 from __future__ import division, absolute_import, print_function, unicode_literals
 
