@@ -3,11 +3,15 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 import os
 from ddc.platf.platform_quirks import is_windows
+from ddc.compat import PY3
 
 if is_windows():
     import win32con, win32file, pywintypes # http://sf.net/projects/pywin32/
 else:
     import fcntl
+if not PY3:
+    from io import BlockingIOError
+    PermissionError = IOError
 
 
 __all__ = ['acquire_lock', 'unlock']
