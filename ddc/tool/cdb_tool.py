@@ -122,7 +122,8 @@ class MMapFile(mmap.mmap):
     def close(self):
         super(MMapFile, self).close()
         # Closing the file will also release the lock implicitely...
-        self._file.close()
+        if not self._file.closed:
+            self._file.close()
         self._closed = True
 
     @property
