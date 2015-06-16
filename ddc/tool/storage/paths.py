@@ -109,7 +109,7 @@ def durus_path(cdb_dir, cdb_basename):
 
 def ask_path(cdb_dir, cdb_basename):
     ask_dir = os.path.join(cdb_dir, ibf_subdir)
-    return look_for_file(ibf_dir, cdb_basename, 'ask')
+    return look_for_file(ask_dir, cdb_basename, 'ask')
 
 def databunch_for_cdb(cdb_path, add_missing_durus_path=False):
     dirpath = os.path.dirname(cdb_path)
