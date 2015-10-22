@@ -2,7 +2,7 @@
 # Copyright 2015 Felix Schwarz
 # The source code in this file is licensed under the MIT license.
 
-from pycerberus.lib.pythonic_testcase import *
+from pythonic_testcase import *
 
 from ddc.lib.dict_merger import merge_dicts
 
