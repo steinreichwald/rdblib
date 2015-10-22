@@ -2,14 +2,15 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 from io import BytesIO
-from unittest.case import TestCase
+
+from pythonic_testcase import *
 
 from ddc.client.config.config_base import FieldList
 from ddc.tool.cdb_tool import FormBatch
 from ddc.tool.storage.cdb.cdb_fixtures import create_cdb, CDBFile, CDBForm
 
 
-class CDBFileTest(TestCase):
+class CDBFileTest(PythonicTestCase):
     def test_can_generate_cdb_file_with_single_form(self):
         field_names = [field_class.link_name for field_class in FieldList(None)]
         fields = []
@@ -20,12 +21,12 @@ class CDBFileTest(TestCase):
         cdb_fp = BytesIO(cdb_batch.as_bytes())
 
         batch = FormBatch(cdb_fp, access='read')
-        self.assertEqual(1, batch.count())
+        assert_equals(1, batch.count())
         form = batch.forms[0]
-        self.assertEqual('baz', form['STRASSE'].corrected_result)
+        assert_equals('baz', form['STRASSE'].corrected_result)
 
     def test_create_cdb_helper_function(self):
         cdb_fp = create_cdb(nr_forms=3)
         cdb_batch = FormBatch(cdb_fp, access='read')
-        self.assertEqual(3, len(cdb_batch))
+        assert_equals(3, len(cdb_batch))
 
