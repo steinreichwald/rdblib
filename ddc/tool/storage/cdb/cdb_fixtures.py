@@ -8,16 +8,10 @@ from ddc.tool.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 from ddc.client.config.config_base import FieldList
 
 
-__all__ = ['CDBField', 'CDBFile', 'CDBForm']
-
-
-def create_cdb(nr_forms=1):
-    field_names = [field_class.link_name for field_class in FieldList(None)]
-    field = {'name': field_names[0], 'corrected_result': 'baz'}
-
-    forms = [CDBForm([field]) for i in range(nr_forms)]
-    cdb_data = CDBFile(forms).as_bytes()
-    return UnclosableBytesIO(cdb_data)
+__all__ = [
+    'create_cdb_with_dummy_data',
+    'CDBField', 'CDBFile', 'CDBForm'
+]
 
 
 cdb_format = cdb_definition.Form_Defn
@@ -84,3 +78,11 @@ class CDBField(BinaryFixture):
     def as_bytes(self):
         return super(CDBField, self).as_bytes(self.values)
 
+
+def create_cdb_with_dummy_data(nr_forms=1):
+    field_names = [field_class.link_name for field_class in FieldList(None)]
+    field = {'name': field_names[0], 'corrected_result': 'baz'}
+
+    forms = [CDBForm([field]) for i in range(nr_forms)]
+    cdb_data = CDBFile(forms).as_bytes()
+    return UnclosableBytesIO(cdb_data)
