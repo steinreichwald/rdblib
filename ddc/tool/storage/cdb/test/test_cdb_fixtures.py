@@ -5,7 +5,7 @@ from io import BytesIO
 
 from pythonic_testcase import *
 
-from ddc.client.config.config_base import FieldList
+from ddc.client.config import ALL_FIELD_NAMES
 from ddc.tool.cdb_tool import FormBatch
 from ddc.tool.storage.cdb.cdb_fixtures import create_cdb_with_dummy_data, CDBFile, CDBForm
 
@@ -15,9 +15,8 @@ class CDBFileTest(PythonicTestCase):
         # use direct access to CDBForm/CDBFile instead of the helper function
         # to get a better view on the lower-level classes even though they are
         # exercised by the helpers as well.
-        field_names = [field_class.link_name for field_class in FieldList(None)]
         fields = []
-        for field_name in field_names:
+        for field_name in ALL_FIELD_NAMES:
             fields.append({'name': field_name, 'corrected_result': 'baz'})
         cdb_form = CDBForm(fields)
         cdb_batch = CDBFile([cdb_form])

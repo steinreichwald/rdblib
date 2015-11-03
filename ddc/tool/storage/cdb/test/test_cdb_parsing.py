@@ -5,7 +5,7 @@ from io import BytesIO
 
 from pythonic_testcase import *
 
-from ddc.client.config.config_base import FieldList
+from ddc.client.config import ALL_FIELD_NAMES
 from ddc.tool.cdb_tool import FormBatch
 from ddc.tool.storage.cdb.cdb_fixtures import CDBFile, CDBForm
 
@@ -14,7 +14,7 @@ class CDBParsing(PythonicTestCase):
     def test_raises_error_if_cdb_file_contains_form_with_overwritten_fields(self):
         # prevent parsing of CDB files with overwritten field names. See also
         # further information in Form (cdb_tool.py) and pydica issue 10.
-        field_names = [field_class.link_name for field_class in FieldList(None)]
+        field_names = ALL_FIELD_NAMES
         first_field = field_names[0]
         second_field = field_names[1]
         bad_field_name = u'INVALID'
@@ -36,8 +36,7 @@ class CDBParsing(PythonicTestCase):
         # is always true for real data files and enables fast data access.
         # However the parser should catch all cases where this assumption is
         # not true.
-        field_names = [field_class.link_name for field_class in FieldList(None)]
-        first_field = field_names[0]
+        first_field = ALL_FIELD_NAMES[0]
         fields = [{'name': first_field, 'corrected_result': 'foo'}]
         # Test scenario: first form has no fields, second form one field
         first_form = CDBForm([])
@@ -52,8 +51,7 @@ class CDBParsing(PythonicTestCase):
         assert_equals('wrong form record size, this is no CDB', str(e))
 
     def test_can_handle_forms_exceptionally_large_field_count_entry(self):
-        field_names = [field_class.link_name for field_class in FieldList(None)]
-        first_field = field_names[0]
+        first_field = ALL_FIELD_NAMES[0]
         fields = [{'name': first_field, 'corrected_result': 'foo'}]
         form = CDBForm(fields, field_count=1431197259)
         cdb_data = CDBFile([form]).as_bytes()

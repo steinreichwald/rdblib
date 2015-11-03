@@ -11,7 +11,7 @@ import mmap
 from ddc.tool.meta import BinaryMeta
 from ddc.tool.storage.paths import ibf_subdir
 from ddc.compat import with_metaclass
-from ddc.client.config.config_base import FieldList
+from ddc.client.config import ALL_FIELD_NAMES
 from ddc.dbdef import cdb_definition
 from timeit import default_timer as timer
 
@@ -230,7 +230,7 @@ class FormBatch(object):
             form = Form(self, offset)
             if form.record_size != record_size:
                 raise TypeError('wrong form record size, this is no CDB')
-            known_fields = [field_class.link_name for field_class in FieldList(None)]
+            known_fields = ALL_FIELD_NAMES
             unknown_fields = set(form._field_names).difference(set(known_fields))
             # The old software sometimes writes junk for some form fields. That
             # seems to happen in the old software if a user entered more characters
