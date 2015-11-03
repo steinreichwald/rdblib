@@ -82,11 +82,9 @@ class CDBField(BinaryFixture):
 
 def create_cdb_with_dummy_data(nr_forms=1):
     field_names = [field_class.link_name for field_class in FieldList(None)]
-    field = {'name': field_names[0], 'corrected_result': 'baz'}
-
-    forms = [CDBForm([field]) for i in range(nr_forms)]
-    cdb_data = CDBFile(forms).as_bytes()
-    return UnclosableBytesIO(cdb_data)
+    field = {field_names[0]: 'baz'}
+    form_values = (field,) * nr_forms
+    return create_cdb_with_form_values(form_values)
 
 
 def create_cdb_with_form_values(form_values):
