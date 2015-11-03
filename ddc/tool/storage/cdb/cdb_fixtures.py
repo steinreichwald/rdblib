@@ -10,6 +10,7 @@ from ddc.client.config.config_base import FieldList
 
 __all__ = [
     'create_cdb_with_dummy_data',
+    'create_cdb_with_form_values',
     'CDBField', 'CDBFile', 'CDBForm'
 ]
 
@@ -86,3 +87,23 @@ def create_cdb_with_dummy_data(nr_forms=1):
     forms = [CDBForm([field]) for i in range(nr_forms)]
     cdb_data = CDBFile(forms).as_bytes()
     return UnclosableBytesIO(cdb_data)
+
+
+def create_cdb_with_form_values(form_values):
+    """
+    Generate a CDB in memory based on the specified form values which is an
+    iterable of dicts. Each dict contains the field names as keys and their
+    corresponding "corrected result".
+    Returns a file-like object which contains the binary CDB data.
+    """
+    forms = []
+    for fields_data in form_values:
+        fields = []
+        for field_name, field_value in fields_data.items():
+            field = {'name': field_name, 'corrected_result': field_value}
+            fields.append(field)
+        form = CDBForm(fields)
+        forms.append(form)
+    cdb_data = CDBFile(forms).as_bytes()
+    return UnclosableBytesIO(cdb_data)
+
