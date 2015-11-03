@@ -12,6 +12,9 @@ from ddc.tool.storage.cdb.cdb_fixtures import create_cdb_with_dummy_data, CDBFil
 
 class CDBFileTest(PythonicTestCase):
     def test_can_generate_cdb_file_with_single_form(self):
+        # use direct access to CDBForm/CDBFile instead of the helper function
+        # to get a better view on the lower-level classes even though they are
+        # exercised by the helpers as well.
         field_names = [field_class.link_name for field_class in FieldList(None)]
         fields = []
         for field_name in field_names:
