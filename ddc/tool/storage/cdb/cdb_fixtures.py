@@ -86,11 +86,14 @@ def create_cdb_with_dummy_data(nr_forms=1):
     return create_cdb_with_form_values(form_values)
 
 
-def create_cdb_with_form_values(form_values):
+def create_cdb_with_form_values(form_values, filename=None):
     """
-    Generate a CDB in memory based on the specified form values which is an
-    iterable of dicts. Each dict contains the field names as keys and their
-    corresponding "corrected result".
+    Generate a CDB based on the specified form values which is an iterable of
+    dicts. Each dict contains the field names as keys and their corresponding
+    "corrected result".
+    If filename is None the data will be created in memory only. Otherwise the
+    data will be written to the specified file.
+
     Returns a file-like object which contains the binary CDB data.
     """
     forms = []
@@ -102,5 +105,10 @@ def create_cdb_with_form_values(form_values):
         form = CDBForm(fields)
         forms.append(form)
     cdb_data = CDBFile(forms).as_bytes()
-    return UnclosableBytesIO(cdb_data)
+    if filename is None:
+        return UnclosableBytesIO(cdb_data)
+    cdb_fp = open(filename, 'wb')
+    cdb_fp.write(cdb_data)
+    cdb_fp.seek(0, 0)
+    return cdb_fp
 

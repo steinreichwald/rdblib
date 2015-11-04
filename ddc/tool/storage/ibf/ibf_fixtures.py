@@ -18,7 +18,7 @@ from ddc.tool.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 __all__ = ['create_ibf', 'IBFFile', 'IBFImage']
 
-def create_ibf(nr_images=1):
+def create_ibf(nr_images=1, filename=None):
     # tiffany can not create tiff images and we should try not to add new
     # dependencies. Currently there is no test at all which relies on having
     # actual tiff data so we can just use some random binary data.
@@ -28,9 +28,13 @@ def create_ibf(nr_images=1):
         return b'\x00' * 200
 
     ibf_images = [IBFImage(_fake_tiff_image()) for i in range(nr_images)]
-    ibf_batch = IBFFile(ibf_images)
-
-    return UnclosableBytesIO(ibf_batch.as_bytes())
+    ibf_data = IBFFile(ibf_images).as_bytes()
+    if filename is None:
+        return UnclosableBytesIO(ibf_data)
+    ibf_fp = open(filename, 'wb')
+    ibf_fp.write(ibf_data)
+    ibf_fp.seek(0, 0)
+    return ibf_fp
 
 
 ibf_format = cdb_definition.Image_Defn
