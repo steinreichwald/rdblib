@@ -12,22 +12,36 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from io import BytesIO
 
+import pkg_resources
+
 from ddc.dbdef import cdb_definition
 from ddc.tool.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 
 __all__ = ['create_ibf', 'IBFFile', 'IBFImage']
 
-def create_ibf(nr_images=1, filename=None):
-    # tiffany can not create tiff images and we should try not to add new
-    # dependencies. Currently there is no test at all which relies on having
-    # actual tiff data so we can just use some random binary data.
-    # We might have to reconsider this decision once we need to test
-    # tiff-related functionality.
+def create_ibf(nr_images=1, filename=None, fake_tiffs=True):
+    # tiffany can not create tiff images and I'd like not to add new
+    # dependencies (smc.freeimage needs compilation and has a few extra
+    # dependencies, PIL can't handle multi-page tiffs).
+    # Current tests don't need actual tiffs so we can just use some random
+    # binary data.
+    # However some scripts need to provide real tiffs so we have a static dummy
+    # tiff which is used if fake_tiffs is False.
+    # (Also Pillow should be able to handle multi-page tiffs so that might be
+    # good thing to explore - we'd be able to replace tiffany with the much
+    # more common Pillow).
     def _fake_tiff_image():
         return b'\x00' * 200
 
-    ibf_images = [IBFImage(_fake_tiff_image()) for i in range(nr_images)]
+    def _use_dummy_tiff():
+        this_module = __name__.rsplit('.', 1)[0]
+        tiff_fp = pkg_resources.resource_stream(this_module, 'dummy.tiff')
+        tiff_data = tiff_fp.read()
+        return tiff_data
+
+    tiff_data = _fake_tiff_image() if fake_tiffs else _use_dummy_tiff()
+    ibf_images = [IBFImage(tiff_data) for i in range(nr_images)]
     ibf_data = IBFFile(ibf_images).as_bytes()
     if filename is None:
         return UnclosableBytesIO(ibf_data)
