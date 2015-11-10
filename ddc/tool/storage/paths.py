@@ -52,6 +52,9 @@ def path_info_from_ibf(ibf_path):
 def path_info_from_durus(durus_path):
     return path_info_from_cdb(durus_path)
 
+def path_info_from_ask(ask_path):
+    return path_info_from_ibf(ask_path)
+
 def guess_cdb_path(base_dir, basename):
     return os.path.join(base_dir, basename+'.cdb')
 
