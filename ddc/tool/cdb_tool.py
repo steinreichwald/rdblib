@@ -157,14 +157,14 @@ class FormHeader(WithBinaryMeta):
 
 
 def filecontent(mmap_or_filelike):
-        if isinstance(mmap_or_filelike, mmap.mmap):
-            return mmap_or_filelike
-        fp = mmap_or_filelike
-        old_pos = fp.tell()
-        fp.seek(0)
-        content = fp.read()
-        fp.seek(old_pos)
-        return content
+    if isinstance(mmap_or_filelike, mmap.mmap):
+        return mmap_or_filelike
+    fp = mmap_or_filelike
+    old_pos = fp.tell()
+    fp.seek(0)
+    content = fp.read()
+    fp.seek(old_pos)
+    return content
 
 class FormBatch(object):
 
