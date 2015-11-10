@@ -107,7 +107,7 @@ def create_cdb_with_form_values(form_values, filename=None):
     cdb_data = CDBFile(forms).as_bytes()
     if filename is None:
         return UnclosableBytesIO(cdb_data)
-    cdb_fp = open(filename, 'wb')
+    cdb_fp = open(filename, 'rb+')
     cdb_fp.write(cdb_data)
     cdb_fp.seek(0, 0)
     return cdb_fp

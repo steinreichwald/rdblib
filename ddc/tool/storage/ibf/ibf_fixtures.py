@@ -45,7 +45,7 @@ def create_ibf(nr_images=1, filename=None, fake_tiffs=True):
     ibf_data = IBFFile(ibf_images).as_bytes()
     if filename is None:
         return UnclosableBytesIO(ibf_data)
-    ibf_fp = open(filename, 'wb')
+    ibf_fp = open(filename, 'rb+')
     ibf_fp.write(ibf_data)
     ibf_fp.seek(0, 0)
     return ibf_fp
