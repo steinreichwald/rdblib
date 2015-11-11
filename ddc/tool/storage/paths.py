@@ -11,7 +11,6 @@ from .filesystem_utils import look_for_file
 
 
 __all__ = [
-    'databunch_for_cdb',
     'guess_bunch_from_path',
     'guess_cdb_path',
     'guess_durus_path',
@@ -129,21 +128,6 @@ def durus_path(cdb_dir, cdb_basename):
 def ask_path(cdb_dir, cdb_basename):
     ask_dir = os.path.join(cdb_dir, ibf_subdir)
     return look_for_file(ask_dir, cdb_basename, 'ask')
-
-def databunch_for_cdb(cdb_path, add_missing_durus_path=False):
-    dirpath = os.path.dirname(cdb_path)
-    cdb_filename = os.path.basename(cdb_path)
-    file_basename = os.path.splitext(cdb_filename)[0]
-    durus_filepath = durus_path(dirpath, file_basename)
-    if (durus_filepath is None) and add_missing_durus_path:
-        durus_filepath = guess_path(cdb_path, type_='durus')
-    data = DataBunch(
-        cdb=cdb_path,
-        ibf=ibf_path(dirpath, file_basename),
-        durus=durus_filepath,
-        ask=ask_path(dirpath, file_basename),
-    )
-    return data
 
 def databunch_for_durus(some_file_path):
     '''
