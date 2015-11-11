@@ -7,7 +7,6 @@ import sys
 
 from ddc.lib.attribute_dict import AttrDict
 from ddc.lib.result import Result
-from .filesystem_utils import look_for_file
 
 
 __all__ = [
@@ -109,43 +108,4 @@ def guess_path(input_, type_):
     module = sys.modules[__name__]
     guess_func = getattr(module, guess_func_name)
     return guess_func(base_dir, basename)
-
-# ----------------------------------------------------------------------------
-# all functionality below should be considered deprecated.
-# Please use DiscoverLib + BunchAssembler instead.
-
-def cdb_path(cdb_dir, cdb_basename):
-    # use look_for_file to check for unique .cdb names, too
-    return look_for_file(cdb_dir, cdb_basename, 'cdb')
-
-def ibf_path(cdb_dir, cdb_basename):
-    ibf_dir = os.path.join(cdb_dir, ibf_subdir)
-    return look_for_file(ibf_dir, cdb_basename, 'ibf')
-
-def durus_path(cdb_dir, cdb_basename):
-    return look_for_file(cdb_dir, cdb_basename, 'durus')
-
-def ask_path(cdb_dir, cdb_basename):
-    ask_dir = os.path.join(cdb_dir, ibf_subdir)
-    return look_for_file(ask_dir, cdb_basename, 'ask')
-
-def databunch_for_durus(some_file_path):
-    '''
-    this is a simplified and more general version of databunch_for_cdb
-    for the current needs of the GUI.
-    '''
-    dirpath = os.path.dirname(some_file_path)
-    durus_filename = os.path.basename(some_file_path)
-    file_basename = os.path.splitext(durus_filename)[0]
-    cdb_filepath = cdb_path(dirpath, file_basename)
-    ibf_filepath = ibf_path(dirpath, file_basename)
-    durus_filepath = durus_path(dirpath, file_basename)
-    ask_filepath = ibf_path(dirpath, file_basename)
-    data = DataBunch(
-        cdb=cdb_filepath,
-        ibf=ibf_filepath,
-        durus=durus_filepath,
-        ask=ask_filepath,
-    )
-    return data
 
