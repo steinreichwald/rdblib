@@ -246,10 +246,6 @@ class FormBatch(object):
             form = form()
         return form
 
-    @property
-    def _image_filename(self):
-        return image_filename(self.batch_filename)
-
     def count(self):
         return self.form_batch_header.rec.form_count
 
@@ -516,38 +512,6 @@ class ImageBatch(object):
             entry.edited_fields.clear()
             self.mmap_file.flush()
 
-
-# -------------------------------------------------------
-# Helper functions
-
-def image_filename(cdb_name):
-    """
-    The intention of the original format of the RDB-files is to
-    get the IBF-Filename with the following code:
-
-        return self.prescription_job_header.ibf_format_string % \
-               self.prescription_job_header.ibf_path
-
-    Doing this it's not possible to move the files (especially the IBF-file)
-    to another location (for testing or backup), because the basepath to
-    the IBF-file is absolute and hard coded in the RDB-file.
-
-    In real life the IBF-file always resides in a subdirectory with the name
-    "00000001" below the RDB-file, that's why we can safely calculate the
-    path to the IBF-file from the path to the RDB-file.
-    """
-    pathname, filename = os.path.split(cdb_name)
-    filename, _ = os.path.splitext(filename)
-    return os.path.join(pathname, ibf_subdir, '%s.IBF' % filename)
-
-def image_dirname(cdb_name):
-    """
-    helper function to obtain the dirname of an ibf file
-    """
-    pathname, filename = os.path.split(cdb_name)
-    return os.path.join(pathname, ibf_subdir)
-# note: this constant is a bit of "eves-dropping". It's name is pseudo-variable,
-# but the fact that it has to be a directory cannot be easily abstracted this way.
 
 # -------------------------------------------------------
 # rudimentary Tiff support
