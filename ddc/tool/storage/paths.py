@@ -21,15 +21,23 @@ __all__ = [
     'DataBunch',
 ]
 
-class DataBunch(namedtuple('DataBunch', 'cdb ibf durus ask')):
+ibf_subdir = '00000001'
 
+class DataBunch(namedtuple('DataBunch', 'cdb ibf durus ask')):
     def is_complete(self):
         return (None not in self[:3])
 
     def is_processed(self):
         return self.ask is not None
 
-ibf_subdir = '00000001'
+    @classmethod
+    def merge(cls, bunch, cdb=None, ibf=None, durus=None, ask=None):
+        cdb_ = cdb or bunch.cdb
+        ibf_ = ibf or bunch.ibf
+        durus_ = durus or bunch.durus
+        ask_ = ask or bunch.ask
+        return DataBunch(cdb=cdb_, ibf=ibf_, durus=durus_, ask=ask_)
+
 
 def path_info_from_cdb(cdb_path):
     if cdb_path is None:
