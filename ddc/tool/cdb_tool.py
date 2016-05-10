@@ -63,7 +63,7 @@ class MMapFile(mmap.mmap):
         # to save a reference to the underlying file ourself.
         f = io.open(filename, aflags)
         log = logging.getLogger(__name__)
-        if access == 'DONTCARE':
+        if access != 'DONTCARE':
             acquire_lock(f, exclusive_lock=(access_mode == mmap.ACCESS_WRITE), log=log)
         self = super(MMapFile, cls).__new__(cls, f.fileno(), 0, access=access_mode)
         self._file = f
