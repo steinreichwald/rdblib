@@ -43,8 +43,9 @@ class MMapFile(mmap.mmap):
         "copy" means copy_on_write: Data is written to memory, only.
 
         """
-        access = getattr(mmap, 'ACCESS_' + access.upper())
-        if access == mmap.ACCESS_READ:
+        access = access.upper()
+        access_mode = getattr(mmap, 'ACCESS_' + access)
+        if access_mode == mmap.ACCESS_READ:
             aflags = 'rb'
         else:
             aflags = 'r+b'
@@ -57,12 +58,12 @@ class MMapFile(mmap.mmap):
         # to save a reference to the underlying file ourself.
         f = io.open(filename, aflags)
         log = logging.getLogger(__name__)
-        acquire_lock(f, exclusive_lock=(access == mmap.ACCESS_WRITE), log=log)
-        self = super(MMapFile, cls).__new__(cls, f.fileno(), 0, access=access)
+        acquire_lock(f, exclusive_lock=(access_mode == mmap.ACCESS_WRITE), log=log)
+        self = super(MMapFile, cls).__new__(cls, f.fileno(), 0, access=access_mode)
         self._file = f
         self._name = filename
         self._closed = False
-        self._access = access
+        self._access = access_mode
 
         if DEBUG_LEVEL:
             tim = timer() - tim
