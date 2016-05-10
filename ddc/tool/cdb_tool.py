@@ -39,12 +39,17 @@ class MMapFile(mmap.mmap):
         are removed.
 
         access is "read", "write", or "copy".
+        (As a short-term workaround we also have "dontcare" which works like
+         "write" but does not do any locking.)
 
         "copy" means copy_on_write: Data is written to memory, only.
 
         """
         access = access.upper()
-        access_mode = getattr(mmap, 'ACCESS_' + access)
+        if access != 'DONTCARE':
+            access_mode = getattr(mmap, 'ACCESS_' + access)
+        else:
+            access_mode = mmap.ACCESS_WRITE
         if access_mode == mmap.ACCESS_READ:
             aflags = 'rb'
         else:
@@ -58,7 +63,8 @@ class MMapFile(mmap.mmap):
         # to save a reference to the underlying file ourself.
         f = io.open(filename, aflags)
         log = logging.getLogger(__name__)
-        acquire_lock(f, exclusive_lock=(access_mode == mmap.ACCESS_WRITE), log=log)
+        if access == 'DONTCARE':
+            acquire_lock(f, exclusive_lock=(access_mode == mmap.ACCESS_WRITE), log=log)
         self = super(MMapFile, cls).__new__(cls, f.fileno(), 0, access=access_mode)
         self._file = f
         self._name = filename
