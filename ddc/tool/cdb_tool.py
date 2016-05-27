@@ -8,11 +8,10 @@ import os, sys, io
 import logging
 import mmap
 
-from ddc.tool.meta import BinaryMeta
-from ddc.tool.storage.paths import ibf_subdir
 from ddc.compat import with_metaclass
 from ddc.client.config import ALL_FIELD_NAMES
 from ddc.dbdef import cdb_definition
+from ddc.tool.meta import BinaryMeta
 from timeit import default_timer as timer
 
 from .storage.locking import acquire_lock
