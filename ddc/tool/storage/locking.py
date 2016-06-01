@@ -2,6 +2,8 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import os
+
+from ddc.lib.log_proxy import l_
 from ddc.platf.platform_quirks import is_windows
 from ddc.compat import PY3
 
@@ -34,9 +36,9 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
           logger instance used for optional log messages (if None nothing will
           be logging)
     """
-    if log:
-        lock_msg = '[%d] locking %r' % (os.getpid(), file_.name)
-        log.debug(lock_msg)
+    log = l_(log)
+    log_type = 'exclusive ' if exclusive_lock else ''
+    log.debug('acquire %slock for "%s" [PID %d]', log_type, file_.name, os.getpid())
     if is_windows():
         fd = win32file._get_osfhandle(file_.fileno())
         if exclusive_lock:
@@ -46,8 +48,7 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
         try:
             win32file.LockFileEx(fd, lock_flags, 0, -65536, pywintypes.OVERLAPPED())
         except pywintypes.error as e:
-            if log:
-                log.warn('[%d] error while trying to lock %r: %r' % (os.getpid(), file_.name, e))
+            log.warn('error while trying to lock "%s": %r [PID %d]', file_.name, e, os.getpid())
             if raise_on_error:
                 raise OSError(e)
             return False
@@ -59,17 +60,15 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
         try:
             fcntl.flock(file_, lock_flags)
         except (BlockingIOError, PermissionError) as e:
-            if log:
-                log.warn('[%d] error while trying to lock %r: %r' % (os.getpid(), file_.name, e))
+            log.warn('error while trying to lock "%s": %r [PID %d]', file_.name, e, os.getpid())
             if raise_on_error:
                 raise
             return False
     return True
 
 def unlock(file_, log=None):
-    if log:
-        lock_msg = '[%d] unlocking %r' % (os.getpid(), file_.name)
-        log.debug(lock_msg)
+    log = l_(log)
+    log.debug('unlocking "%s" [PID %d]', file_.name, os.getpid())
     if is_windows():
         fd = win32file._get_osfhandle(file_.fileno())
         win32file.UnlockFileEx(fd, 0, -65536, pywintypes.OVERLAPPED())
