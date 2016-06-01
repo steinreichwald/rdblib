@@ -56,8 +56,7 @@ class MMapFile(mmap.mmap):
             aflags = 'r+b'
         log = l_(log)
 
-        if DEBUG_LEVEL:
-            tim = timer()
+        start = timer()
 
         # Locking requires file descriptors/handles. mmap.mmap creates an
         # internal file descriptor which we can not access. Therefore we have
@@ -71,9 +70,8 @@ class MMapFile(mmap.mmap):
         self._closed = False
         self._access = access_mode
 
-        if DEBUG_LEVEL:
-            tim = timer() - tim
-            self._log('open file', None, tim)
+        duration = timer() - start
+        log.debug('opened file %s in %.5f seconds', filename, duration)
 
         if FORCE_LOAD:
             # just to check the effect of mmap
@@ -473,7 +471,10 @@ class ImageBatch(object):
         self.mmap_file.close()
 
     def load_header(self):
+        start = timer()
         self.header = ImageBatchHeader(self.filecontent)
+        duration = timer() - start
+        self.log.debug('loading IBF header took %.5f seconds', duration)
 
     @property
     def filecontent(self):
@@ -493,11 +494,14 @@ class ImageBatch(object):
                 offset += len(entry)
             return entries, offset_next_index
 
+        start = timer()
         offset = self.header.rec.offset_first_index
         self.image_entries = []
         while offset != 0:
             directory, offset = _get_subindex(offset)
             self.image_entries += directory
+        duration = timer() - start
+        self.log.debug('loading %d image entries from IBF took %.5f seconds', len(self.image_entries), duration)
 
     def get_tiff_image(self, index):
         entry = self.image_entries[index]
