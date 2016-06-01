@@ -4,16 +4,17 @@ classes for dealing with prescription-files
 """
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-import os, sys, io
+import io
 import logging
 import mmap
+import os
+import sys
+from timeit import default_timer as timer
 
 from ddc.compat import with_metaclass
 from ddc.client.config import ALL_FIELD_NAMES
 from ddc.dbdef import cdb_definition
-from ddc.tool.meta import BinaryMeta
-from timeit import default_timer as timer
-
+from .meta import BinaryMeta
 from .storage.locking import acquire_lock
 
 
