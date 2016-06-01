@@ -74,10 +74,12 @@ class MMapFile(mmap.mmap):
         log.debug('opened file %s in %.5f seconds', filename, duration)
 
         if FORCE_LOAD:
+            start = timer()
             # just to check the effect of mmap
-            print('preload:')
             self[:]
-            print('--------')
+            duration = timer() - start
+            basename = os.path.basename(filename)
+            log.debug('force loading of %s tool %.5f seconds', basename, duration)
         return self
 
     if sys.platform == 'win32':
