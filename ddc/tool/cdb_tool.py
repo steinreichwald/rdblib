@@ -463,8 +463,8 @@ class ImageBatch(object):
             self.mmap_file = MMapFile(image_job, access=access, log=log)
 
         self.log = l_(log)
+        self._load_delayed = delay_load
         self.load_header()
-        self._load_delayed = delay_load # unused so far
         self.load_directories()
 
     def close(self):
