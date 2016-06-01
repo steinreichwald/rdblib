@@ -18,7 +18,7 @@ from .meta import BinaryMeta
 from .storage.locking import acquire_lock
 
 
-DEBUG_LEVEL = 0     # set to 1 for little output, 2 for all
+
 FORCE_LOAD = False  # set to True to effectively disable mmap
 
 ########################################################################
@@ -80,33 +80,6 @@ class MMapFile(mmap.mmap):
             print('--------')
         return self
 
-    if DEBUG_LEVEL or FORCE_LOAD:
-        def _log(self, prefix, rng, tim):
-            if rng:
-                start, stop, step = rng.start, rng.stop, rng.step
-                assert step == None or step == 1
-                start = ('' if start is None else str(start))
-                stop = ('' if stop is None else str(stop))
-                rng = '[{:>7s}:{:>7s}]'.format(start, stop)
-            else:
-                rng = ''
-            print('{} {}{}: {:.3f}'.format(prefix, self._name, rng, tim))
-
-        def __getitem__(self, rng):
-            tim = timer()
-            data = super(MMapFile, self).__getitem__(rng)
-            tim = timer() - tim
-            if tim >= 0.0005 or DEBUG_LEVEL >= 2:
-                self._log('read access', rng, tim)
-            return data
-
-        def __setitem__(self, rng, data):
-            tim = timer()
-            super(MMapFile, self).__setitem__(rng, data)
-            tim = timer() - tim
-            if tim >= 0.0005 or DEBUG_LEVEL >= 2:
-                self._log('read access', rng, tim)
-
     if sys.platform == 'win32':
         # windows will return 0 if an error occurred. Linux/Mac raise an error.
         # this description is misleading. It is actually the behavior of
@@ -150,7 +123,6 @@ class WithBinaryMeta(with_metaclass(BinaryMeta)):
     ''' helper class for python 2/3 compatibility '''
 
     _encoding = cdb_definition.encoding
-    _debug = DEBUG_LEVEL > 0
 
 
 class FormBatchHeader(WithBinaryMeta):
