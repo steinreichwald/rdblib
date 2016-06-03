@@ -5,7 +5,6 @@ classes for dealing with prescription-files
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import io
-import logging
 import mmap
 import os
 import sys
@@ -14,6 +13,7 @@ from timeit import default_timer as timer
 from ddc.compat import with_metaclass
 from ddc.client.config import ALL_FIELD_NAMES
 from ddc.dbdef import cdb_definition
+from ddc.lib.log_proxy import l_
 from .meta import BinaryMeta
 from .storage.locking import acquire_lock
 
@@ -30,7 +30,7 @@ class MMapFile(mmap.mmap):
     """
 
     #----------------------------------------------------------------------
-    def __new__(cls, filename, access):
+    def __new__(cls, filename, access, log=None):
         """
         Simplified constructor
         ----------------------
@@ -54,6 +54,7 @@ class MMapFile(mmap.mmap):
             aflags = 'rb'
         else:
             aflags = 'r+b'
+        log = l_(log)
 
         if DEBUG_LEVEL:
             tim = timer()
@@ -62,7 +63,6 @@ class MMapFile(mmap.mmap):
         # internal file descriptor which we can not access. Therefore we have
         # to save a reference to the underlying file ourself.
         f = io.open(filename, aflags)
-        log = logging.getLogger(__name__)
         if access != 'DONTCARE':
             acquire_lock(f, exclusive_lock=(access_mode == mmap.ACCESS_WRITE), log=log)
         self = super(MMapFile, cls).__new__(cls, f.fileno(), 0, access=access_mode)
@@ -175,11 +175,11 @@ def filecontent(mmap_or_filelike):
 
 class FormBatch(object):
 
-    def __init__(self, batch_file, delay_load=False, access='write'):
+    def __init__(self, batch_file, delay_load=False, access='write', log=None):
         if not hasattr(batch_file, 'close'):
             # the regular case, given a file name.
             batch_filename = batch_file
-            self.mmap_file = MMapFile(batch_filename, access=access)
+            self.mmap_file = MMapFile(batch_filename, access=access, log=log)
         else:
             # an already opened file, mostly meant for testing.
             # XXX should be cleaned: access is always passed, but ignored.
@@ -458,12 +458,13 @@ class Image(WithBinaryMeta):
 
 class ImageBatch(object):
 
-    def __init__(self, image_job, delay_load=False, access='write'):
+    def __init__(self, image_job, delay_load=False, access='write', log=None):
         if hasattr(image_job, 'close'):
             self.mmap_file = image_job
         else:
-            self.mmap_file = MMapFile(image_job, access=access)
+            self.mmap_file = MMapFile(image_job, access=access, log=log)
 
+        self.log = l_(log)
         self.load_header()
         self._load_delayed = delay_load # unused so far
         self.load_directories()
