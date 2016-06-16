@@ -158,6 +158,9 @@ class FormBatch(object):
             # XXX should be cleaned: access is always passed, but ignored.
             self.mmap_file = batch_file
 
+        self.form_batch_header = None
+        self.forms = None
+
         self.load_form_batch_header()
         self._load_delayed = delay_load
         self.load_forms()
@@ -184,8 +187,7 @@ class FormBatch(object):
         return int(filename[0:5])
 
     def load_form_batch_header(self):
-        self.form_batch_header = FormBatchHeader(
-            self.filecontent)
+        self.form_batch_header = FormBatchHeader(self.filecontent)
 
     def load_forms(self):
         self.forms = LazyList()
