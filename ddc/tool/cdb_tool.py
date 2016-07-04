@@ -365,8 +365,7 @@ class Form(object):
         if self._fields_loaded:
             return
         offset = self.offset + self.form_header.record_size
-        # nota bene: range can break the machine when random data is read
-        for _ in xrange(self.form_header.rec.field_count):
+        for _ in range(self.form_header.rec.field_count):
             field = FormField(self.filecontent, offset)
             field_name = field.rec.name
             self.fields[field_name] = field
