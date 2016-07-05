@@ -366,6 +366,9 @@ class Form(object):
         if not self._load_delayed:
             self._do_load_form_fields()
 
+    def is_deleted(self):
+        return (self.form_header.rec.imprint_line_short == 'DELETED')
+
     def _do_load_form_fields(self, key=None):
         # key could be used, but we need to create all fields in order
         if self._fields_loaded:
