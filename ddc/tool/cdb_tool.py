@@ -9,6 +9,7 @@ import mmap
 import os
 import sys
 from timeit import default_timer as timer
+import warnings
 
 from ddc.compat import with_metaclass
 from ddc.client.config import ALL_FIELD_NAMES
@@ -340,6 +341,11 @@ class Form(object):
 
     @property
     def pic_nr(self):
+        warnings.warn('"cdb_tool.Form.pic_nr" is ambiguous, use "cdb_tool.Form.cdb_pic_nr" instead', DeprecationWarning)
+        return self.cdb_pic_nr
+
+    @property
+    def cdb_pic_nr(self):
         return self.form_header.rec.imprint_line_short
 
     def load_form_header(self):
