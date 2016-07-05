@@ -32,3 +32,29 @@ class CDBFileTest(PythonicTestCase):
         cdb_batch = FormBatch(cdb_fp, access='read')
         assert_equals(3, len(cdb_batch))
 
+    def test_can_generate_form_with_specified_pic(self):
+        pic = '12345600114024'
+        fields = [
+            {'name': 'AUSSTELLUNGSDATUM', 'corrected_result': 'baz'}
+        ]
+        cdb_form = CDBForm(fields, imprint_line_short=pic)
+        cdb_fp = BytesIO(CDBFile([cdb_form]).as_bytes())
+
+        batch = FormBatch(cdb_fp, access='read')
+        assert_equals(1, batch.count())
+        form = batch.forms[0]
+        assert_equals(pic, form.pic_nr)
+
+    def test_can_generate_deleted_forms(self):
+        fields = [
+            {'name': 'AUSSTELLUNGSDATUM', 'corrected_result': 'baz'}
+        ]
+        cdb_form = CDBForm(fields, imprint_line_short='DELETED')
+        cdb_fp = BytesIO(CDBFile([cdb_form]).as_bytes())
+
+        batch = FormBatch(cdb_fp, access='read')
+        assert_equals(1, batch.count())
+        form = batch.forms[0]
+        assert_true(form.is_deleted())
+        assert_equals('DELETED', form.pic_nr)
+
