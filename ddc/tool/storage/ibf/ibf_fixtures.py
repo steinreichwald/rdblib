@@ -118,7 +118,7 @@ class IBFFile(BinaryFixture):
 
 
 class IBFImage(BinaryFixture):
-    def __init__(self, img_data, image_nr=None, codenr=None, encoding=None, **values):
+    def __init__(self, img_data, image_nr=None, encoding=None, **values):
         self.img_data = img_data
         values_ = dict(
             first_index_entry=0,
