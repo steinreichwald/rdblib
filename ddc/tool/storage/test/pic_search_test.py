@@ -108,4 +108,20 @@ class FormIndexForPICTest(PythonicTestCase):
         assert_equals(1, form_index_for_pic(batch, pic=pic, index_hint=2, ignore_deleted_forms=True),
             message='index_hint points to correct form')
 
+    def test_can_return_index_of_nondeleted_form_when_there_are_deleted_forms_with_the_same_pic(self):
+        pic = '12345600114024'
+        pic1 = '12345600110024'
+        pic2 = ('DELETED', pic)
+        pic3 = ('DELETED', pic)
+        pic4 = pic
+        pic5 = '12345600115024'
+        batch = batch_with_pic_forms([pic1, pic2, pic3, pic4, pic5])
+
+        # should return the index of the first non-deleted form
+        assert_equals(3, form_index_for_pic(batch, pic=pic, index_hint=0, ignore_deleted_forms=False),
+            message='index_hint is too small')
+        assert_equals(3, form_index_for_pic(batch, pic=pic, index_hint=3, ignore_deleted_forms=False),
+            message='index_hint is spot on')
+        assert_equals(3, form_index_for_pic(batch, pic=pic, index_hint=4, ignore_deleted_forms=False),
+            message='index_hint is too big')
 

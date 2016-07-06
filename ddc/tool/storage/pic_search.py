@@ -13,8 +13,19 @@ def form_index_for_pic(batch, *, pic, index_hint, ignore_deleted_forms=True):
 
     form = batch.form(current_index)
     hinted_pic = batch.pic_for_form(current_index)
-    if (pic == hinted_pic) and (not form.is_deleted() or also_return_deleted_forms):
-        return current_index
+    # We have to deal with duplicate PICs in a batch. However all forms but one
+    # MUST be marked as "deleted" so there is only a single non-deleted form for a
+    # given PIC.
+    # Even if we don't ignore deleted forms we should still prefer non-deleted
+    # forms over deleted forms with the same PIC. (Usually the deleted ones were
+    # bad scans so they are not very useful). If there are only deleted forms for
+    # a given PIC, return the one with the highest index.
+    last_index_for_pic = None
+    if pic == hinted_pic:
+        if not form.is_deleted():
+            return current_index
+        elif also_return_deleted_forms:
+            last_index_for_pic = current_index
 
     # the <index_hint> might be a bit of (mostly due to deleted forms which our
     # backend system might not know) so we need to scan the CDB file.
@@ -32,10 +43,6 @@ def form_index_for_pic(batch, *, pic, index_hint, ignore_deleted_forms=True):
     # solution "for i in range(seq.form_count)" - in the worst case we
     # had to load 300 form-headers to find the right form (<index_hint> is 299,
     # but 300 is the form with the requested <pic>)
-    #
-    # Please note that we have to deal with duplicate PICs in a batch. However
-    # all forms but one MUST be marked as "deleted" so there is only a single
-    # non-deleted form for a given PIC.
     if hinted_pic < pic:
         # search forward if the pic at <index_hint> is lower than <pic>
         start_nr = current_index + 1
@@ -52,7 +59,11 @@ def form_index_for_pic(batch, *, pic, index_hint, ignore_deleted_forms=True):
         assert 0 <= current_index < form_count, 'out of bounds: current_index=%r' % current_index
         current_pic = batch.pic_for_form(current_index)
         form = batch.form(current_index)
-        if (pic == current_pic) and (not form.is_deleted() or also_return_deleted_forms):
-            return current_index
-    return None
+        if pic == current_pic:
+            is_form_more_recent = (last_index_for_pic is None) or (current_index > last_index_for_pic)
+            if not form.is_deleted():
+                return current_index
+            elif also_return_deleted_forms and is_form_more_recent:
+                last_index_for_pic = current_index
+    return last_index_for_pic
 
