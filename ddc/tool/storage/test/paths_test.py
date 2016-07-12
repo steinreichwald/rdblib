@@ -27,7 +27,8 @@ class PathTest(PythonicTestCase):
         ibf_dir = os.path.join('tmp', 'foo', 'bar')
         ibf_path = os.path.join(ibf_dir, '00000001', 'abc.ibf')
         assert_equals((ibf_dir, 'abc'), path_info_from_ibf(ibf_path))
-        assert_raises(Exception, lambda: path_info_from_ibf(os.path.join(ibf_dir, 'abc.ibf')))
+        with assert_raises(ValueError):
+            path_info_from_ibf(os.path.join(ibf_dir, 'abc.ibf'))
 
     def test_path_info_from_durus(self):
         durus_dir = os.path.join('tmp', 'foo', 'bar')
