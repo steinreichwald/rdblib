@@ -36,12 +36,12 @@ class PathTest(PythonicTestCase):
 
     def test_guess_cdb_path(self):
         cdb_dir = os.path.join('tmp', 'foo', 'bar')
-        cdb_path = os.path.join(cdb_dir, 'abc.cdb')
+        cdb_path = os.path.join(cdb_dir, 'abc.CDB')
         assert_equals(cdb_path, guess_cdb_path(cdb_dir, 'abc'))
 
     def test_guess_ibf_path(self):
         ibf_dir = os.path.join('tmp', 'foo', 'bar')
-        ibf_path = os.path.join(ibf_dir, '00000001', 'abc.ibf')
+        ibf_path = os.path.join(ibf_dir, '00000001', 'abc.IBF')
         assert_equals(ibf_path, guess_ibf_path(ibf_dir, 'abc'))
 
     def test_guess_durus_path(self):
@@ -99,7 +99,7 @@ class PathTest(PythonicTestCase):
         assert_equals(bunch, guessed_bunch)
 
     def test_guess_path(self):
-        assert_equals(f('/tmp/00000001/foo.ibf'), guess_path(f('/tmp/foo.CDB'), type_='ibf'))
+        assert_equals(f('/tmp/00000001/foo.IBF'), guess_path(f('/tmp/foo.CDB'), type_='ibf'))
         assert_equals(f('/tmp/foo.durus'), guess_path(f('/tmp/foo.CDB'), type_='durus'))
         assert_equals(f('/tmp/00000001/foo.ask'), guess_path(f('/tmp/foo.durus'), type_='ask'))
 

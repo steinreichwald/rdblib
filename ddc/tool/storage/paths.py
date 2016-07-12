@@ -65,10 +65,10 @@ def path_info_from_ask(ask_path):
     return path_info_from_ibf(ask_path)
 
 def guess_cdb_path(base_dir, basename):
-    return os.path.join(base_dir, basename+'.cdb')
+    return os.path.join(base_dir, basename+'.CDB')
 
 def guess_ibf_path(base_dir, basename):
-    return os.path.join(base_dir, ibf_subdir, basename+'.ibf')
+    return os.path.join(base_dir, ibf_subdir, basename+'.IBF')
 
 def guess_durus_path(base_dir, basename):
     return os.path.join(base_dir, basename+'.durus')
@@ -77,11 +77,11 @@ def guess_ask_path(base_dir, basename):
     return os.path.join(base_dir, ibf_subdir, basename+'.ask')
 
 def _basedir_and_name_from_path(path):
-    dot_extension = (os.path.splitext(path)[-1]).lower()
-    cdb_path = path if (dot_extension == '.cdb') else None
-    ibf_path = path if (dot_extension == '.ibf') else None
-    durus_path = path if (dot_extension == '.durus') else None
-    ask_path = path if (dot_extension == '.ask') else None
+    dot_extension = (os.path.splitext(path)[-1]).upper()
+    cdb_path = path if (dot_extension == '.CDB') else None
+    ibf_path = path if (dot_extension == '.IBF') else None
+    durus_path = path if (dot_extension == '.DURUS') else None
+    ask_path = path if (dot_extension == '.ASK') else None
     if cdb_path is not None:
         base_dir, basename = path_info_from_cdb(cdb_path)
     elif ibf_path is not None:
