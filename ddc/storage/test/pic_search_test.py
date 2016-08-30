@@ -3,10 +3,10 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from pythonic_testcase import *
 
-from ddc.tool.storage.testhelpers import (
+from ddc.storage.testhelpers import (
     batch_with_pic_forms, set_durus_loglevel, silence_durus_logging,
 )
-from ddc.tool.storage.pic_search import form_index_for_pic
+from ddc.storage.pic_search import form_index_for_pic
 
 
 class FormIndexForPICTest(PythonicTestCase):
