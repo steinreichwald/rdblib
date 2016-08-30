@@ -5,7 +5,7 @@ from io import BytesIO
 
 from ddc.client.config import ALL_FIELD_NAMES
 from ddc.dbdef import cdb_definition
-from ddc.tool.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
+from ddc.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 
 __all__ = [

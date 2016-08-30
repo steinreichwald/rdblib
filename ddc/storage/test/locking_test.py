@@ -9,7 +9,7 @@ import time
 
 from pythonic_testcase import *
 
-from ddc.tool.storage.locking import acquire_lock, unlock
+from ddc.storage.locking import acquire_lock, unlock
 from ddc.platf.platform_quirks import is_windows
 
 
@@ -83,7 +83,7 @@ class LockingTest(PythonicTestCase):
         test_code = (
             'import sys;'
             'sys._called_from_test = True;'
-            'from ddc.tool.storage.locking import acquire_lock;'
+            'from ddc.storage.locking import acquire_lock;'
             'got_lock = acquire_lock(open(sys.argv[1]), exclusive_lock=%s, raise_on_error=False);'
             'sys.exit(got_lock == False);'
         ) % ('True' if exclusive_lock else 'False')

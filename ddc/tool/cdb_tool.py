@@ -16,7 +16,7 @@ from ddc.client.config import ALL_FIELD_NAMES
 from ddc.dbdef import cdb_definition
 from ddc.lib.log_proxy import l_
 from .meta import BinaryMeta
-from .storage.locking import acquire_lock
+from ddc.storage.locking import acquire_lock
 
 
 

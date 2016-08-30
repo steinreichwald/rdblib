@@ -7,7 +7,7 @@ from pythonic_testcase import *
 
 from ddc.client.config import ALL_FIELD_NAMES
 from ddc.tool.cdb_tool import FormBatch
-from ddc.tool.storage.cdb.cdb_fixtures import CDBFile, CDBForm
+from ddc.storage.cdb.cdb_fixtures import CDBFile, CDBForm
 
 
 class CDBParsing(PythonicTestCase):

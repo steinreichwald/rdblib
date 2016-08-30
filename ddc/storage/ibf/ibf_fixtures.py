@@ -15,7 +15,7 @@ from io import BytesIO
 import pkg_resources
 
 from ddc.dbdef import cdb_definition
-from ddc.tool.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
+from ddc.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 
 __all__ = ['create_ibf', 'IBFFile', 'IBFImage']

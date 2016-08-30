@@ -6,7 +6,7 @@ import os
 from ddt import ddt as DataDrivenTestCase, data
 from pythonic_testcase import *
 
-from ddc.tool.storage.paths import *
+from ddc.storage.paths import *
 
 
 def fix_path(path):

@@ -6,7 +6,7 @@ from io import BytesIO
 from pythonic_testcase import *
 
 from ddc.tool.cdb_tool import ImageBatch
-from ddc.tool.storage.ibf.ibf_fixtures import create_ibf, IBFFile, IBFImage
+from ddc.storage.ibf.ibf_fixtures import create_ibf, IBFFile, IBFImage
 
 
 class IBFFileTest(PythonicTestCase):

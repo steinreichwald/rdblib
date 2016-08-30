@@ -7,7 +7,7 @@ from pythonic_testcase import *
 
 from ddc.client.config import ALL_FIELD_NAMES
 from ddc.tool.cdb_tool import FormBatch
-from ddc.tool.storage.cdb.cdb_fixtures import create_cdb_with_dummy_data, CDBFile, CDBForm
+from ddc.storage.cdb.cdb_fixtures import create_cdb_with_dummy_data, CDBFile, CDBForm
 
 
 class CDBFileTest(PythonicTestCase):
