@@ -30,10 +30,10 @@ class PathTest(PythonicTestCase):
         with assert_raises(ValueError):
             path_info_from_ibf(os.path.join(ibf_dir, 'abc.ibf'))
 
-    def test_path_info_from_durus(self):
-        durus_dir = os.path.join('tmp', 'foo', 'bar')
-        durus_path = os.path.join(durus_dir, 'abc.durus')
-        assert_equals((durus_dir, 'abc'), path_info_from_durus(durus_path))
+    def test_path_info_from_db(self):
+        db_dir = os.path.join('tmp', 'foo', 'bar')
+        db_path = os.path.join(db_dir, 'abc.db')
+        assert_equals((db_dir, 'abc'), path_info_from_db(db_path))
 
     def test_guess_cdb_path(self):
         cdb_dir = os.path.join('tmp', 'foo', 'bar')
@@ -45,10 +45,10 @@ class PathTest(PythonicTestCase):
         ibf_path = os.path.join(ibf_dir, '00000001', 'abc.IBF')
         assert_equals(ibf_path, guess_ibf_path(ibf_dir, 'abc'))
 
-    def test_guess_durus_path(self):
-        durus_dir = os.path.join('tmp', 'foo', 'bar')
-        durus_path = os.path.join(durus_dir, 'abc.durus')
-        assert_equals(durus_path, guess_durus_path(durus_dir, 'abc'))
+    def test_guess_db_path(self):
+        db_dir = os.path.join('tmp', 'foo', 'bar')
+        db_path = os.path.join(db_dir, 'abc.db')
+        assert_equals(db_path, guess_db_path(db_dir, 'abc'))
 
     def test_cdb_path_calculation_is_reversible(self):
         path_info = ('foo', 'bar.cdb')
@@ -64,17 +64,17 @@ class PathTest(PythonicTestCase):
             path_info_from_ibf(guess_ibf_path(*path_info))
         )
 
-    def test_durus_path_calculation_is_reversible(self):
-        path_info = ('foo', 'bar.durus')
+    def test_db_path_calculation_is_reversible(self):
+        path_info = ('foo', 'bar.db')
         assert_equals(
             path_info,
-            path_info_from_durus(guess_durus_path(*path_info))
+            path_info_from_db(guess_db_path(*path_info))
         )
 
-    @data('cdb', 'ibf', 'durus', 'ask')
+    @data('cdb', 'ibf', 'db', 'ask')
     def test_can_guess_bunch_with_path(self, missing):
         bunch = DataBunch(cdb=f('/tmp/foo.CDB'), ibf=f('/tmp/00000001/FOO.ibf'),
-                          durus=f('/tmp/Foo.durus'), ask=f('/tmp/00000001/FOO.ask'))
+                          db=f('/tmp/Foo.db'), ask=f('/tmp/00000001/FOO.ask'))
         noise = f('/foo.' + missing)
         fn_map = {noise: noise}
         for key in bunch:
@@ -94,7 +94,7 @@ class PathTest(PythonicTestCase):
         }
         bunch = DataBunch(
             cdb=f('/tmp/foo.CDB'), ibf=f('/tmp/00000001/foo.IBF'),
-            durus=None, ask=None
+            db=None, ask=None
         )
         guessed_bunch = guess_bunch_from_path(input_path, fn_map)
         assert_equals(bunch, guessed_bunch)
@@ -116,8 +116,8 @@ class PathTest(PythonicTestCase):
 
     def test_guess_path(self):
         assert_equals(f('/tmp/00000001/foo.IBF'), guess_path(f('/tmp/foo.CDB'), type_='ibf'))
-        assert_equals(f('/tmp/foo.durus'), guess_path(f('/tmp/foo.CDB'), type_='durus'))
-        assert_equals(f('/tmp/00000001/foo.ask'), guess_path(f('/tmp/foo.durus'), type_='ask'))
+        assert_equals(f('/tmp/foo.db'), guess_path(f('/tmp/foo.CDB'), type_='db'))
+        assert_equals(f('/tmp/00000001/foo.ask'), guess_path(f('/tmp/foo.db'), type_='ask'))
         assert_equals(
             f('/tmp/00000001/foo.IBF'),
             guess_path(f('/tmp/foo.RDB'), type_='ibf'),
