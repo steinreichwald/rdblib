@@ -15,6 +15,7 @@ __all__ = [
     'guess_durus_path',
     'guess_ibf_path',
     'guess_path',
+    'ibf_subdir',
     'path_info_from_cdb',
     'path_info_from_ibf',
     'path_info_from_durus',
@@ -98,7 +99,7 @@ def guess_bunch_from_path(path, file_casing_map):
     # <path> might be something like 'foo/../foo' which messes up with filename
     # lookup in the file_casing_map (as discoverlib normalizes paths - which is
     # good). So let's normalize the input path outself.
-    normalized_path = os.path.normpath(path)
+    normalized_path = os.path.abspath(os.path.normpath(path))
     result = _basedir_and_name_from_path(normalized_path)
     (base_dir, basename) = result.value
     r = AttrDict(result.data)

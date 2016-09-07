@@ -99,6 +99,21 @@ class PathTest(PythonicTestCase):
         guessed_bunch = guess_bunch_from_path(input_path, fn_map)
         assert_equals(bunch, guessed_bunch)
 
+    def test_guess_bunch_uses_absolute_paths_in_lookup(self):
+        cwd = os.getcwd()
+        input_path = './foo.CDB'
+        cdb_path = f(os.path.join(cwd, 'foo.CDB'))
+        cdb_key = f(cdb_path.lower())
+        ibf_path = f(os.path.join(cwd, ibf_subdir, 'foo.IBF'))
+        ibf_key = f(ibf_path.lower())
+        fn_map = {
+            cdb_key: cdb_path,
+            ibf_key: ibf_path,
+        }
+        bunch = DataBunch(cdb=cdb_path, ibf=ibf_path, db=None, ask=None)
+        guessed_bunch = guess_bunch_from_path(input_path, fn_map)
+        assert_equals(bunch, guessed_bunch)
+
     def test_guess_path(self):
         assert_equals(f('/tmp/00000001/foo.IBF'), guess_path(f('/tmp/foo.CDB'), type_='ibf'))
         assert_equals(f('/tmp/foo.durus'), guess_path(f('/tmp/foo.CDB'), type_='durus'))
