@@ -82,7 +82,6 @@ class LockingTest(PythonicTestCase):
     def is_locked(self, filename, exclusive_lock):
         test_code = (
             'import sys;'
-            'sys._called_from_test = True;'
             'from ddc.storage.locking import acquire_lock;'
             'got_lock = acquire_lock(open(sys.argv[1]), exclusive_lock=%s, raise_on_error=False);'
             'sys.exit(got_lock == False);'
