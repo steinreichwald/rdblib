@@ -3,21 +3,11 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from pythonic_testcase import *
 
-from ddc.storage.testhelpers import (
-    batch_with_pic_forms, set_durus_loglevel, silence_durus_logging,
-)
+from ddc.storage.testhelpers import batch_with_pic_forms
 from ddc.storage.pic_search import form_index_for_pic
 
 
 class FormIndexForPICTest(PythonicTestCase):
-    def setUp(self):
-        super(FormIndexForPICTest, self).setUp()
-        self._previous_loglevel = silence_durus_logging()
-
-    def tearDown(self):
-        set_durus_loglevel(self._previous_loglevel)
-        super(FormIndexForPICTest, self).tearDown()
-
     def test_can_return_index_if_hint_is_spot_on(self):
         pic1 = '12345600100024'
         pic2 = '12345600114024'

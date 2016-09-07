@@ -7,17 +7,15 @@ import logging
 from ddc.lib.attribute_dict import AttrDict
 from .batch import Batch
 from .cdb import CDBFile, CDBForm
-from ddc.storage.durus_ import create_durus_fixture
 from ddc.storage.ibf import create_ibf
-from ddc.storage.paths import ibf_subdir, path_info_from_cdb, DataBunch
+from ddc.storage.sqlite import create_sqlite_db
+from ddc.storage.paths import DataBunch
 
 
 __all__ = [
     'batch_with_pic_forms',
     'fake_tiff_handler',
     'ibf_mock',
-    'set_durus_loglevel',
-    'silence_durus_logging'
 ]
 
 def ibf_mock(pics):
@@ -38,7 +36,7 @@ def fake_tiff_handler(pic):
         )
     )
 
-def batch_with_pic_forms(pics):
+def batch_with_pic_forms(pics, *, model=None):
     def _form(pic):
         fields = [
             {'name': 'AUSSTELLUNGSDATUM', 'corrected_result': '01.01.2016'}
@@ -53,25 +51,11 @@ def batch_with_pic_forms(pics):
     databunch = DataBunch(
         cdb=cdb_fp,
         ibf=create_ibf(nr_images=len(pics)),
-        durus=create_durus_fixture(),
+        db=create_sqlite_db(model=model),
         ask=None,
     )
-    batch = Batch.init_from_bunch(databunch, create_new_durus=False, access='read')
+    batch = Batch.init_from_bunch(databunch, create_new_db=False, access='read')
     batch.ibf = ibf_mock(pics)
     batch._tiff_handler = [fake_tiff_handler(pic) for pic in pics]
     return batch
-
-
-def set_durus_loglevel(new_level):
-    # Durus automatically logs some transaction info to stderr which is
-    # annoying in the tests.
-    # This helper method can be used to configure durus' logger with just one
-    # line of code.
-    logger = logging.getLogger('durus')
-    previous_log_level = logger.level
-    logger.setLevel(new_level)
-    return previous_log_level
-
-def silence_durus_logging():
-    return set_durus_loglevel(new_level=logging.ERROR)
 

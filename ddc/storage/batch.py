@@ -3,7 +3,7 @@
 The basic idea is that we always need a triple to access all relevant information.
   1. CDB files for extracted text data
   2. IBF for actual images (scans)
-  3. Durus DB for meta data
+  3. SQLite DB for meta data
 
 DataBunch represents the path information for that triple (so no file system
 access or active databases required). The Batch is the main abstraction which
@@ -12,25 +12,27 @@ hides all implementation details (as much as possible/sensible).
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-from ddc.lib.dict_merger import merge_dicts
+from sqlalchemy import and_
+
 from ddc.lib.log_proxy import l_
-from .durus_ import DurusDB, DurusKey
 from .paths import guess_path
+from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
+from .utils import DELETE
 
 
 __all__ = ['Batch']
 
 class Batch(object):
-    def __init__(self, cdb, ibf, durus_db, meta=None):
+    def __init__(self, cdb, ibf, db, meta=None):
         self.cdb = cdb
         self.ibf = ibf
-        self.durus_db = durus_db
+        self.db = db
         self.meta = meta or {}
         self._tiff_handler = None
 
     @classmethod
-    def init_from_bunch(cls, databunch, create_new_durus=False,
+    def init_from_bunch(cls, databunch, create_new_db=False,
                         delay_load=False, access='write', log=None):
         """
         Return a new Batch instance based on the given databunch.
@@ -41,25 +43,23 @@ class Batch(object):
         from ddc.tool.cdb_tool import ImageBatch, FormBatch
         cdb = FormBatch(databunch.cdb, delay_load=delay_load, access=access, log=log)
         ibf = ImageBatch(databunch.ibf, delay_load=delay_load, access=access, log=log)
-        durus_path = databunch.durus
-        if create_new_durus:
-            if durus_path is None:
-                durus_path = guess_path(databunch.cdb, type_='durus')
-            durus_db = DurusDB.create_new_db(durus_path, log=log)
-            cls._create_snapshot(cdb, durus_db)
-        elif isinstance(durus_path, DurusDB):
-            durus_db = durus_path
+        db_path = databunch.db
+        if create_new_db:
+            if db_path is None:
+                db_path = guess_path(databunch.cdb, type_='db')
+            sqlite_db = SQLiteDB.create_new_db(db_path, log=log)
+        elif isinstance(db_path, SQLiteDB):
+            sqlite_db = db_path
         else:
             readonly = (access == 'read')
-            durus_db = DurusDB.init_with_file(durus_path, readonly=readonly)
-            # LATER: verify snapshot and record change if necessary
-        batch = Batch(cdb, ibf, durus_db)
+            sqlite_db = SQLiteDB.init_with_file(db_path, create=False, log=log)
+        batch = Batch(cdb, ibf, sqlite_db)
 
         log = l_(log)
         verification_tasks = batch.tasks(type_=TaskType.VERIFICATION, status=TaskStatus.NEW)
         forms_with_errors = []
         for task in verification_tasks:
-            msg = 'form #%d: %s' % (task.form_position, task.data['field_name'])
+            msg = 'form #%d: %s' % (task.form_index, task.field_name)
             forms_with_errors.append(msg)
         if forms_with_errors:
             log.debug('remaining verification tasks in ' + ', '.join(forms_with_errors))
@@ -68,46 +68,34 @@ class Batch(object):
         return batch
 
     def commit(self):
-        self.durus_db.commit()
+        self.db.commit()
 
     def close(self):
-        self.durus_db.rollback()
-        self.durus_db.close()
+        self.db.rollback()
+        self.db.close()
         self.cdb.close()
         self.ibf.close()
 
-    # --- data integrity ------------------------------------------------------
-    @classmethod
-    def _create_snapshot(cls, cdb, durus_db):
-        durus_db.insert_snapshot('cdb', [cdb.filecontent[:]])
-
     # --- accessing data ------------------------------------------------------
-    @property
-    def durus(self):
-        """Returns the <root> of the Durus database.
-        Hint: If you need access to this property you please think about adding
-        a method to this class."""
-        return self.durus_db.root
+    def tasks(self, type_=None, status=None, form_index=None):
+        Task = self.db.Task
+        query_all = self.db.query(Task)
 
-    def tasks(self, type_=None, status=None, form_position=None):
-        all_tasks = self.durus[DurusKey.TASKS]
-        if (type_ is None) and (status is None) and (form_position is None):
-            return all_tasks
-
-        def _matches(task, attr_name, attr_value):
-            if attr_value is None:
-                return True
-            return (getattr(task, attr_name) == attr_value)
-        matching_tasks = []
-        for task in all_tasks:
-            if (_matches(task, 'type_', type_) and _matches(task, 'status', status)
-                    and _matches(task, 'form_position', form_position)):
-                matching_tasks.append(task)
-        return matching_tasks
+        conditions = []
+        attrs = (
+            ('form_index', form_index),
+            ('type_', type_),
+            ('status', status)
+        )
+        for attr, value in attrs:
+            if value is not None:
+                conditions.append(getattr(Task, attr) == value)
+        if not conditions:
+            return query_all.all()
+        return query_all.filter(and_(*conditions)).all()
 
     def new_tasks(self, type_=None, **kwargs):
-        params = merge_dicts({'status': TaskStatus.NEW, 'type_': type_}, kwargs)
-        return self.tasks(**params)
+        return self.tasks(type_=type_, status=TaskStatus.NEW, **kwargs)
 
     def pic_for_form(self, form_index):
         image_data = self.ibf.image_entries[form_index]
@@ -131,20 +119,24 @@ class Batch(object):
     def forms(self):
         return self.cdb.forms
 
-    def ignored_warnings(self, form_index):
-        if DurusKey.IGNORED_WARNINGS not in self.durus:
-            self.durus_db._create_initial_structure()
+    def db_form(self, form_index):
+        session = self.db.session
+        return DBForm(session, form_index, self.db.model)
 
-        ignores = []
-        for ignore_item in self.durus[DurusKey.IGNORED_WARNINGS]:
-            ignore_form_index = ignore_item[0]
-            ignore_key = ignore_item[1:]
-            if form_index == ignore_form_index:
-                ignores.append(ignore_key)
-        return tuple(ignores)
+    def get_setting(self, key):
+        session = self.db.session
+        BatchData = self.db.model.BatchData
+        option = session.query(BatchData).filter(BatchData.key == key).first()
+        if option is None:
+            return None
+        return option.value
 
-    def store_ignored_warning(self, form_index, field_name, error_key, field_value):
-        ignore_key = (field_name, error_key, field_value)
-        db_item = (form_index, ) + ignore_key
-        if db_item not in self.durus[DurusKey.IGNORED_WARNINGS]:
-            self.durus[DurusKey.IGNORED_WARNINGS].append(db_item)
+    def store_setting(self, key, value=DELETE):
+        BatchData = self.db.model.BatchData
+        session = self.db.session
+        if value is DELETE:
+            setting_ = session.query(BatchData).filter(BatchData.key == key).first()
+            if setting_:
+                setting_.delete()
+            return None
+        return get_or_add(BatchData, session, {'key': key}, {'value': value})
