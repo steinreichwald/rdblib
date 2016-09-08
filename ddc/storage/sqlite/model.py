@@ -98,7 +98,7 @@ def v201609():
 
     class FormData(Base):
         __tablename__ = 'form_data'
-        form_index = Column(String, primary_key=True)
+        form_index = Column(Integer, primary_key=True, autoincrement=False)
         key = Column(String, primary_key=True)
         value = Column(UnicodeText, nullable=False, default=u'')
 

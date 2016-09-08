@@ -87,21 +87,24 @@ class DBForm(object):
         )
         return get_or_add(IgnoredWarning, self.session, key_attrs)
 
-    def get_setting(self, key):
-        session = self.db.session
-        FormData = self.db.model.FormData
-        option = session.query(FormData).filter(FormData.key == key).first()
-        if option is None:
-            return None
-        return option.value
+    def get_setting(self, key, value_only=True):
+        FormData = self.model.FormData
+        c = and_(
+            FormData.key == key,
+            FormData.form_index == self.form_index,
+        )
+        option = self.session.query(FormData).filter(c).first()
+        if not value_only:
+            return option
+        return option.value if (option is not None) else None
 
     def store_setting(self, key, value=DELETE):
-        FormData = self.db.model.FormData
-        session = self.db.session
+        FormData = self.model.FormData
         if value is DELETE:
-            setting_ = session.query(FormData).filter(FormData.key == key).first()
+            setting_ = self.get_setting(key, value_only=False)
             if setting_:
-                setting_.delete()
+                self.session.delete(setting_)
             return None
-        return get_or_add(FormData, session, {'key': key}, {'value': value})
+        setting = get_or_add(FormData, self.session, {'key': key, 'form_index': self.form_index})
+        setting.value = value
 

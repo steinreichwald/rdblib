@@ -123,20 +123,20 @@ class Batch(object):
         session = self.db.session
         return DBForm(session, form_index, self.db.model)
 
-    def get_setting(self, key):
+    def get_setting(self, key, value_only=True):
         session = self.db.session
         BatchData = self.db.model.BatchData
         option = session.query(BatchData).filter(BatchData.key == key).first()
-        if option is None:
-            return None
-        return option.value
+        if not value_only:
+            return option
+        return option.value if (option is not None) else None
 
     def store_setting(self, key, value=DELETE):
         BatchData = self.db.model.BatchData
-        session = self.db.session
         if value is DELETE:
-            setting_ = session.query(BatchData).filter(BatchData.key == key).first()
+            setting_ = self.get_setting(key, value_only=False)
             if setting_:
-                setting_.delete()
+                self.db.session.delete(setting_)
             return None
-        return get_or_add(BatchData, session, {'key': key}, {'value': value})
+        setting = get_or_add(BatchData, self.db.session, {'key': key})
+        setting.value = value

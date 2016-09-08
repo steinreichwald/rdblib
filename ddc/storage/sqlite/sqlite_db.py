@@ -65,7 +65,9 @@ class SQLiteDB(object):
         else:
             path_uri = ''
         db_uri = 'sqlite:///' + path_uri
-        engine = create_engine(db_uri)
+        echo = False
+        # echo = 'debug' # for full debugging output (including results
+        engine = create_engine(db_uri, echo=echo)
         metadata = model_.metadata
         session = Session(bind=engine)
         log.info('opened SQlite db "%s"', log_filename)
