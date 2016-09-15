@@ -11,6 +11,7 @@ ImageBatch.load_directories() for the complete parsing implementation).
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 from io import BytesIO
+import os
 
 import pkg_resources
 
@@ -20,7 +21,7 @@ from ddc.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 __all__ = ['create_ibf', 'IBFFile', 'IBFImage']
 
-def create_ibf(nr_images=1, filename=None, fake_tiffs=True):
+def create_ibf(nr_images=1, filename=None, fake_tiffs=True, create_directory=False):
     # tiffany can not create tiff images and I'd like not to add new
     # dependencies (smc.freeimage needs compilation and has a few extra
     # dependencies, PIL can't handle multi-page tiffs).
@@ -45,10 +46,10 @@ def create_ibf(nr_images=1, filename=None, fake_tiffs=True):
     ibf_data = IBFFile(ibf_images).as_bytes()
     if filename is None:
         return UnclosableBytesIO(ibf_data)
-    ibf_fp = open(filename, 'ab+')
-    # seek+truncate just in case the file already exists
-    ibf_fp.seek(0, 0)
-    ibf_fp.truncate()
+    ibf_directory = os.path.dirname(filename)
+    if create_directory and not os.path.exists(ibf_directory):
+        os.makedirs(ibf_directory)
+    ibf_fp = open(filename, 'wb+')
     ibf_fp.write(ibf_data)
     ibf_fp.seek(0, 0)
     return ibf_fp
