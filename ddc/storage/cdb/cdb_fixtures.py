@@ -80,10 +80,10 @@ class CDBField(BinaryFixture):
         return super(CDBField, self).as_bytes(self.values)
 
 
-def create_cdb_with_dummy_data(nr_forms=1):
+def create_cdb_with_dummy_data(nr_forms=1, filename=None):
     field = {ALL_FIELD_NAMES[0]: 'baz'}
     form_values = (field,) * nr_forms
-    return create_cdb_with_form_values(form_values)
+    return create_cdb_with_form_values(form_values, filename=filename)
 
 
 def create_cdb_with_form_values(form_values, filename=None):
