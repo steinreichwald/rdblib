@@ -16,7 +16,8 @@ from ..utils import DELETE as DELETE_
 __all__ = ['create_sqlite_db', 'SQLiteDB']
 
 def create_sqlite_db(tasks=(), ignored_warnings=(), filename='', model=None):
-    db = SQLiteDB.create_new_db(filename, model=model)
+    create_file = not (not filename)
+    db = SQLiteDB.create_new_db(filename, create_file=create_file, model=model)
     for task in tasks:
         db.session.add(task)
     for warning in ignored_warnings:
@@ -38,8 +39,8 @@ class SQLiteDB(object):
         self.log = l_(log)
 
     @classmethod
-    def create_new_db(cls, filename='', *, log=None, model=None):
-        db = cls.init_with_file(filename, create=True, log=log, model=model)
+    def create_new_db(cls, filename='', *, create_file, log=None, model=None):
+        db = cls.init_with_file(filename, create=create_file, log=log, model=model)
         engine = db.session.bind
         db.metadata.create_all(bind=engine)
         # stamp with alembic

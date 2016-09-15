@@ -125,6 +125,6 @@ class BatchTest(PythonicTestCase):
             db=create_sqlite_db(tasks=tasks, ignored_warnings=ignored_warnings, model=model),
             ask=create_ask(),
         )
-        batch = Batch.init_from_bunch(databunch, create_new_db=False)
+        batch = Batch.init_from_bunch(databunch, create_persistent_db=False)
         return batch
 

@@ -32,7 +32,7 @@ class Batch(object):
         self._tiff_handler = None
 
     @classmethod
-    def init_from_bunch(cls, databunch, create_new_db=False,
+    def init_from_bunch(cls, databunch, create_persistent_db=False,
                         delay_load=False, access='write', log=None):
         """
         Return a new Batch instance based on the given databunch.
@@ -44,15 +44,15 @@ class Batch(object):
         cdb = FormBatch(databunch.cdb, delay_load=delay_load, access=access, log=log)
         ibf = ImageBatch(databunch.ibf, delay_load=delay_load, access=access, log=log)
         db_path = databunch.db
-        if create_new_db:
-            if db_path is None:
-                db_path = guess_path(databunch.cdb, type_='db')
-            sqlite_db = SQLiteDB.create_new_db(db_path, log=log)
-        elif isinstance(db_path, SQLiteDB):
+        if isinstance(db_path, SQLiteDB):
             sqlite_db = db_path
         else:
-            readonly = (access == 'read')
-            sqlite_db = SQLiteDB.init_with_file(db_path, create=False, log=log)
+            is_readonly = (access == 'read')
+            if create_persistent_db:
+                assert not is_readonly
+                if db_path is None:
+                    db_path = guess_path(databunch.cdb, type_='db')
+            sqlite_db = SQLiteDB.create_new_db(db_path, create_file=create_persistent_db, log=log)
         batch = Batch(cdb, ibf, sqlite_db)
 
         log = l_(log)

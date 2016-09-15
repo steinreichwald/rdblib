@@ -54,7 +54,7 @@ def batch_with_pic_forms(pics, *, model=None):
         db=create_sqlite_db(model=model),
         ask=None,
     )
-    batch = Batch.init_from_bunch(databunch, create_new_db=False, access='read')
+    batch = Batch.init_from_bunch(databunch, create_persistent_db=False, access='read')
     batch.ibf = ibf_mock(pics)
     batch._tiff_handler = [fake_tiff_handler(pic) for pic in pics]
     return batch
