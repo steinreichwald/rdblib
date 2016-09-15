@@ -368,6 +368,12 @@ class Form(object):
         if not self._load_delayed:
             self._do_load_form_fields()
 
+    def is_dirty(self):
+        for field in self.fields.values():
+            if field.is_dirty():
+                return True
+        return False
+
     def is_deleted(self):
         return (self.form_header.rec.imprint_line_short == 'DELETED')
 
