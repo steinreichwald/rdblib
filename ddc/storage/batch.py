@@ -68,6 +68,9 @@ class Batch(object):
         return batch
 
     def commit(self):
+        for form in self.cdb.forms:
+            if form.is_dirty():
+                form.write_back()
         self.db.commit()
 
     def close(self):

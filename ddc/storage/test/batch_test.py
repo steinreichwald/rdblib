@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+import os
+
 from pythonic_testcase import *
 
-from ddc.storage import Batch, DataBunch, TaskStatus, TaskType
+from ddc.storage import guess_path, Batch, DataBunch, TaskStatus, TaskType
 from ddc.storage.ask import create_ask
 from ddc.storage.cdb import create_cdb_with_dummy_data
 from ddc.storage.ibf import create_ibf
 from ddc.storage.sqlite import create_sqlite_db, db_schema, get_model
-from ddc.storage.testhelpers import batch_with_pic_forms
+from ddc.storage.testhelpers import batch_with_pic_forms, use_tempdir
 from ddc.storage.utils import DELETE
-
 
 class BatchTest(PythonicTestCase):
     def test_can_initialize_batch_without_real_files(self):
@@ -116,6 +117,30 @@ class BatchTest(PythonicTestCase):
 
         batch.store_setting(key, value=DELETE)
         assert_none(batch.get_setting(key), message='setting should be gone now')
+
+    def test_batch_commit_also_stores_cdb_data(self):
+        nr_forms = 2
+        with use_tempdir() as temp_dir:
+            cdb_path = os.path.join(temp_dir, '00042100.CDB')
+            ibf_path = guess_path(cdb_path, type_='ibf')
+            create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path)
+            create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
+            bunch = DataBunch(cdb_path, ibf_path, db=None, ask=None)
+
+            batch = Batch.init_from_bunch(bunch, create_persistent_db=False, access='write')
+            form = batch.form(0)
+            field_name = tuple(form.fields)[0]
+            previous_value = form.fields[field_name].value
+            new_value = 'foobar'
+            form.fields[field_name].value = new_value
+            assert_not_equals(previous_value, new_value,
+                message='must set a different value so we test the real thing')
+            batch.commit()
+            batch.close()
+
+            batch = Batch.init_from_bunch(bunch, create_persistent_db=False, access='write')
+            form = batch.form(0)
+            assert_equals(new_value, form.fields[field_name].value)
 
     # --- helpers -------------------------------------------------------------
     def _create_batch(self, *, nr_forms=1, tasks=(), ignored_warnings=(), model=None):
