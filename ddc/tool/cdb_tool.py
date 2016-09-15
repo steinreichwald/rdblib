@@ -149,6 +149,7 @@ def filecontent(mmap_or_filelike):
 class FormBatch(object):
 
     def __init__(self, batch_file, delay_load=False, access='write', log=None):
+        assert delay_load == False
         if not hasattr(batch_file, 'close'):
             # the regular case, given a file name.
             batch_filename = batch_file
