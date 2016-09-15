@@ -37,11 +37,16 @@ class Batch(object):
         """
         Return a new Batch instance based on the given databunch.
         """
+        # If delay_load is True, we can not access the form data via
+        # cdb_tool.FormBatch.forms (the list contains only callables then).
+        # This complicates the code a lot and I think delaying the loading does
+        # not affect the performance that much.
+        assert delay_load == False
         # prevent recursive imports
         # ideally classes from cdb_tool should be located below ".storage" as
         # they deal with the on-disk data layout.
         from ddc.tool.cdb_tool import ImageBatch, FormBatch
-        cdb = FormBatch(databunch.cdb, delay_load=delay_load, access=access, log=log)
+        cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log)
         ibf = ImageBatch(databunch.ibf, delay_load=delay_load, access=access, log=log)
         db_path = databunch.db
         if isinstance(db_path, SQLiteDB):
