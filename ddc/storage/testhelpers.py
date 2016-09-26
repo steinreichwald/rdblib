@@ -2,7 +2,6 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 from io import BytesIO
-import logging
 
 from ddc.lib.attribute_dict import AttrDict
 from .batch import Batch

@@ -3,7 +3,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
 
 from ddc.lib.log_proxy import l_
@@ -35,8 +35,18 @@ class SQLiteDB(object):
     def __init__(self, metadata, session, model, log=None):
         self.metadata = metadata
         self.session = session
+        self._engine = self.session.bind
         self.model = model
         self.log = l_(log)
+        # for performance reasons SQLAlchemy does not track if a session needs
+        # a DB change (at least there is no API) so we have to do the recording
+        # ourself using events (also see http://stackoverflow.com/q/16256777/138526)
+        self._was_flushed = False
+        self._listeners = [
+            ('after_flush', self._on_flush),
+            ('after_commit', self._on_commit),
+        ]
+        self._register_listeners()
 
     @classmethod
     def create_new_db(cls, filename='', *, create_file, log=None, model=None):
@@ -76,23 +86,55 @@ class SQLiteDB(object):
 
     # --- connection handling -------------------------------------------------
     def is_dirty(self):
-        # seems like it is quite complicated to find out as SQLAlchemy was not
-        # built for that: http://stackoverflow.com/q/16256777/138526
-        # so let's always do a commit and let SQLAlchemy/SQLite figure out the
-        # rest.
-        return True
+        if self._was_flushed:
+            print('session was flushed')
+            return True
+        elif self.session.new or self.session.deleted:
+            return True
+        has_modified_items = len([x for x in self.session.dirty if self.session.is_modified(x)]) > 0
+        if has_modified_items:
+            return True
+        return False
+
+    # only meant for testing
+    def _new_session(self):
+        # At least one test uses a SQLiteDB instance which is "re-used" after
+        # close so it does not need to use real files. Provide a way for such
+        # tests to reinitialize the DB session while catching errorneous
+        # access to closed sessions.
+        assert self.session is None
+        self.session = Session(bind=self._engine)
+        self._register_listeners()
+
+    def _register_listeners(self):
+        for key in self._listeners:
+            event.listen(self.session, *key)
+
+    def _on_flush(self, session, flush_context):
+        self._was_flushed = True
+        assert session == self.session
+
+    def _on_commit(self, session):
+        self._was_flushed = False
+        assert session == self.session
 
     def commit(self):
+        assert (self.session is not None)
         self.session.commit()
+        self._was_flushed = False
 
     def rollback(self):
+        assert (self.session is not None)
         self.session.rollback()
     abort = rollback
 
-    # TODO: Do we need close/save?
     def close(self):
+        assert (self.session is not None)
         self.session.rollback()
+        for key in self._listeners:
+            event.remove(self.session, *key)
         self.session.close()
+        self.session = None
 
     save = commit
 
