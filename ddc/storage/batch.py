@@ -24,11 +24,12 @@ from .utils import DELETE
 __all__ = ['Batch']
 
 class Batch(object):
-    def __init__(self, cdb, ibf, db, meta=None):
+    def __init__(self, cdb, ibf, db, *, meta=None, bunch=None):
         self.cdb = cdb
         self.ibf = ibf
         self.db = db
         self.meta = meta or {}
+        self.bunch = bunch
         self._tiff_handler = None
 
     @classmethod
@@ -58,7 +59,7 @@ class Batch(object):
                 if db_path is None:
                     db_path = guess_path(databunch.cdb, type_='db')
             sqlite_db = SQLiteDB.create_new_db(db_path, create_file=create_persistent_db, log=log)
-        batch = Batch(cdb, ibf, sqlite_db)
+        batch = Batch(cdb, ibf, sqlite_db, bunch=databunch)
 
         log = l_(log)
         verification_tasks = batch.tasks(type_=TaskType.VERIFICATION, status=TaskStatus.NEW)
