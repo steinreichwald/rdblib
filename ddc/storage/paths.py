@@ -71,6 +71,9 @@ def guess_cdb_path(base_dir, basename):
 def guess_ibf_path(base_dir, basename):
     return os.path.join(base_dir, ibf_subdir, basename+'.IBF')
 
+def guess_asc_path(base_dir, basename):
+    return os.path.join(base_dir, ibf_subdir, basename+'.ASC')
+
 def guess_db_path(base_dir, basename):
     return os.path.join(base_dir, basename+'.db')
 
