@@ -120,7 +120,7 @@ def guess_path(input_, type_):
     is_fp_like = hasattr(input_, 'close')
     input_path = input_ if (not is_fp_like) else input_.name
     (base_dir, basename) = _basedir_and_name_from_path(input_path).value
-    guess_func_name = ('guess_%s_path' % type_)
+    guess_func_name = ('guess_%s_path' % type_.lower())
     module = sys.modules[__name__]
     guess_func = getattr(module, guess_func_name)
     return guess_func(base_dir, basename)

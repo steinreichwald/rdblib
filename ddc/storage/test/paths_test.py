@@ -124,4 +124,8 @@ class PathTest(PythonicTestCase):
             message='can guess paths based on RDB filenames'
         )
         assert_equals(f('/tmp/00000001/foo.ASC'), guess_path(f('/tmp/foo.db'), type_='asc'))
+        assert_equals(
+            f('/tmp/00000001/foo.IBF'),
+            guess_path(f('/tmp/foo.CDB'), type_='IBF'),
+            message='ignores "type_" casing')
 
