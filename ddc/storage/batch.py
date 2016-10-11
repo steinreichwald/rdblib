@@ -15,7 +15,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from sqlalchemy import and_
 
 from ddc.lib.log_proxy import l_
-from .paths import guess_path
+from .paths import guess_path, DataBunch
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
 from .utils import DELETE
@@ -58,6 +58,7 @@ class Batch(object):
                 assert not is_readonly
                 if db_path is None:
                     db_path = guess_path(databunch.cdb, type_='db')
+            databunch = DataBunch(cdb=databunch.cdb, ibf=databunch.ibf, db=db_path, ask=databunch.ask)
             sqlite_db = SQLiteDB.create_new_db(db_path, create_file=create_persistent_db, log=log)
         batch = Batch(cdb, ibf, sqlite_db, bunch=databunch)
 

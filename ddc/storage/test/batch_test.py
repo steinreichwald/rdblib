@@ -18,6 +18,20 @@ class BatchTest(PythonicTestCase):
         batch = self._create_batch(tasks=())
         assert_isinstance(batch, Batch)
 
+    def test_can_create_new_db_when_initializing_with_bunch(self):
+        nr_forms = 2
+        with use_tempdir() as temp_dir:
+            cdb_path = os.path.join(temp_dir, '00042100.CDB')
+            ibf_path = guess_path(cdb_path, type_='ibf')
+            create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path)
+            create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
+            bunch = DataBunch(cdb_path, ibf_path, db=None, ask=None)
+
+            batch = Batch.init_from_bunch(bunch, create_persistent_db=True, access='write')
+            sqlite_path = batch.bunch.db
+            assert_not_none(sqlite_path)
+            assert_true(os.path.exists(sqlite_path))
+
     def test_can_add_tasks_via_batch(self):
         model = get_model(db_schema.LATEST)
         batch = self._create_batch(tasks=(), model=model)
