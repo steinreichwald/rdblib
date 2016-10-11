@@ -93,11 +93,10 @@ class MMapFile(mmap.mmap):
         # as a successful no-op.
         def flush(self, *args, **kw):
             ret = super(MMapFile, self).flush(*args, **kw)
-            if ret == 0:
-                if self._access == mmap.ACCESS_WRITE:
-                    # this is a real error.
-                    # ACCESS_READ or ACCESS_COPY return 0 as a no-op.
-                    raise WindowsError('something went wrong in flush().')
+            if (ret == 0) and (self._access == mmap.ACCESS_WRITE):
+                # this is a real error.
+                # ACCESS_READ or ACCESS_COPY return 0 as a no-op.
+                raise WindowsError('something went wrong in flush().')
             return ret
 
     def close(self):
