@@ -219,6 +219,9 @@ class FormBatch(object):
             # than the field definition actually allows. The extra character will
             # overflow in a new "field".
             # We can catch that by ensuring that we only accept known field names.
+            # LATER: catching the error here is a bit annoying because it
+            # basically means we're hard-coding all known field names which makes
+            # it less convenient to work with.
             if unknown_fields:
                 form_position = len(self.forms)
                 msg = 'Form %d contains unknown field(s): %r' % (form_position, tuple(unknown_fields))
