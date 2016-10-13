@@ -3,7 +3,6 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from io import BytesIO
 
-from ddc.client.config import ALL_FIELD_NAMES
 from ddc.dbdef import cdb_definition
 from ddc.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
@@ -81,7 +80,9 @@ class CDBField(BinaryFixture):
 
 
 def create_cdb_with_dummy_data(nr_forms=1, filename=None):
-    field = {ALL_FIELD_NAMES[0]: 'baz'}
+    from ddc.validation.testutil import valid_prescription_values
+
+    field = valid_prescription_values()
     form_values = (field,) * nr_forms
     return create_cdb_with_form_values(form_values, filename=filename)
 
