@@ -103,6 +103,7 @@ def v201609():
         value = Column(UnicodeText, nullable=False, default=u'')
 
     return AttrDict(
+        id='v201609',
         metadata=metadata,
 
         BatchData=BatchData,
