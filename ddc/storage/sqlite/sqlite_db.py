@@ -59,8 +59,8 @@ class SQLiteDB(object):
             log.error(msg)
             raise ValueError(msg)
         db_version = session.query(DBVersion).first()
-        if db_version != model.id:
-            msg = 'DB version mismach %s (DB) vs. %s (model)' % (db_version, model.id)
+        if db_version.version_id != model.id:
+            msg = 'DB version mismatch %s (DB) vs. %s (model)' % (db_version.version_id, model.id)
             log.error(msg)
             raise ValueError(msg)
 

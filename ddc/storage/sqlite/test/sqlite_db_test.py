@@ -12,6 +12,16 @@ from ddc.storage import create_sqlite_db, DBVersion, SQLiteDB
 
 
 class SQLiteDBTest(PythonicTestCase):
+    def test_can_create_new_database(self):
+        with use_tempdir() as temp_dir:
+            db_filename = os.path.join(temp_dir, 'foo.db')
+            assert_false(os.path.exists(db_filename))
+            SQLiteDB.create_new_db(db_filename, create_file=True)
+            assert_true(os.path.exists(db_filename))
+
+            with assert_not_raises():
+                SQLiteDB.init_with_file(db_filename)
+
     def test_can_track_dirty_state(self):
         db = create_sqlite_db()
         session = db.session
