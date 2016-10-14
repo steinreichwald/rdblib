@@ -70,7 +70,7 @@ class SQLiteDB(object):
                 raise IOError('DB file "%s" already exists' % filename)
             elif (not create) and (not os.path.exists(filename)):
                 raise IOError('DB file "%s" does not exist' % filename)
-        log_filename = filename if filename else '[in memory]'
+        logged_filename = filename if filename else '[in memory]'
         if filename:
             path_uri = os.path.abspath(filename)
         else:
@@ -81,7 +81,7 @@ class SQLiteDB(object):
         engine = create_engine(db_uri, echo=echo)
         metadata = model_.metadata
         session = Session(bind=engine)
-        log.info('opened SQlite db "%s"', log_filename)
+        log.info('opened SQlite db "%s"', logged_filename)
         return SQLiteDB(metadata, session, model_, log=log)
 
     # --- connection handling -------------------------------------------------
