@@ -111,7 +111,6 @@ class SQLiteDB(object):
     # --- connection handling -------------------------------------------------
     def is_dirty(self):
         if self._was_flushed:
-            print('session was flushed')
             return True
         elif self.session.new or self.session.deleted:
             return True
