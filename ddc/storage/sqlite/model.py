@@ -13,7 +13,7 @@ from ddc.lib.utc_datetime_column import UTCDateTime
 from ddc.storage.task import TaskStatus
 
 
-__all__ = ['get_model', 'LATEST']
+__all__ = ['get_model', 'DBVersion', 'LATEST']
 
 LATEST = 'v201609'
 

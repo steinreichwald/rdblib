@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from ddc.lib.log_proxy import l_
 from . import model as db_schema
 from .dbform import DBForm
-from .model import get_model
+from .model import get_model, DBVersion
 from ..utils import DELETE as DELETE_
 
 
@@ -32,12 +32,15 @@ def create_sqlite_db(tasks=(), ignored_warnings=(), filename='', model=None):
 
 class SQLiteDB(object):
     DELETE = DELETE_
-    def __init__(self, metadata, session, model, log=None):
+    def __init__(self, metadata, session, model, *, log=None, ignore_db_version=False):
         self.metadata = metadata
         self.session = session
         self._engine = self.session.bind
         self.model = model
         self.log = l_(log)
+        if not ignore_db_version:
+            self._ensure_db_version_matches_model(self.session, self.model, self.log)
+
         # for performance reasons SQLAlchemy does not track if a session needs
         # a DB change (at least there is no API) so we have to do the recording
         # ourself using events (also see http://stackoverflow.com/q/16256777/138526)
@@ -48,12 +51,27 @@ class SQLiteDB(object):
         ]
         self._register_listeners()
 
+    def _ensure_db_version_matches_model(self, session, model, log):
+        connection = session.connection()
+        version_table_name = DBVersion.__table__.name
+        if not self._engine.dialect.has_table(connection, version_table_name):
+            msg = 'DB version table "%s" does not exist!' % version_table_name
+            log.error(msg)
+            raise ValueError(msg)
+        db_version = session.query(DBVersion).first()
+        if db_version != model.id:
+            msg = 'DB version mismach %s (DB) vs. %s (model)' % (db_version, model.id)
+            log.error(msg)
+            raise ValueError(msg)
+
     @classmethod
     def create_new_db(cls, filename='', *, create_file, log=None, model=None):
-        db = cls.init_with_file(filename, create=create_file, log=log, model=model)
+        db = cls.init_with_file(filename, create=True, log=log, model=model)
         engine = db.session.bind
+        DBVersion.metadata.create_all(bind=engine)
         db.metadata.create_all(bind=engine)
-        # stamp with alembic
+        db.session.add(DBVersion(version_id=db.model.id))
+        db.commit()
         return db
 
     @classmethod
@@ -81,8 +99,9 @@ class SQLiteDB(object):
         engine = create_engine(db_uri, echo=echo)
         metadata = model_.metadata
         session = Session(bind=engine)
+
         log.info('opened SQlite db "%s"', logged_filename)
-        return SQLiteDB(metadata, session, model_, log=log)
+        return SQLiteDB(metadata, session, model_, log=log, ignore_db_version=create)
 
     # --- connection handling -------------------------------------------------
     def is_dirty(self):
