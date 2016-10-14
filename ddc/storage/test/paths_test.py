@@ -10,7 +10,12 @@ from ddc.storage.paths import *
 
 
 def fix_path(path):
-    return path.replace('/', os.path.sep)
+    os_path = path.replace('/', os.path.sep)
+    if os_path.startswith('\\'):
+        # Windows: add drive letter for absolute paths without drive letter
+        # qualification
+        os_path = os.path.abspath(os_path)
+    return os_path
 # short-hand alias to keep the code as readable as possible
 f = fix_path
 
