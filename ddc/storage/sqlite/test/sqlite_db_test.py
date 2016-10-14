@@ -16,11 +16,16 @@ class SQLiteDBTest(PythonicTestCase):
         with use_tempdir() as temp_dir:
             db_filename = os.path.join(temp_dir, 'foo.db')
             assert_false(os.path.exists(db_filename))
-            SQLiteDB.create_new_db(db_filename, create_file=True)
+            db = SQLiteDB.create_new_db(db_filename, create_file=True)
             assert_true(os.path.exists(db_filename))
+            # close all open files - so we can open the db again
+            db.close()
 
             with assert_not_raises():
-                SQLiteDB.init_with_file(db_filename)
+                db = SQLiteDB.init_with_file(db_filename)
+            # close all open files - otherwise Windows won't be able to remove
+            # the temp dir
+            db.close()
 
     def test_can_track_dirty_state(self):
         db = create_sqlite_db()
@@ -69,6 +74,9 @@ class SQLiteDBTest(PythonicTestCase):
 
             db_version = db.query(DBVersion).one()
             assert_equals('v201609', db_version.version_id)
+            # close all open files - otherwise Windows won't be able to remove
+            # the temp dir
+            db.close()
 
     def test_rejects_opening_db_without_dbversion_table(self):
         with use_tempdir() as temp_dir:
@@ -79,6 +87,9 @@ class SQLiteDBTest(PythonicTestCase):
             version_table.drop(engine, checkfirst=True)
             connection = db.session.connection()
             assert_false(engine.dialect.has_table(connection, version_table.name))
+            # close all open files - otherwise Windows won't be able to remove
+            # the temp dir
+            db.close()
 
             with assert_raises(ValueError):
                 SQLiteDB.init_with_file(db_filename, create=False)
@@ -90,6 +101,9 @@ class SQLiteDBTest(PythonicTestCase):
             db_version = db.query(DBVersion).one()
             db_version.version_id = u'unknown'
             db.commit()
+            # close all open files - otherwise Windows won't be able to remove
+            # the temp dir
+            db.close()
 
             with assert_raises(ValueError):
                 SQLiteDB.init_with_file(db_filename, create=False)

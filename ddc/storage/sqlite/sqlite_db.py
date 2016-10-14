@@ -38,8 +38,6 @@ class SQLiteDB(object):
         self._engine = self.session.bind
         self.model = model
         self.log = l_(log)
-        if not ignore_db_version:
-            self._ensure_db_version_matches_model(self.session, self.model, self.log)
 
         # for performance reasons SQLAlchemy does not track if a session needs
         # a DB change (at least there is no API) so we have to do the recording
@@ -50,6 +48,8 @@ class SQLiteDB(object):
             ('after_commit', self._on_commit),
         ]
         self._register_listeners()
+        if not ignore_db_version:
+            self._ensure_db_version_matches_model(self.session, self.model, self.log)
 
     def _ensure_db_version_matches_model(self, session, model, log):
         connection = session.connection()
@@ -57,11 +57,16 @@ class SQLiteDB(object):
         if not self._engine.dialect.has_table(connection, version_table_name):
             msg = 'DB version table "%s" does not exist!' % version_table_name
             log.error(msg)
+            # close all open files to prevent problems in Windows if the file
+            # is opened again
+            self.close()
             raise ValueError(msg)
         db_version = session.query(DBVersion).first()
         if db_version.version_id != model.id:
             msg = 'DB version mismatch %s (DB) vs. %s (model)' % (db_version.version_id, model.id)
             log.error(msg)
+            # Windows, see above
+            self.close()
             raise ValueError(msg)
 
     @classmethod
