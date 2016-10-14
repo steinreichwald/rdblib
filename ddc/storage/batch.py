@@ -50,9 +50,7 @@ class Batch(object):
         cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log)
         ibf = ImageBatch(databunch.ibf, delay_load=delay_load, access=access, log=log)
         db_path = databunch.db
-        if isinstance(db_path, SQLiteDB):
-            sqlite_db = db_path
-        else:
+        if db_path is None:
             is_readonly = (access == 'read')
             if create_persistent_db:
                 assert not is_readonly
@@ -60,6 +58,10 @@ class Batch(object):
                     db_path = guess_path(databunch.cdb, type_='db')
             databunch = DataBunch(cdb=databunch.cdb, ibf=databunch.ibf, db=db_path, ask=databunch.ask)
             sqlite_db = SQLiteDB.create_new_db(db_path, create_file=create_persistent_db, log=log)
+        elif isinstance(db_path, SQLiteDB):
+            sqlite_db = db_path
+        else:
+            sqlite_db = SQLiteDB.init_with_file(db_path)
         batch = Batch(cdb, ibf, sqlite_db, bunch=databunch)
 
         log = l_(log)

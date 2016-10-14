@@ -28,9 +28,13 @@ class BatchTest(PythonicTestCase):
             bunch = DataBunch(cdb_path, ibf_path, db=None, ask=None)
 
             batch = Batch.init_from_bunch(bunch, create_persistent_db=True, access='write')
-            sqlite_path = batch.bunch.db
-            assert_not_none(sqlite_path)
-            assert_true(os.path.exists(sqlite_path))
+            bunch = batch.bunch
+            assert_not_none(bunch.db)
+            assert_true(os.path.exists(bunch.db))
+            batch.close()
+
+            with assert_not_raises(OSError):
+                Batch.init_from_bunch(bunch, create_persistent_db=False)
 
     def test_can_add_tasks_via_batch(self):
         model = get_model(db_schema.LATEST)
