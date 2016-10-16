@@ -34,7 +34,10 @@ class BatchTest(PythonicTestCase):
             batch.close()
 
             with assert_not_raises(OSError):
-                Batch.init_from_bunch(bunch, create_persistent_db=False)
+                batch = Batch.init_from_bunch(bunch, create_persistent_db=False)
+            # close all open files - otherwise Windows won't be able to remove
+            # the temp dir
+            batch.close()
 
     def test_can_add_tasks_via_batch(self):
         model = get_model(db_schema.LATEST)
@@ -159,6 +162,9 @@ class BatchTest(PythonicTestCase):
             batch = Batch.init_from_bunch(bunch, create_persistent_db=False, access='write')
             form = batch.form(0)
             assert_equals(new_value, form.fields[field_name].value)
+            # close all open files - otherwise Windows won't be able to remove
+            # the temp dir
+            batch.close()
 
     # --- helpers -------------------------------------------------------------
     def _create_batch(self, *, nr_forms=1, tasks=(), ignored_warnings=(), model=None):
