@@ -238,6 +238,9 @@ class FormBatch(object):
         return self.count()
 
     def __eq__(self, other):
+        for attr in ('form_batch_header', 'forms'):
+            if not hasattr(other, attr):
+                return False
         return (self.form_batch_header == other.form_batch_header and
                 self.forms == other.forms)
 
