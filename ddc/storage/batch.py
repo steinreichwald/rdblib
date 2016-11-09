@@ -56,7 +56,7 @@ class Batch(object):
                 assert not is_readonly
                 if db_path is None:
                     db_path = guess_path(databunch.cdb, type_='db')
-            databunch = DataBunch(cdb=databunch.cdb, ibf=databunch.ibf, db=db_path, ask=databunch.ask)
+            databunch = DataBunch.merge(databunch, db=db_path)
             sqlite_db = SQLiteDB.create_new_db(db_path, create_file=create_persistent_db, log=log)
         elif isinstance(db_path, SQLiteDB):
             sqlite_db = db_path
