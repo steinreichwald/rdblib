@@ -10,6 +10,7 @@ from ddc.lib.result import Result
 
 
 __all__ = [
+    'get_path_from_instance',
     'guess_bunch_from_path',
     'guess_cdb_path',
     'guess_db_path',
@@ -19,6 +20,7 @@ __all__ = [
     'path_info_from_cdb',
     'path_info_from_db',
     'path_info_from_ibf',
+    'simple_bunch',
     'DataBunch',
 ]
 
@@ -125,3 +127,20 @@ def guess_path(input_, type_):
     guess_func = getattr(module, guess_func_name)
     return guess_func(base_dir, basename)
 
+
+def get_path_from_instance(value):
+    if value is None:
+        return None
+    elif isinstance(value, str):
+        return value
+    elif hasattr(value, 'name'):
+        return value.name
+    return None
+
+def simple_bunch(bunch):
+    """Return a bunch which only contains path names. Tries to extract the path
+    name from file-like objects."""
+    values = {}
+    for key in ('cdb', 'ibf', 'db', 'ask'):
+        values[key] = get_path_from_instance(getattr(bunch, key))
+    return DataBunch(**values)
