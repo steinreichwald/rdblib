@@ -3,4 +3,5 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from .cdb_check import *
 from .cdb_fixtures import *
+from .cdb_format import *
 
