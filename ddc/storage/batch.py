@@ -15,7 +15,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from sqlalchemy import and_
 
 from ddc.lib.log_proxy import l_
-from .paths import guess_path, DataBunch
+from .paths import guess_path, simple_bunch, DataBunch
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
 from .utils import DELETE
@@ -62,7 +62,7 @@ class Batch(object):
             sqlite_db = db_path
         else:
             sqlite_db = SQLiteDB.init_with_file(db_path)
-        batch = Batch(cdb, ibf, sqlite_db, bunch=databunch)
+        batch = Batch(cdb, ibf, sqlite_db, bunch=simple_bunch(databunch))
 
         log = l_(log)
         verification_tasks = batch.tasks(type_=TaskType.VERIFICATION, status=TaskStatus.NEW)
