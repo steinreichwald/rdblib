@@ -15,6 +15,7 @@ from ddc.lib.log_proxy import l_
 from .meta import BinaryMeta
 from ddc.storage import filecontent, MMapFile
 from ddc.storage.cdb import CDBFormat, CDB_ENCODING
+from ddc.storage.ibf import IBFFormat, Tiff
 
 
 ########################################################################
@@ -332,11 +333,11 @@ class Form(object):
 
 
 class ImageBatchHeader(WithBinaryMeta):
-    _struc = cdb_definition.Image_Defn.header_struc
+    _struc = IBFFormat.batch_header
 
 
 class Image(WithBinaryMeta):
-    _struc = cdb_definition.Image_Defn.index_struc
+    _struc = IBFFormat.index_entry
 
 
 class ImageBatch(object):
@@ -416,16 +417,16 @@ class ImageBatch(object):
 class TiffHandler(object):
 
     class Header(WithBinaryMeta):
-        _struc = cdb_definition.Tiff_Defn.header_struc
+        _struc = Tiff.header
 
     class IfdStruc(WithBinaryMeta):
-        _struc = cdb_definition.Tiff_Defn.ifd_struc
+        _struc = Tiff.ifd
 
     class TagStruc(WithBinaryMeta):
-        _struc = cdb_definition.Tiff_Defn.tag_struc
+        _struc = Tiff.tag
 
     class LongData(WithBinaryMeta):
-        _struc = cdb_definition.Tiff_Defn.long_data_struc
+        _struc = Tiff.long_data
 
 
     def __init__(self, image_batch, index):

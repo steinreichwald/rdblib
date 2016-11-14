@@ -15,7 +15,7 @@ import os
 
 import pkg_resources
 
-from ddc.dbdef import cdb_definition
+from .ibf_format import IBFFormat, BatchHeader, ImageIndexEntry
 from ddc.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 
@@ -55,8 +55,6 @@ def create_ibf(nr_images=1, filename=None, fake_tiffs=True, create_directory=Fal
     return ibf_fp
 
 
-ibf_format = cdb_definition.Image_Defn
-
 class IBFFile(BinaryFixture):
     def __init__(self, images, encoding=None):
         self.images = images
@@ -72,13 +70,13 @@ class IBFFile(BinaryFixture):
             # file_size (calculated in as_bytes())
             _ign3='',
         )
-        bin_structure = ibf_format.header_struc
+        bin_structure = IBFFormat.batch_header
         super(IBFFile, self).__init__(values, bin_structure, encoding=encoding)
 
     def as_bytes(self):
         buffer_ = BytesIO()
-        header_size = 252 # size of ibf_format.header_struc
-        index_size = 256
+        header_size = BatchHeader.size
+        index_size = ImageIndexEntry.size
         max_index = self.values['image_count'] - 1
         image_sizes = [img.values['image_size'] for img in self.images]
 
@@ -135,7 +133,7 @@ class IBFImage(BinaryFixture):
             codnr='',
         )
         values_.update(values)
-        bin_structure = ibf_format.index_struc
+        bin_structure = IBFFormat.index_entry
         super(IBFImage, self).__init__(values_, bin_structure, encoding=encoding)
 
     def index_as_bytes(self, **values):
