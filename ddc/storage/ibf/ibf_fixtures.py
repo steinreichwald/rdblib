@@ -21,7 +21,7 @@ from ddc.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 __all__ = ['create_ibf', 'IBFFile', 'IBFImage']
 
-def create_ibf(nr_images=1, filename=None, fake_tiffs=True, create_directory=False):
+def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, create_directory=False):
     # tiffany can not create tiff images and I'd like not to add new
     # dependencies (smc.freeimage needs compilation and has a few extra
     # dependencies, PIL can't handle multi-page tiffs).
@@ -42,7 +42,17 @@ def create_ibf(nr_images=1, filename=None, fake_tiffs=True, create_directory=Fal
         return tiff_data
 
     tiff_data = _fake_tiff_image() if fake_tiffs else _use_dummy_tiff()
-    ibf_images = [IBFImage(tiff_data) for i in range(nr_images)]
+    if pic_nrs is None:
+        pic_nrs = ('dummy',) * nr_images
+    assert nr_images == len(pic_nrs)
+    ibf_images = []
+    for pic in pic_nrs:
+        ibf_img = IBFImage(tiff_data, codnr=pic)
+        ibf_images.append(ibf_img)
+    # The PIC is also stored inside the actual TIFF image but this code can not
+    # generate these data structures currently. So far this was good enough but
+    # we might need to extend the functionality later (test stub already
+    # prepared).
     ibf_data = IBFFile(ibf_images).as_bytes()
     if filename is None:
         return UnclosableBytesIO(ibf_data)

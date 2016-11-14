@@ -5,7 +5,7 @@ from io import BytesIO
 
 from pythonic_testcase import *
 
-from ddc.tool.cdb_tool import ImageBatch
+from ddc.tool.cdb_tool import ImageBatch, TiffHandler
 from ddc.storage.ibf.ibf_fixtures import create_ibf, IBFFile, IBFImage
 
 
@@ -26,3 +26,28 @@ class IBFFileTest(PythonicTestCase):
         ibf_batch = ImageBatch(ibf_fp, access='read')
         assert_equals(3, ibf_batch.image_count())
 
+    def test_can_create_ibf_with_pic_numbers(self):
+        pics = (
+            '12345600100024',
+            '12345600114024',
+            '12345600130024'
+        )
+        ibf_fp = create_ibf(nr_images=3, pic_nrs=pics, fake_tiffs=False)
+
+        ibf_batch = ImageBatch(ibf_fp, access='read')
+        for i, pic in enumerate(pics):
+            tiff = ibf_batch.image_entries[i]
+            assert_equals(pic, tiff.rec.codnr,
+                message='PIC in first header')
+            # currently only the TiffHandler does the complicated offset
+            # calculation to parse the tiff headers.
+            tiff_handler = TiffHandler(ibf_batch, i)
+            # ideally we would also test the "long_data" structures but these
+            # are inside the actual tiff image which the fixtures module can't
+            # generate currently.
+            assert_not_equals(pic, tiff_handler.long_data.rec.page_name,
+                message='if long_data contains the correct pic enable the next two asserts')
+            #assert_equals(pic, tiff_handler.long_data.rec.page_name,
+            #    message='PIC in first tiff header (unused?)')
+            #assert_equals(pic, tiff_handler.long_data2.rec.page_name,
+            #    message='PIC in second tiff header')
