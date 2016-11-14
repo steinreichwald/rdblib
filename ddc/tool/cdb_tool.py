@@ -13,7 +13,7 @@ from ddc.client.config import ALL_FIELD_NAMES
 from ddc.dbdef import cdb_definition
 from ddc.lib.log_proxy import l_
 from .meta import BinaryMeta
-from ddc.storage import MMapFile
+from ddc.storage import filecontent, MMapFile
 
 
 ########################################################################
@@ -32,16 +32,6 @@ class FormBatchHeader(WithBinaryMeta):
 class FormHeader(WithBinaryMeta):
     _struc = cdb_definition.Form_Defn.header_struc
 
-
-def filecontent(mmap_or_filelike):
-    if isinstance(mmap_or_filelike, mmap.mmap):
-        return mmap_or_filelike
-    fp = mmap_or_filelike
-    old_pos = fp.tell()
-    fp.seek(0)
-    content = fp.read()
-    fp.seek(old_pos)
-    return content
 
 class FormBatch(object):
 

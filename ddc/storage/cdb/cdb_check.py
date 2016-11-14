@@ -8,8 +8,8 @@ from ddc.lib.filesize import format_filesize
 from ddc.lib.log_proxy import l_
 from ddc.lib.result import Result
 from .cdb_format import BatchHeader, Field, FormHeader, CDB_ENCODING
-from ddc.storage import MMapFile
-from ddc.tool.cdb_tool import filecontent
+from ddc.storage import filecontent, MMapFile
+
 
 __all__ = ['open_cdb']
 
