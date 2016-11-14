@@ -349,6 +349,8 @@ class ImageBatch(object):
             self.mmap_file = MMapFile(image_job, access=access, log=log)
 
         self.log = l_(log)
+        self.header = None
+        self.image_entries = None
         self._load_delayed = delay_load
         self.load_header()
         self.load_directories()
