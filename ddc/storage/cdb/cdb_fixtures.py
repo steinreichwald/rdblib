@@ -3,7 +3,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from io import BytesIO
 
-from ddc.dbdef import cdb_definition
+from .cdb_format import CDBFormat
 from ddc.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 
@@ -13,15 +13,12 @@ __all__ = [
     'CDBField', 'CDBFile', 'CDBForm'
 ]
 
-
-cdb_format = cdb_definition.Form_Defn
-
 class CDBFile(BinaryFixture):
     # TODO: support ibf_path, ibf_format_string, next_form, recognized_forms
     def __init__(self, forms, encoding=None):
         self.forms = forms
         values = dict(form_count=len(forms))
-        bin_structure = cdb_format.batchheader_struc
+        bin_structure = CDBFormat.batch_header
         super(CDBFile, self).__init__(values, bin_structure, encoding=encoding)
 
     def as_bytes(self):
@@ -46,7 +43,7 @@ class CDBForm(BinaryFixture):
             field_count=len(fields),
         )
         values_.update(values)
-        bin_structure = cdb_format.header_struc
+        bin_structure = CDBFormat.form_header
         super(CDBForm, self).__init__(values_, bin_structure, encoding=encoding)
 
     def as_bytes(self, batch_position=None):
@@ -72,7 +69,7 @@ class CDBField(BinaryFixture):
         # I think it's a convenient API to use have name/"value" also as
         # positional parameters.
         values.update(dict(name=name, corrected_result=corrected_result))
-        bin_structure = cdb_format.field_struc
+        bin_structure = CDBFormat.field
         super(CDBField, self).__init__(values, bin_structure, encoding=encoding)
 
     def as_bytes(self):

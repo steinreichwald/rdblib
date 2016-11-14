@@ -14,6 +14,7 @@ from ddc.dbdef import cdb_definition
 from ddc.lib.log_proxy import l_
 from .meta import BinaryMeta
 from ddc.storage import filecontent, MMapFile
+from ddc.storage.cdb import CDBFormat, CDB_ENCODING
 
 
 ########################################################################
@@ -22,15 +23,15 @@ from ddc.storage import filecontent, MMapFile
 class WithBinaryMeta(with_metaclass(BinaryMeta)):
     ''' helper class for python 2/3 compatibility '''
 
-    _encoding = cdb_definition.encoding
+    _encoding = CDB_ENCODING
 
 
 class FormBatchHeader(WithBinaryMeta):
-    _struc = cdb_definition.Form_Defn.batchheader_struc
+    _struc = CDBFormat.batch_header
 
 
 class FormHeader(WithBinaryMeta):
-    _struc = cdb_definition.Form_Defn.header_struc
+    _struc = CDBFormat.form_header
 
 
 class FormBatch(object):
@@ -137,7 +138,7 @@ class FormBatch(object):
 
 
 class FormField(WithBinaryMeta):
-    _struc = cdb_definition.Form_Defn.field_struc
+    _struc = CDBFormat.field
 
     @property
     def name(self):

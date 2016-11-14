@@ -4,7 +4,6 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from io import BytesIO
 import struct
 
-from ddc.dbdef import cdb_definition
 from ddc.compat import string_types
 
 
@@ -14,7 +13,10 @@ class BinaryFixture(object):
     def __init__(self, values, bin_structure, encoding=None):
         self.values = values
         self.bin_structure = bin_structure
-        self.encoding = encoding or cdb_definition.encoding
+        # prevent recursive imports (and fixtues inherit from "BinaryFixture"
+        # so they can't delay the import)
+        from ddc.storage.cdb import CDB_ENCODING
+        self.encoding = encoding or CDB_ENCODING
         self._assert_caller_used_only_known_fields(values, bin_structure)
 
     def _assert_caller_used_only_known_fields(self, values, bin_structure):
