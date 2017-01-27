@@ -108,7 +108,8 @@ class CDBCheckTest(PythonicTestCase):
     def test_can_detect_forms_with_unknown_field_names(self):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         fields_form1 = valid_prescription_values()
-        first_field_name = tuple(fields_form1)[0]
+        # "sorted()" ensure we always get the same "first" field
+        first_field_name = sorted(tuple(fields_form1))[0]
         del fields_form1[first_field_name]
         fields_form1['extra'] = 'anything'
         cdb_forms = (fields_form1,)
@@ -118,5 +119,7 @@ class CDBCheckTest(PythonicTestCase):
         result = open_cdb(cdb_path, field_names=ALL_FIELD_NAMES)
         assert_false(result)
         assert_none(result.cdb_fp)
-        expected_msg = u'Formular #1 ist vermutlich fehlerhaft (unbekanntes Feld b\'extra\').'
-        assert_contains(expected_msg, result.message)
+        assert_contains(
+            u'Formular #1 ist vermutlich fehlerhaft (unbekanntes Feld b\'extra\', fehlendes Feld b\'ABGABEDATUM\').',
+            result.message
+        )

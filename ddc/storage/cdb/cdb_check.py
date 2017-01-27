@@ -67,14 +67,23 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
             msg = 'Formular #%d ist vermutlich fehlerhaft (%d Felder statt %d)' % (form_nr, field_count, nr_fields_per_form)
             return _error(msg)
 
+        unknown_names = []
+        seen_names = []
         for i in range(field_count):
             field_data = cdb_data.read(bytes_per_field)
             assert len(field_data) == bytes_per_field
             field = Field.parse(field_data)
             b_field_name = field['name'].rstrip(b'\x00')
             if b_field_name not in b_field_names:
-                msg = 'Formular #%d ist vermutlich fehlerhaft (unbekanntes Feld %r).' % (form_nr, b_field_name)
-                return _error(msg)
+                unknown_names.append(b_field_name)
+            else:
+                seen_names.append(b_field_name)
+        unseen_names = set(b_field_names).difference(set(seen_names))
+        if unknown_names:
+            unknown_msg = 'unbekanntes Feld %r' % (b', '.join(unknown_names))
+            unseen_msg = 'fehlendes Feld %r' % (b', '.join(unseen_names))
+            msg = 'Formular #%d ist vermutlich fehlerhaft (%s, %s).' % (form_nr, unknown_msg, unseen_msg)
+            return _error(msg)
 
     return Result(True, cdb_fp=cdb_fp)
 
