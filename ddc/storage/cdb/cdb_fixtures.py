@@ -94,13 +94,20 @@ def create_cdb_with_form_values(form_values, filename=None):
 
     Returns a file-like object which contains the binary CDB data.
     """
-    forms = []
-    for fields_data in form_values:
+    def _cdb_form_from_fields_data(fields_data):
         fields = []
+        header_values = {}
         for field_name, field_value in fields_data.items():
+            if field_name == 'pic':
+                header_values['imprint_line_short'] = field_value
+                continue
             field = {'name': field_name, 'corrected_result': field_value}
             fields.append(field)
-        form = CDBForm(fields)
+        return CDBForm(fields, **header_values)
+
+    forms = []
+    for fields_data in form_values:
+        form = _cdb_form_from_fields_data(fields_data)
         forms.append(form)
     cdb_data = CDBFile(forms).as_bytes()
     if filename is None:

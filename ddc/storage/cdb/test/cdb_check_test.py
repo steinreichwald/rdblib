@@ -14,6 +14,7 @@ from ddc.storage.cdb import (
     Field, FormHeader,
     open_cdb,
 )
+from ddc.storage.cdb.cdb_fixtures import CDBFile, CDBForm
 from ddc.storage.locking import acquire_lock
 from ddc.tool.cdb_tool import FormBatch
 from ddc.validation.testutil import valid_prescription_values
@@ -30,7 +31,8 @@ class CDBCheckTest(PythonicTestCase):
 
     def test_can_return_cdb_instance(self):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
-        cdb_fp = create_cdb_with_dummy_data(nr_forms=1, filename=cdb_path)
+        form_fields = valid_prescription_values(with_pic=True)
+        cdb_fp = create_cdb_with_form_values([form_fields], filename=cdb_path)
         cdb_fp.close()
 
         result = open_cdb(cdb_path, field_names=ALL_FIELD_NAMES)
@@ -84,8 +86,8 @@ class CDBCheckTest(PythonicTestCase):
 
     def test_can_detect_forms_with_unusual_number_of_fields(self):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
-        fields_form1 = valid_prescription_values()
-        nr_fields1 = len(fields_form1)
+        fields_form1 = valid_prescription_values(with_pic=True)
+        nr_fields1 = len(fields_form1) - 1 # -1 because of PIC
         # form #2 has one field less and form #3 one extra field so the total
         # file size looks ok
         fields_form2 = valid_prescription_values()
@@ -122,4 +124,25 @@ class CDBCheckTest(PythonicTestCase):
         assert_contains(
             u'Formular #1 ist vermutlich fehlerhaft (unbekanntes Feld b\'extra\', fehlendes Feld b\'ABGABEDATUM\').',
             result.message
+        )
+
+    def test_can_detect_forms_with_empty_pic(self):
+        cdb_path = os.path.join(self.env_dir, 'foo.cdb')
+        fields = []
+        for field_name, field_value in valid_prescription_values().items():
+            field = {'name': field_name, 'corrected_result': field_value}
+            fields.append(field)
+        forms = [CDBForm(fields, imprint_line_short=b'')]
+        cdb_bytes = CDBFile(forms).as_bytes()
+        with open(cdb_path, 'wb') as fp:
+            fp.write(cdb_bytes)
+
+        result = open_cdb(cdb_path, field_names=ALL_FIELD_NAMES)
+        assert_true(result,
+            message='empty PIC numbers should be treated as warnings (can recover them from IBF)')
+        assert_not_none(result.cdb_fp)
+        assert_length(1, result.warnings)
+        assert_equals(
+            u'Formular #1 ist wahrscheinlich fehlerhaft (keine PIC-Nr vorhanden)',
+            result.warnings[0]
         )

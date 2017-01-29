@@ -18,9 +18,10 @@ _100mb = 100 * 1024 * 1024
 def open_cdb(cdb_path, *, field_names, access='write', log=None):
     log = l_(log)
     filesize = os.stat(cdb_path).st_size
+    warnings = []
     if filesize >= _100mb:
         size_str = format_filesize(filesize, locale='de')
-        return _error('Die CDB-Datei ist defekt (%s groß)' % size_str)
+        return _error('Die CDB-Datei ist defekt (%s groß)' % size_str, warnings=warnings)
 
     encode_ = lambda s: s.encode(CDB_ENCODING)
     b_field_names = tuple(map(encode_, field_names))
@@ -33,12 +34,12 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
     if expected_file_size != filesize:
         extra_bytes = filesize - expected_file_size
         msg = 'Die CDB hat eine ungewöhnliche Größe (%d Bytes zu viel bei %d Belegen)'
-        return _error(msg % (extra_bytes, calculated_form_count))
+        return _error(msg % (extra_bytes, calculated_form_count), warnings=warnings)
 
     try:
         cdb_fp = MMapFile(cdb_path, access=access, log=log)
     except OSError:
-        return _error('Die CDB-Datei ist vermutlich noch in Bearbeitung.')
+        return _error('Die CDB-Datei ist vermutlich noch in Bearbeitung.', warnings=warnings)
 
     cdb_data = BytesIO(filecontent(cdb_fp))
     header_data = cdb_data.read(bytes_batch_header)
@@ -49,7 +50,7 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
     if expected_file_size != filesize:
         extra_bytes = filesize - expected_file_size
         msg = u'Die Datei enthält %d Belege (Header), es müssten %d Belege vorhanden sein (Dateigröße).'
-        return _error(msg % (form_count, calculated_form_count))
+        return _error(msg % (form_count, calculated_form_count), warnings=warnings)
 
     next_index = 0
     while True:
@@ -58,14 +59,13 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
         next_index += 1
         header_data = cdb_data.read(FormHeader.size)
         if len(header_data) == 0:
-            # LATER: check that global form count is correct?
             break
         assert len(header_data) == FormHeader.size
         form_header = FormHeader.parse(header_data)
         field_count = form_header['field_count']
         if field_count != nr_fields_per_form:
             msg = 'Formular #%d ist vermutlich fehlerhaft (%d Felder statt %d)' % (form_nr, field_count, nr_fields_per_form)
-            return _error(msg)
+            return _error(msg, warnings=warnings)
 
         unknown_names = []
         seen_names = []
@@ -83,9 +83,18 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
             unknown_msg = 'unbekanntes Feld %r' % (b', '.join(unknown_names))
             unseen_msg = 'fehlendes Feld %r' % (b', '.join(unseen_names))
             msg = 'Formular #%d ist vermutlich fehlerhaft (%s, %s).' % (form_nr, unknown_msg, unseen_msg)
-            return _error(msg)
+            return _error(msg, warnings=warnings)
 
-    return Result(True, cdb_fp=cdb_fp)
+        # CDB/RDB files might contain empty an PIC field in case of OCR problems.
+        # We can apply workarounds for that but it might help finding the bad
+        # form.
+        # TODO: That is just a warning!
+        cdb_pic = form_header['imprint_line_short'].rstrip(b'\x00')
+        if cdb_pic == b'':
+            msg = 'Formular #%d ist wahrscheinlich fehlerhaft (keine PIC-Nr vorhanden)' % form_nr
+            warnings.append(msg)
 
-def _error(msg):
-    return Result(False, cdb_fp=None, message=msg)
+    return Result(True, cdb_fp=cdb_fp, warnings=warnings)
+
+def _error(msg, warnings=()):
+    return Result(False, cdb_fp=None, message=msg, warnings=warnings)
