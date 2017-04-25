@@ -27,7 +27,7 @@ def form_index_for_pic(batch, *, pic, index_hint, ignore_deleted_forms=True):
         elif also_return_deleted_forms:
             last_index_for_pic = current_index
 
-    # the <index_hint> might be a bit of (mostly due to deleted forms which our
+    # the <index_hint> might be a bit off (mostly due to deleted forms which our
     # backend system might not know) so we need to scan the CDB file.
     # (Note July 2016: The following optimization is likely not really necessary
     # anymore as the network should be fast enough to load all batch-related data.
