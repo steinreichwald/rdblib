@@ -38,6 +38,41 @@ class BatchForm(object):
     def ibf(self):
         return self.batch.ibf
 
+    # LATER: Refactor arguments for is_deleted(...)
+    # ideally the API should look like this:
+    #    .is_deleted(Source.CDB)
+    #    .is_deleted(Source.IBF)
+    #    .is_deleted(Source.CDB | Source.IBF)
+    #    .is_deleted(Source.CDB & Source.IBF)
+    def is_deleted(self, *, cdb=True, ibf=True, operator=Source.OR):
+        """Return True if the form has been deleted. Without parameters this
+        is true if the form is marked as "DELETED" in the CDB or the IBF.
+
+        This decision is surprisingly complicated because the legacy software
+        does not use a single deletion flag. Instead the PIC is replaced by the
+        special string "DELETED" in the RDB field as well as in the first TIFF
+        page (the stored PIC on the second TIFF page is left intact so the
+        value can be recovered).
+        This method provides a simple API to determine the deletion state. The
+        main part is a user defined condition.
+        """
+        assert (operator in (Source.OR, Source.AND))
+
+        is_cdb_deleted = None
+        if cdb:
+            cdb_form = self.batch.form(self.form_index)
+            is_cdb_deleted = cdb_form.is_deleted()
+        is_ibf_deleted = None
+        if ibf:
+            image_data = self.ibf.image_entries[self.form_index]
+            ibf_rec_pic = image_data.rec.codnr
+            is_ibf_deleted = (ibf_rec_pic == 'DELETED')
+        if operator == Source.AND:
+            is_deleted = (is_cdb_deleted and is_ibf_deleted)
+        else:
+            is_deleted = (is_cdb_deleted or is_ibf_deleted)
+        # not (not ...) to ensure we always return a bool (not None)
+        return not (not is_deleted)
 
     def pic(self):
         image_data = self.ibf.image_entries[self.form_index]
