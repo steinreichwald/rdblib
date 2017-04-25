@@ -15,6 +15,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from sqlalchemy import and_
 
 from ddc.lib.log_proxy import l_
+from .batch_form import BatchForm
 from .paths import guess_path, simple_bunch, DataBunch
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
@@ -110,26 +111,16 @@ class Batch(object):
         return self.tasks(type_=type_, status=TaskStatus.NEW, **kwargs)
 
     def pic_for_form(self, form_index):
-        image_data = self.ibf.image_entries[form_index]
-        ibf_rec_pic = image_data.rec.codnr
-        if ibf_rec_pic != 'DELETED':
-            return ibf_rec_pic
-
-        if (self._tiff_handler is None):
-            self._tiff_handler = [None] * self.ibf.image_count()
-        th = self._tiff_handler[form_index]
-        if th is None:
-            from ddc.tool.cdb_tool import TiffHandler
-            th = TiffHandler(self.ibf, form_index)
-            self._tiff_handler[form_index] = th
-        ibf_long_pic = th.long_data2.rec.page_name
-        return ibf_long_pic
+        return self.batch_form(form_index).pic()
 
     def form(self, i):
         return self.cdb.forms[i]
 
     def forms(self):
         return self.cdb.forms
+
+    def batch_form(self, form_index):
+        return BatchForm(self, form_index)
 
     def db_form(self, form_index):
         session = self.db.session

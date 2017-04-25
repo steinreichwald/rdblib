@@ -10,8 +10,9 @@ from ddc.storage.ask import create_ask
 from ddc.storage.cdb import create_cdb_with_dummy_data
 from ddc.storage.ibf import create_ibf
 from ddc.storage.sqlite import create_sqlite_db, db_schema, get_model
-from ddc.storage.testhelpers import batch_with_pic_forms, use_tempdir
+from ddc.storage.testhelpers import use_tempdir
 from ddc.storage.utils import DELETE
+
 
 class BatchTest(PythonicTestCase):
     def test_can_initialize_batch_without_real_files(self):
@@ -73,13 +74,6 @@ class BatchTest(PythonicTestCase):
 
         assert_length(1, batch.new_tasks())
         assert_length(0, batch.new_tasks(TaskType.VERIFICATION))
-
-    def test_can_retrieve_pic_for_form(self):
-        pic1 = '12345600100024'
-        pic2 = '12345600114024'
-        batch = batch_with_pic_forms([pic1, pic2])
-        assert_equals(pic1, batch.pic_for_form(0))
-        assert_equals(pic2, batch.pic_for_form(1))
 
     def test_can_retrieve_ignored_warnings(self):
         ignore_key = ('FOO', 'some_error', '21')
