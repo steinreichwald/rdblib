@@ -259,7 +259,7 @@ class Form(object):
         return False
 
     def is_deleted(self):
-        return (self.form_header.rec.imprint_line_short == 'DELETED')
+        return (self.cdb_pic_nr == 'DELETED')
 
     def _do_load_form_fields(self, key=None):
         # key could be used, but we need to create all fields in order
