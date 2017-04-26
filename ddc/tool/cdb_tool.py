@@ -5,26 +5,15 @@ classes for dealing with prescription-files
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import os
-from timeit import default_timer as timer
 import warnings
 
-from ddc.compat import with_metaclass
 from ddc.client.config import ALL_FIELD_NAMES
-from ddc.lib.log_proxy import l_
-from .meta import BinaryMeta
 from ddc.storage import filecontent, MMapFile
-from ddc.storage.cdb import CDBFormat, CDB_ENCODING
-from ddc.storage.ibf import IBFFormat, Tiff
+from ddc.storage.cdb import CDBFormat
+from ddc.storage.meta import WithBinaryMeta
 
 
 ########################################################################
-
-
-class WithBinaryMeta(with_metaclass(BinaryMeta)):
-    ''' helper class for python 2/3 compatibility '''
-
-    _encoding = CDB_ENCODING
-
 
 class FormBatchHeader(WithBinaryMeta):
     _struc = CDBFormat.batch_header
@@ -330,153 +319,3 @@ class Form(object):
     def __ne__(self, other):
         return not(self == other)
 
-
-class ImageBatchHeader(WithBinaryMeta):
-    _struc = IBFFormat.batch_header
-
-
-class Image(WithBinaryMeta):
-    _struc = IBFFormat.index_entry
-
-
-class ImageBatch(object):
-
-    def __init__(self, image_job, delay_load=False, access='write', log=None):
-        if hasattr(image_job, 'close'):
-            self.mmap_file = image_job
-        else:
-            self.mmap_file = MMapFile(image_job, access=access, log=log)
-
-        self.log = l_(log)
-        self.header = None
-        self.image_entries = None
-        self._load_delayed = delay_load
-        self.load_header()
-        self.load_directories()
-
-    def close(self):
-        self.mmap_file.close()
-
-    def load_header(self):
-        start = timer()
-        self.header = ImageBatchHeader(self.filecontent)
-        duration = timer() - start
-        self.log.debug('loading IBF header took %.5f seconds', duration)
-
-    @property
-    def filecontent(self):
-        return filecontent(self.mmap_file)
-
-    def load_directories(self):
-        def _get_subindex(offset):
-            entries = []
-            image_count = -1
-            while image_count != 0:
-                entry = Image(self.filecontent, offset)
-                entries.append(entry)
-                if image_count == -1:
-                    offset_next_index = entry.rec.offset_next_index
-                    image_count = entry.rec.indexblock_len
-                image_count -= 1
-                offset += len(entry)
-            return entries, offset_next_index
-
-        start = timer()
-        offset = self.header.rec.offset_first_index
-        self.image_entries = []
-        while offset != 0:
-            directory, offset = _get_subindex(offset)
-            self.image_entries += directory
-        duration = timer() - start
-        self.log.debug('loading %d image entries from IBF took %.5f seconds', len(self.image_entries), duration)
-
-    def get_tiff_image(self, index):
-        entry = self.image_entries[index]
-        return self.filecontent[entry.rec.image_offset:
-                                entry.rec.image_offset + entry.rec.image_size]
-
-    def image_count(self):
-        return len(self.image_entries)
-
-    # XXX this is right now a bit ugly, since we need to go though this structure
-    # and not the image struc, directly. Will change...
-    def update_entry(self, entry):
-        ''' write a changed index entry '''
-        assert isinstance(entry, Image)
-        buffer = self.filecontent
-        if entry.edited_fields:
-            data = entry._get_binary()
-            offset = entry.offset
-            buffer[offset:offset + len(data)] = data
-            entry.edited_fields.clear()
-            self.mmap_file.flush()
-
-
-# -------------------------------------------------------
-# rudimentary Tiff support
-
-class TiffHandler(object):
-
-    class Header(WithBinaryMeta):
-        _struc = Tiff.header
-
-    class IfdStruc(WithBinaryMeta):
-        _struc = Tiff.ifd
-
-    class TagStruc(WithBinaryMeta):
-        _struc = Tiff.tag
-
-    class LongData(WithBinaryMeta):
-        _struc = Tiff.long_data
-
-
-    def __init__(self, image_batch, index):
-        assert isinstance(image_batch, ImageBatch)
-        self.filecontent = image_batch.filecontent
-        entry = image_batch.image_entries[index]
-        self.offset = entry.rec.image_offset
-        self.image_size = entry.rec.image_size
-        header = self.__class__.Header(self.filecontent, self.offset)
-        assert header.rec.byte_order == 0x4949 # 'II'
-        #
-        # Note:
-        # This special version of a tiff structure always has two almost identical
-        # versions of the tiff header.
-        # We use the fact that the old software only examines the first header.
-        # We never write the second header, but use it to restore a deleted tiff record.
-
-        # The first tiff header:
-        ifd_ofs = self.offset + header.rec.first_ifd
-        self.ifd = self.__class__.IfdStruc(self.filecontent, ifd_ofs)
-        # tags ignored for now, just asssuming a fixed offset
-        ext_ofs = ifd_ofs + self.ifd.record_size
-        self.long_data = self.__class__.LongData(self.filecontent, ext_ofs)
-
-        # The second tiff header:
-        ifd2_ofs = self.offset + self.ifd.rec.next_ifd
-        self.ifd2 = self.__class__.IfdStruc(self.filecontent, ifd2_ofs)
-        ext_ofs2 = ifd2_ofs + self.ifd2.record_size
-        self.long_data2 = self.__class__.LongData(self.filecontent, ext_ofs2)
-
-    def update(self):
-        ''' write changed tiff data '''
-        #
-        # Note:
-        # The relevant classes in this container class derive from
-        # "WithBinaryMeta".
-        # Those classes are aware of attribute updates.
-        # Whenever a field of X is changed, the field's name is inserted into
-        # X.edited_fields.  Therefore, update() just examines that set to decide
-        # if it needs to write data.
-        #
-        # This is a bit like ZODB/Durus handle changes to persistent data,
-        # but in a very explicit way.
-
-        buffer = self.filecontent
-        long_data = self.long_data
-        if long_data.edited_fields:
-            data = long_data._get_binary()
-            offset = long_data.offset
-            buffer[offset:offset + len(data)] = data
-            long_data.edited_fields.clear()
-            self.filecontent.flush()
