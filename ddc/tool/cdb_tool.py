@@ -302,7 +302,16 @@ class Form(object):
         if self.form_header.edited_fields:
             data = self.form_header._get_binary()
             offset = self.offset
-            buffer[offset:offset + len(data)] = data
+            if not isinstance(buffer, bytes):
+                # mmap'd file
+                buffer[offset:offset + len(data)] = data
+            else:
+                # in testing "buffer" is a plain file-like object...
+                new_buffer = buffer[:offset] + data + buffer[offset + len(data):]
+                fp = self.parent.mmap_file
+                fp.seek(0)
+                fp.write(new_buffer)
+                fp.seek(0)
             self.form_header.edited_fields.clear()
             written = True
 
