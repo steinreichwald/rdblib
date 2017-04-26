@@ -45,11 +45,11 @@ class BatchForm(object):
         if ibf_rec_pic != 'DELETED':
             return ibf_rec_pic
 
-        if (self.batch._tiff_handler is None):
-            self.batch._tiff_handler = [None] * self.ibf.image_count()
-        th = self.batch._tiff_handler[self.form_index]
+        if (self.batch._tiff_handlers is None):
+            self.batch._tiff_handlers = [None] * self.ibf.image_count()
+        th = self.batch._tiff_handlers[self.form_index]
         if th is None:
             th = TiffHandler(self.ibf, self.form_index)
-            self.batch._tiff_handler[self.form_index] = th
+            self.batch._tiff_handlers[self.form_index] = th
         ibf_long_pic = th.long_data2.rec.page_name
         return ibf_long_pic

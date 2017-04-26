@@ -32,7 +32,7 @@ class Batch(object):
         self.db = db
         self.meta = meta or {}
         self.bunch = bunch
-        self._tiff_handler = None
+        self._tiff_handlers = None
 
     @classmethod
     def init_from_bunch(cls, databunch, create_persistent_db=False,
