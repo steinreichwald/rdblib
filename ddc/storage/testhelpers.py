@@ -17,22 +17,38 @@ __all__ = [
     'ibf_mock',
 ]
 
+def _update_attr(container, **kwargs):
+    for attr_name, value in kwargs.items():
+        setattr(container, attr_name, value)
+
 def ibf_mock(pics):
     def _create_entry(pic):
         if not isinstance(pic, str):
             pic = pic[0]
-        return AttrDict(rec=AttrDict(codnr=pic))
+
+        data = AttrDict({
+            'rec': AttrDict(codnr=pic),
+        })
+        data['update_rec'] = lambda codnr=None: _update_attr(data.rec, codnr=codnr)
+        return data
     return AttrDict(
-        image_entries=[_create_entry(pic) for pic in pics]
+        image_entries=[_create_entry(pic) for pic in pics],
+        update_entry = lambda x: None
     )
 
 def fake_tiff_handler(pic):
     if not isinstance(pic, str):
         pic = pic[1]
+
+    long_data = AttrDict({
+        'rec': AttrDict(page_name=pic),
+    })
+    long_data['update_rec'] = lambda page_name=None: _update_attr(long_data.rec, page_name=page_name)
     return AttrDict(
+        long_data=long_data,
         long_data2=AttrDict(
             rec=AttrDict(page_name=pic)
-        )
+        ),
     )
 
 def batch_with_pic_forms(pics, *, model=None):
