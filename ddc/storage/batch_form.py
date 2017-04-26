@@ -2,6 +2,11 @@
 
 import enum
 
+from .ibf import TiffHandler
+
+
+__all__ = []
+
 @enum.unique
 class Source(enum.Enum):
     CDB = 2
@@ -44,7 +49,6 @@ class BatchForm(object):
             self.batch._tiff_handler = [None] * self.ibf.image_count()
         th = self.batch._tiff_handler[self.form_index]
         if th is None:
-            from ddc.tool.cdb_tool import TiffHandler
             th = TiffHandler(self.ibf, self.form_index)
             self.batch._tiff_handler[self.form_index] = th
         ibf_long_pic = th.long_data2.rec.page_name

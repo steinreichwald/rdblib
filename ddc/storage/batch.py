@@ -16,6 +16,7 @@ from sqlalchemy import and_
 
 from ddc.lib.log_proxy import l_
 from .batch_form import BatchForm
+from .ibf import ImageBatch
 from .paths import guess_path, simple_bunch, DataBunch
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
@@ -47,7 +48,7 @@ class Batch(object):
         # prevent recursive imports
         # ideally classes from cdb_tool should be located below ".storage" as
         # they deal with the on-disk data layout.
-        from ddc.tool.cdb_tool import ImageBatch, FormBatch
+        from ddc.tool.cdb_tool import FormBatch
         cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log)
         ibf = ImageBatch(databunch.ibf, delay_load=delay_load, access=access, log=log)
         db_path = databunch.db
