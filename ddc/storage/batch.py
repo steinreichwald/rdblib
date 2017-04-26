@@ -17,6 +17,7 @@ from sqlalchemy import and_
 from ddc.lib.log_proxy import l_
 from .batch_form import BatchForm
 from .ibf import ImageBatch
+from .ibf.tiff_handler import TiffHandler
 from .paths import guess_path, simple_bunch, DataBunch
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
@@ -33,6 +34,19 @@ class Batch(object):
         self.meta = meta or {}
         self.bunch = bunch
         self._tiff_handlers = None
+
+    @property
+    def tiff_handlers(self):
+        if self._tiff_handlers is None:
+            self._tiff_handlers = [None] * self.ibf.image_count()
+        return self._tiff_handlers
+
+    def tiff_handler(self, form_index):
+        th = self.tiff_handlers[form_index]
+        if th is None:
+            th = TiffHandler(self.ibf, form_index)
+            self._tiff_handlers[form_index] = th
+        return th
 
     @classmethod
     def init_from_bunch(cls, databunch, create_persistent_db=False,
