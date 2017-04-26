@@ -11,9 +11,11 @@ This is only true for the generated classes.
 Subclasses need to do their own pickling, again.
 '''
 
-from operator import itemgetter as _itemgetter
 from keyword import iskeyword as _iskeyword
-from ddc.compat import exec_
+from operator import itemgetter as _itemgetter
+
+from six import exec_
+
 
 _refmodule = 'ddc.tool.tupletool'
 

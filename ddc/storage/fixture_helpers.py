@@ -4,7 +4,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from io import BytesIO
 import struct
 
-from ddc.compat import string_types
+from six import string_types
 
 
 __all__ = ['BinaryFixture', 'UnclosableBytesIO']

@@ -7,8 +7,8 @@ import tempfile
 
 from ddt import ddt as DataDrivenTestCase, data
 from pythonic_testcase import *
+import six
 
-from ddc.compat import PY3
 from ddc.storage.mmap_file import MMapFile
 
 
@@ -28,7 +28,7 @@ class MMapFileTest(PythonicTestCase):
         mm = MMapFile(self.temp_fname, 'write')
         assert_equals(b'hallo', mm[:])
         mm.flush()
-        if PY3:
+        if six.PY3:
             mm[3] = ord(b'X')
         else:
             mm[3] = b'X'
