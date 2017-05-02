@@ -48,7 +48,9 @@ class FormBatch(object):
             if form.is_dirty():
                 form.write_back()
 
-    def close(self):
+    def close(self, commit=False):
+        if commit:
+            self.commit()
         self.mmap_file.close()
 
     @property
