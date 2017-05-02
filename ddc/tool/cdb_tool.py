@@ -43,6 +43,11 @@ class FormBatch(object):
         self._load_delayed = delay_load
         self.load_forms()
 
+    def commit(self):
+        for form in self.forms:
+            if form.is_dirty():
+                form.write_back()
+
     def close(self):
         self.mmap_file.close()
 
