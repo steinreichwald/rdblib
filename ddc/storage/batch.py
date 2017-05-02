@@ -9,8 +9,9 @@ DataBunch represents the path information for that triple (so no file system
 access or active databases required). The Batch is the main abstraction which
 hides all implementation details (as much as possible/sensible).
 """
-
 from __future__ import division, absolute_import, print_function, unicode_literals
+
+import os
 
 from sqlalchemy import and_
 
@@ -100,6 +101,37 @@ class Batch(object):
         self.db.close(commit=commit)
         self.cdb.close(commit=commit)
         self.ibf.close()
+
+    def rename_xdb(self, to, log=None):
+        """
+        Rename the underlying "CDB" file (which might be also refer to a RDB).
+
+        Due to locking constraints on Windows this means we have to close the
+        FormBatch and reopen it after the renaming. All pending data is
+        committed before closing.
+
+        The process is inherently "racy" at the moment but I think it is better
+        to implement this once and document the caveats clearly instead of
+        duplicating this code in several places (each with different errors).
+        """
+        log = l_(log)
+        self.cdb.close(commit=True)
+        previous_path = self.bunch.cdb
+        base_path, previous_extension = os.path.splitext(previous_path)
+        if previous_extension and (previous_extension.upper() == to.upper()):
+            return
+        new_path = base_path + '.' + to.upper()
+        log.info('rename %s -> %s', previous_path, new_path)
+        os.rename(previous_path, new_path)
+        self.bunch = DataBunch.merge(self.bunch, cdb=new_path)
+
+        # (prevent recursive imports)
+        from ddc.tool.cdb_tool import FormBatch
+        # Just assume that it is ok if reuse the old logger even if it might contain
+        # the wrong (RDB) context. The log is stored in several places and I think
+        # it would be more confusing if some parts log with the old context while
+        # others already use the new context.
+        self.cdb = FormBatch(new_path, log=log)
 
     # --- accessing data ------------------------------------------------------
     def tasks(self, type_=None, status=None, form_index=None):
