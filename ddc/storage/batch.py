@@ -96,10 +96,9 @@ class Batch(object):
         self.cdb.commit()
         self.db.commit()
 
-    def close(self):
-        self.db.rollback()
-        self.db.close()
-        self.cdb.close()
+    def close(self, commit=False):
+        self.db.close(commit=commit)
+        self.cdb.close(commit=commit)
         self.ibf.close()
 
     # --- accessing data ------------------------------------------------------

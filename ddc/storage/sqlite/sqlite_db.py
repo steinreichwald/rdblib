@@ -151,9 +151,12 @@ class SQLiteDB(object):
         self.session.rollback()
     abort = rollback
 
-    def close(self):
+    def close(self, commit=False):
         assert (self.session is not None)
-        self.session.rollback()
+        if commit:
+            self.commit()
+        else:
+            self.rollback()
         for key in self._listeners:
             event.remove(self.session, *key)
         self.session.close()
