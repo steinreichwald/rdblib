@@ -3,6 +3,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from collections import namedtuple
 import os
+import re
 import sys
 
 from ddc.lib.attribute_dict import AttrDict
@@ -25,6 +26,7 @@ __all__ = [
 ]
 
 ibf_subdir = '00000001'
+xdb_regex = re.compile('^\..DB$')
 
 class DataBunch(namedtuple('DataBunch', 'cdb ibf db ask')):
     def is_complete(self):
@@ -41,6 +43,9 @@ class DataBunch(namedtuple('DataBunch', 'cdb ibf db ask')):
         ask_ = ask or bunch.ask
         return DataBunch(cdb=cdb_, ibf=ibf_, db=db_, ask=ask_)
 
+
+def is_xdb(path):
+    return (xdb_regex.search(path) is not None)
 
 def path_info_from_cdb(cdb_path):
     if cdb_path is None:
@@ -84,7 +89,7 @@ def guess_ask_path(base_dir, basename):
 
 def _basedir_and_name_from_path(path):
     dot_extension = (os.path.splitext(path)[-1]).upper()
-    cdb_path = path if (dot_extension in ('.CDB', '.RDB')) else None
+    cdb_path = path if is_xdb(dot_extension) else None
     ibf_path = path if (dot_extension == '.IBF') else None
     db_path = path if (dot_extension == '.DB') else None
     ask_path = path if (dot_extension == '.ASK') else None
