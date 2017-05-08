@@ -102,7 +102,7 @@ class Batch(object):
         self.cdb.close(commit=commit)
         self.ibf.close()
 
-    def rename_xdb(self, to, log=None):
+    def rename_xdb(self, to, log=None, target_dir=None):
         """
         Rename the underlying "CDB" file (which might be also refer to a RDB).
 
@@ -118,8 +118,11 @@ class Batch(object):
         self.cdb.close(commit=True)
         previous_path = self.bunch.cdb
         base_path, previous_extension = os.path.splitext(previous_path)
-        if previous_extension and (previous_extension.upper() == to.upper()):
+        basename = os.path.basename(base_path)
+        if previous_extension and (previous_extension.upper() == to.upper()): # and (not target_dir)
             return
+        if target_dir is not None:
+            base_path = os.path.join(target_dir, basename)
         new_path = base_path + '.' + to.upper()
         log.info('rename %s -> %s', previous_path, new_path)
         os.rename(previous_path, new_path)
