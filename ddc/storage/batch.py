@@ -115,7 +115,6 @@ class Batch(object):
         duplicating this code in several places (each with different errors).
         """
         log = l_(log)
-        self.cdb.close(commit=True)
         previous_path = self.bunch.cdb
         base_path, previous_extension = os.path.splitext(previous_path)
         basename = os.path.basename(base_path)
@@ -124,6 +123,7 @@ class Batch(object):
         if target_dir is not None:
             base_path = os.path.join(target_dir, basename)
         new_path = base_path + '.' + to.upper()
+        self.cdb.close(commit=True)
         log.info('rename %s -> %s', previous_path, new_path)
         os.rename(previous_path, new_path)
         self.bunch = DataBunch.merge(self.bunch, cdb=new_path)
