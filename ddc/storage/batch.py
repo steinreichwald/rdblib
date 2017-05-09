@@ -102,7 +102,7 @@ class Batch(object):
         self.cdb.close(commit=commit)
         self.ibf.close()
 
-    def rename_xdb(self, to, log=None, target_dir=None):
+    def rename_xdb(self, to, log=None, target_dir=None, backup_dir=None):
         """
         Rename the underlying "CDB" file (which might be also refer to a RDB).
 
@@ -120,6 +120,25 @@ class Batch(object):
         basename = os.path.basename(base_path)
         if previous_extension and (previous_extension.upper() == to.upper()): # and (not target_dir)
             return
+        if backup_dir:
+            cdb_content = self.cdb.filecontent
+            os.makedirs(backup_dir, exist_ok=True)
+            ext_nr = 0
+            extension = previous_extension
+            while True:
+                backup_path = os.path.join(backup_dir, basename+extension)
+                try:
+                    # mode "xb" (Python 3.3+) ensures we never overwrite an
+                    # existing backup file
+                    with open(backup_path, 'xb') as fp:
+                        fp.write(cdb_content)
+                    log.debug('created backup in %s', backup_path)
+                    break
+                except FileExistsError:
+                    log.debug('file %s already exists, must try another backup filename', os.path.basename(backup_path))
+                    ext_nr += 1
+                    extension = previous_extension + '.' + str(ext_nr)
+
         if target_dir is not None:
             base_path = os.path.join(target_dir, basename)
         new_path = base_path + '.' + to.upper()

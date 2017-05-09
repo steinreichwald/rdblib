@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+import hashlib
 import os
 
 from pythonic_testcase import *
@@ -69,6 +70,35 @@ class BatchTest(PythonicTestCase):
             assert_true(os.path.exists(cdb_path))
             assert_equals(temp_dir, os.path.dirname(cdb_path))
             assert_equals(canary_value, batch.form(0)['PZN_1'].value)
+
+            # close all open files - otherwise Windows won't be able to remove
+            # the temp dir
+            batch.close()
+
+    def test_can_backup_original_file_before_renaming_cdb(self):
+        with use_tempdir() as temp_dir:
+            canary_value = '00031526'
+            rdb_path = os.path.join(temp_dir, '00042100.RDB')
+            batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
+            cdb_hash = hashlib.md5(batch.cdb.filecontent).hexdigest()
+
+            backup_dir = os.path.join(temp_dir, 'backup')
+            batch.rename_xdb(to='CDB', backup_dir=backup_dir)
+            cdb_path = os.path.join(temp_dir, '00042100.CDB')
+            assert_false(os.path.exists(rdb_path))
+            assert_true(os.path.exists(cdb_path))
+
+            rdb_backup_path = os.path.join(backup_dir, os.path.basename(rdb_path))
+            assert_true(os.path.exists(rdb_backup_path))
+            with open(rdb_backup_path, 'rb') as fp:
+                backup_hash = hashlib.md5(fp.read()).hexdigest()
+            assert_equals(cdb_hash, backup_hash)
+
+            # ensure the code does not overwrite backup files
+            batch.rename_xdb(to='RDB')
+            batch.rename_xdb(to='CDB', backup_dir=backup_dir)
+            backup1_path = rdb_backup_path + '.1'
+            assert_true(os.path.exists(backup1_path))
 
             # close all open files - otherwise Windows won't be able to remove
             # the temp dir
