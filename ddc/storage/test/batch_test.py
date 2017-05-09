@@ -20,15 +20,10 @@ class BatchTest(PythonicTestCase):
         assert_isinstance(batch, Batch)
 
     def test_can_create_new_db_when_initializing_with_bunch(self):
-        nr_forms = 2
         with use_tempdir() as temp_dir:
             cdb_path = os.path.join(temp_dir, '00042100.CDB')
-            ibf_path = guess_path(cdb_path, type_='ibf')
-            create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path)
-            create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
-            bunch = DataBunch(cdb_path, ibf_path, db=None, ask=None)
+            batch = self._create_cdbibf_batch(cdb_path, nr_forms=2, create_persistent_db=True)
 
-            batch = Batch.init_from_bunch(bunch, create_persistent_db=True, access='write')
             bunch = batch.bunch
             assert_not_none(bunch.db)
             assert_true(os.path.exists(bunch.db))
@@ -41,20 +36,14 @@ class BatchTest(PythonicTestCase):
             batch.close()
 
     def test_can_rename_batch(self):
-        nr_forms = 2
         with use_tempdir() as temp_dir:
-            rdb_path = os.path.join(temp_dir, '00042100.RDB')
-            cdb_path = os.path.splitext(rdb_path)[0] + '.CDB'
-            ibf_path = guess_path(rdb_path, type_='ibf')
-            create_cdb_with_dummy_data(nr_forms=nr_forms, filename=rdb_path)
-            create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
-            bunch = DataBunch(rdb_path, ibf_path, db=None, ask=None)
-            batch = Batch.init_from_bunch(bunch, access='write')
-            id_formbatch = id(batch.cdb)
             canary_value = '00031526'
-            batch.form(0)['PZN_1'].value = canary_value
+            rdb_path = os.path.join(temp_dir, '00042100.RDB')
+            batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
+            id_formbatch = id(batch.cdb)
 
             batch.rename_xdb(to='CDB')
+            cdb_path = os.path.splitext(rdb_path)[0] + '.CDB'
             assert_not_equals(id_formbatch, id(batch.cdb))
             assert_equals(cdb_path, batch.bunch.cdb)
             assert_true(os.path.exists(cdb_path))
@@ -66,19 +55,11 @@ class BatchTest(PythonicTestCase):
             batch.close()
 
     def test_can_rename_and_move_cdb(self):
-        nr_forms = 2
         with use_tempdir() as temp_dir:
-            rdb_dir = os.path.join(temp_dir, 'subdir')
-            os.makedirs(rdb_dir, exist_ok=True)
-            rdb_path = os.path.join(rdb_dir, '00042100.RDB')
-            ibf_path = guess_path(rdb_path, type_='ibf')
-            create_cdb_with_dummy_data(nr_forms=nr_forms, filename=rdb_path)
-            create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
-            bunch = DataBunch(rdb_path, ibf_path, db=None, ask=None)
-            batch = Batch.init_from_bunch(bunch, access='write')
-            id_formbatch = id(batch.cdb)
             canary_value = '00031526'
-            batch.form(0)['PZN_1'].value = canary_value
+            rdb_path = os.path.join(temp_dir, 'subdir', '00042100.RDB')
+            batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
+            id_formbatch = id(batch.cdb)
 
             batch.rename_xdb(to='CDB', target_dir=temp_dir)
             cdb_path = os.path.join(temp_dir, '00042100.CDB')
@@ -214,6 +195,24 @@ class BatchTest(PythonicTestCase):
             batch.close()
 
     # --- helpers -------------------------------------------------------------
+
+    def _create_cdbibf_batch(self, cdb_path, nr_forms=1, form0_data=None, create_persistent_db=False):
+        cdb_dir = os.path.dirname(cdb_path)
+        os.makedirs(cdb_dir, exist_ok=True)
+        ibf_path = guess_path(cdb_path, type_='ibf')
+        create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path)
+        create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
+        bunch = DataBunch(cdb_path, ibf_path, db=None, ask=None)
+        batch = Batch.init_from_bunch(
+            bunch,
+            create_persistent_db=create_persistent_db,
+            access='write'
+        )
+        if form0_data:
+            for field_name, value in form0_data.items():
+                batch.form(0)[field_name].value = value
+        return batch
+
     def _create_batch(self, *, nr_forms=1, tasks=(), ignored_warnings=(), model=None):
         databunch = DataBunch(
             cdb=create_cdb_with_dummy_data(nr_forms=nr_forms),
