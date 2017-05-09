@@ -51,6 +51,7 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
     if expected_file_size != filesize:
         extra_bytes = filesize - expected_file_size
         msg = u'Die Datei enthält %d Belege (Header), es müssten %d Belege vorhanden sein (Dateigröße).'
+        cdb_fp.close()
         return _error(msg % (form_count, calculated_form_count), warnings=warnings)
 
     next_index = 0
@@ -66,6 +67,7 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
         field_count = form_header['field_count']
         if field_count != nr_fields_per_form:
             msg = 'Formular #%d ist vermutlich fehlerhaft (%d Felder statt %d)' % (form_nr, field_count, nr_fields_per_form)
+            cdb_fp.close()
             return _error(msg, warnings=warnings)
 
         unknown_names = []
@@ -84,6 +86,7 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
             unknown_msg = 'unbekanntes Feld %r' % (b', '.join(unknown_names))
             unseen_msg = 'fehlendes Feld %r' % (b', '.join(unseen_names))
             msg = 'Formular #%d ist vermutlich fehlerhaft (%s, %s).' % (form_nr, unknown_msg, unseen_msg)
+            cdb_fp.close()
             return _error(msg, warnings=warnings)
 
         # CDB/RDB files might contain empty an PIC field in case of OCR problems.
