@@ -89,7 +89,6 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
         # CDB/RDB files might contain empty an PIC field in case of OCR problems.
         # We can apply workarounds for that but it might help finding the bad
         # form.
-        # TODO: That is just a warning!
         cdb_pic = form_header['imprint_line_short'].rstrip(b'\x00')
         if cdb_pic == b'':
             msg = 'Formular #%d ist wahrscheinlich fehlerhaft (keine PIC-Nr vorhanden)' % form_nr
