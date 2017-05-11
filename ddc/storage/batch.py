@@ -120,8 +120,9 @@ class Batch(object):
         basename = os.path.basename(base_path)
         if previous_extension and (previous_extension.upper() == to.upper()): # and (not target_dir)
             return
+        self.cdb.commit()
+        cdb_content = bytes(self.cdb.filecontent)
         if backup_dir:
-            cdb_content = self.cdb.filecontent
             os.makedirs(backup_dir, exist_ok=True)
             ext_nr = 0
             extension = previous_extension
@@ -144,7 +145,13 @@ class Batch(object):
         new_path = base_path + '.' + to.upper()
         self.cdb.close(commit=True)
         log.info('rename %s -> %s', previous_path, new_path)
-        os.rename(previous_path, new_path)
+        # os.rename() overwrites existing files on Unix (but raises OSError on
+        # Windows). Still we must ensure that we never overwrite anything.
+        # The current "naive" approach means we are loosing metadata but that
+        # seems to be fine currently.
+        with open(new_path, 'xb') as fp:
+            fp.write(cdb_content)
+        os.unlink(previous_path)
         self.bunch = DataBunch.merge(self.bunch, cdb=new_path)
 
         # (prevent recursive imports)

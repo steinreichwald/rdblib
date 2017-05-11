@@ -55,6 +55,22 @@ class BatchTest(PythonicTestCase):
             # the temp dir
             batch.close()
 
+    def test_fails_rename_if_target_file_already_exists(self):
+        with use_tempdir() as temp_dir:
+            rdb_path = os.path.join(temp_dir, '00042100.RDB')
+            cdb_path = rdb_path.replace('.RDB', '.CDB')
+            batch = self._create_cdbibf_batch(rdb_path, nr_forms=2)
+            with open(cdb_path, 'wb') as fp:
+                fp.write(b'should be kept')
+
+            with assert_raises(FileExistsError):
+                batch.rename_xdb(to='CDB')
+            assert_true(os.path.exists(rdb_path))
+            assert_true(os.path.exists(cdb_path))
+            # close all open files - otherwise Windows won't be able to remove
+            # the temp dir
+            batch.close()
+
     def test_can_rename_and_move_cdb(self):
         with use_tempdir() as temp_dir:
             canary_value = '00031526'
@@ -241,6 +257,7 @@ class BatchTest(PythonicTestCase):
         if form0_data:
             for field_name, value in form0_data.items():
                 batch.form(0)[field_name].value = value
+            batch.cdb.commit()
         return batch
 
     def _create_batch(self, *, nr_forms=1, tasks=(), ignored_warnings=(), model=None):
