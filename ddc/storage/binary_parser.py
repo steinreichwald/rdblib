@@ -42,3 +42,10 @@ class BinaryFormat(object):
         name_value_pairs = tuple(zip(self.field_names, values))
         return OrderedDict(name_value_pairs)
 
+    def to_bytes(self, values):
+        assert len(self.field_names) == len(values)
+        ordered_values = []
+        for name in self.field_names:
+            ordered_values.append(values[name])
+        return struct.pack(self.format_string, *ordered_values)
+
