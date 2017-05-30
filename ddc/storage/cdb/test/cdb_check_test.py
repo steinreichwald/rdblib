@@ -52,6 +52,9 @@ class CDBCheckTest(PythonicTestCase):
         assert_false(result)
         assert_none(result.cdb_fp)
         assert_contains('noch in Bearbeitung.', result.message)
+        assert_equals('file.is_locked', result.key)
+        assert_none(result.form_index)
+        assert_none(result.field_index)
 
         cdb_fp.close()
 
@@ -66,6 +69,9 @@ class CDBCheckTest(PythonicTestCase):
         assert_false(result)
         assert_none(result.cdb_fp)
         assert_contains(u'ungewöhnliche Größe', result.message)
+        assert_equals('file.junk_after_last_record', result.key)
+        assert_none(result.form_index)
+        assert_none(result.field_index)
 
     def test_can_detect_cdb_files_with_bad_formcount_in_header(self):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
@@ -83,6 +89,9 @@ class CDBCheckTest(PythonicTestCase):
         assert_none(result.cdb_fp)
         expected_msg = u'Die Datei enthält 1 Belege (Header), es müssten 2 Belege vorhanden sein (Dateigröße).'
         assert_contains(expected_msg, result.message)
+        assert_equals('file.size_does_not_match_records', result.key)
+        assert_none(result.form_index)
+        assert_none(result.field_index)
 
     def test_can_detect_forms_with_unusual_number_of_fields(self):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
@@ -106,11 +115,15 @@ class CDBCheckTest(PythonicTestCase):
         assert_none(result.cdb_fp)
         expected_msg = u'Formular #2 ist vermutlich fehlerhaft (%d Felder statt %d)'
         assert_contains(expected_msg % (nr_fields2, nr_fields1), result.message)
+        assert_equals('form.unusual_number_of_fields', result.key)
+        assert_equals(1, result.form_index)
+        assert_none(result.field_index)
 
     def test_can_detect_forms_with_unknown_field_names(self):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         fields_form1 = valid_prescription_values()
         missing_fieldname = 'ABGABEDATUM'
+        index_missing_field = tuple(fields_form1).index(missing_fieldname)
         del fields_form1[missing_fieldname]
         fields_form1['extra'] = 'anything'
         cdb_forms = (fields_form1,)
@@ -124,6 +137,9 @@ class CDBCheckTest(PythonicTestCase):
             u'Formular #1 ist vermutlich fehlerhaft (unbekanntes Feld b\'extra\', fehlendes Feld b%r).' % missing_fieldname,
             result.message
         )
+        assert_equals('form.unknown_fields', result.key)
+        assert_equals(0, result.form_index)
+        assert_equals(len(fields_form1)-1, result.field_index)
 
     def test_can_detect_forms_with_empty_pic(self):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
@@ -145,3 +161,6 @@ class CDBCheckTest(PythonicTestCase):
             u'Formular #1 ist wahrscheinlich fehlerhaft (keine PIC-Nr vorhanden)',
             result.warnings[0]
         )
+        assert_none(result.key)
+        assert_none(result.form_index)
+        assert_none(result.field_index)
