@@ -141,6 +141,7 @@ class Batch(object):
                     extension = previous_extension + '.' + str(ext_nr)
 
         if target_dir is not None:
+            os.makedirs(target_dir, exist_ok=True)
             base_path = os.path.join(target_dir, basename)
         new_path = base_path + '.' + to.upper()
         self.cdb.close(commit=True)

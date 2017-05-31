@@ -78,13 +78,16 @@ class BatchTest(PythonicTestCase):
             batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
             id_formbatch = id(batch.cdb)
 
-            batch.rename_xdb(to='CDB', target_dir=temp_dir)
-            cdb_path = os.path.join(temp_dir, '00042100.CDB')
+            target_dir = os.path.join(temp_dir, 'cdb_dir')
+            assert_false(os.path.exists(target_dir),
+                message='rename_xdb() should create the target dir if necessary')
+            batch.rename_xdb(to='CDB', target_dir=target_dir)
+            cdb_path = os.path.join(target_dir, '00042100.CDB')
             assert_false(os.path.exists(rdb_path))
             assert_not_equals(id_formbatch, id(batch.cdb))
             assert_equals(cdb_path, batch.bunch.cdb)
             assert_true(os.path.exists(cdb_path))
-            assert_equals(temp_dir, os.path.dirname(cdb_path))
+            assert_equals(target_dir, os.path.dirname(cdb_path))
             assert_equals(canary_value, batch.form(0)['PZN_1'].value)
 
             # close all open files - otherwise Windows won't be able to remove
