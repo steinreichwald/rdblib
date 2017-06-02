@@ -21,6 +21,7 @@ __all__ = [
     'path_info_from_cdb',
     'path_info_from_db',
     'path_info_from_ibf',
+    'safe_move',
     'simple_bunch',
     'DataBunch',
 ]
@@ -149,3 +150,15 @@ def simple_bunch(bunch):
     for key in ('cdb', 'ibf', 'db', 'ask'):
         values[key] = get_path_from_instance(getattr(bunch, key))
     return DataBunch(**values)
+
+def safe_move(previous_path, new_path, data=None):
+    if data is None:
+        with open(previous_path, 'rb') as source_fp:
+            data = source_fp.read()
+    # os.rename() overwrites existing files on Unix (but raises OSError on
+    # Windows). Still we must ensure that we never overwrite anything.
+    # The current "naive" approach means we are loosing metadata but that
+    # seems to be fine currently.
+    with open(new_path, 'xb') as target_fp:
+        target_fp.write(data)
+    os.unlink(previous_path)
