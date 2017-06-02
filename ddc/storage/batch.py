@@ -19,7 +19,7 @@ from ddc.lib.log_proxy import l_
 from .batch_form import BatchForm
 from .ibf import ImageBatch
 from .ibf.tiff_handler import TiffHandler
-from .paths import guess_path, simple_bunch, DataBunch
+from .paths import guess_path, safe_move, simple_bunch, DataBunch
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
 from .utils import DELETE
@@ -146,13 +146,7 @@ class Batch(object):
         new_path = base_path + '.' + to.upper()
         self.cdb.close(commit=True)
         log.info('rename %s -> %s', previous_path, new_path)
-        # os.rename() overwrites existing files on Unix (but raises OSError on
-        # Windows). Still we must ensure that we never overwrite anything.
-        # The current "naive" approach means we are loosing metadata but that
-        # seems to be fine currently.
-        with open(new_path, 'xb') as fp:
-            fp.write(cdb_content)
-        os.unlink(previous_path)
+        safe_move(previous_path, new_path, data=cdb_content)
         self.bunch = DataBunch.merge(self.bunch, cdb=new_path)
 
         # (prevent recursive imports)
