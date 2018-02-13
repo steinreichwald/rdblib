@@ -101,7 +101,11 @@ def create_cdb_with_form_values(form_values, filename=None):
             if field_name == 'pic':
                 header_values['imprint_line_short'] = field_value
                 continue
-            field = {'name': field_name, 'corrected_result': field_value}
+            field = {'name': field_name}
+            if isinstance(field_value, str):
+                field['corrected_result'] = field_value
+            else:
+                field.update(field_value)
             fields.append(field)
         return CDBForm(fields, **header_values)
 
