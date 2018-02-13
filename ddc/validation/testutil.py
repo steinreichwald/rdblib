@@ -16,6 +16,7 @@ def valid_prescription_values(*, with_pic=False, **values):
         valid_values[field_name] = ''
     valid_values.update(values)
     if with_pic:
-        valid_values['pic'] = '10501200042024'
+        pic_str = '10501200042024' if (with_pic == True) else with_pic
+        valid_values['pic'] = pic_str
     return valid_values
 
