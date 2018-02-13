@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2013 Felix Schwarz
+# Copyright 2013, 2018 Felix Schwarz
 # The source code in this file is is dual licensed under the MIT license or
 # the GPLv3 or (at your option) any later version.
 
@@ -26,9 +26,10 @@ class UTCDateTime(TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         if value is not None:
-            # this will raise an exception for naive datetime instances but
-            # that is actually intended so we never accidentally guess a
-            # timezone
+            if value.tzinfo is None:
+                # since Python 3.6 ".astimetzone()" also works on naive datetime
+                # instances so we have to check this separately.
+                raise ValueError('naive datetime instance passed: %r' % value)
             utc_dt = value.astimezone(UTC)
             if not self._strip_tz:
                 return utc_dt
