@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2013 Felix Schwarz
+# Copyright 2013, 2018 Felix Schwarz
 # The source code in this file is is dual licensed under the MIT license or
 # the GPLv3 or (at your option) any later version.
 
@@ -55,7 +55,8 @@ class UTCDateTimeTest(PythonicTestCase):
 
     def test_raises_exception_for_naive_datetime(self):
         dt = DateTime(2013, 5, 25, 9, 53, 24)
-        assert_raises(StatementError, lambda: self._insert(dt))
+        with assert_raises(StatementError):
+            self._insert(dt)
 
     def test_can_store_none(self):
         inserted_id = self._insert(None)
