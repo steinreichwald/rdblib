@@ -19,7 +19,7 @@ from ddc.lib.log_proxy import l_
 from .batch_form import BatchForm
 from .ibf import ImageBatch
 from .ibf.tiff_handler import TiffHandler
-from .paths import guess_path, safe_move, simple_bunch, DataBunch
+from .paths import assemble_new_path, guess_path, safe_move, simple_bunch, DataBunch
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
 from .utils import DELETE
@@ -114,12 +114,18 @@ class Batch(object):
         to implement this once and document the caveats clearly instead of
         duplicating this code in several places (each with different errors).
         """
+        previous_path = self.bunch.cdb
+        target_path = assemble_new_path(previous_path, new_dir=target_dir, new_extension=to.upper())
+        self.move_xdb(target_path, log=log, backup_dir=backup_dir)
+
+    def move_xdb(self, target_path, log=None, backup_dir=None):
         log = l_(log)
         previous_path = self.bunch.cdb
+        if previous_path == target_path:
+            return
+
         base_path, previous_extension = os.path.splitext(previous_path)
         basename = os.path.basename(base_path)
-        if previous_extension and (previous_extension.upper() == to.upper()): # and (not target_dir)
-            return
         self.cdb.commit()
         cdb_content = bytes(self.cdb.filecontent)
         if backup_dir:
@@ -140,14 +146,14 @@ class Batch(object):
                     ext_nr += 1
                     extension = previous_extension + '.' + str(ext_nr)
 
+        target_dir = os.path.dirname(target_path)
         if target_dir is not None:
             os.makedirs(target_dir, exist_ok=True)
             base_path = os.path.join(target_dir, basename)
-        new_path = base_path + '.' + to.upper()
         self.cdb.close(commit=True)
-        log.info('rename %s -> %s', previous_path, new_path)
-        safe_move(previous_path, new_path, data=cdb_content)
-        self.bunch = DataBunch.merge(self.bunch, cdb=new_path)
+        log.info('rename %s -> %s', previous_path, target_path)
+        safe_move(previous_path, target_path, data=cdb_content)
+        self.bunch = DataBunch.merge(self.bunch, cdb=target_path)
 
         # (prevent recursive imports)
         from ddc.tool.cdb_tool import FormBatch
@@ -155,7 +161,7 @@ class Batch(object):
         # the wrong (RDB) context. The log is stored in several places and I think
         # it would be more confusing if some parts log with the old context while
         # others already use the new context.
-        self.cdb = FormBatch(new_path, log=log)
+        self.cdb = FormBatch(target_path, log=log)
 
     # --- accessing data ------------------------------------------------------
     def tasks(self, type_=None, status=None, form_index=None):
