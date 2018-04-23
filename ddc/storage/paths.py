@@ -4,6 +4,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from collections import namedtuple
 import os
 import re
+import shutil
 import sys
 
 from ddc.lib.attribute_dict import AttrDict
@@ -161,4 +162,5 @@ def safe_move(previous_path, new_path, data=None):
     # seems to be fine currently.
     with open(new_path, 'xb') as target_fp:
         target_fp.write(data)
+    shutil.copystat(previous_path, new_path)
     os.unlink(previous_path)
