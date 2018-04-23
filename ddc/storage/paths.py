@@ -12,6 +12,7 @@ from ddc.lib.result import Result
 
 
 __all__ = [
+    'assemble_new_path',
     'get_path_from_instance',
     'guess_bunch_from_path',
     'guess_cdb_path',
@@ -151,6 +152,19 @@ def simple_bunch(bunch):
     for key in ('cdb', 'ibf', 'db', 'ask'):
         values[key] = get_path_from_instance(getattr(bunch, key))
     return DataBunch(**values)
+
+def assemble_new_path(current_path, new_dir=None, new_extension=None):
+    """Return the path of a file after changing the extension to "new_extension"
+    and/or changing the directory to "new_dir".
+    """
+    base_path, dot_extension = os.path.splitext(current_path)
+    if new_dir is not None:
+        basename = os.path.basename(base_path)
+        base_path = os.path.join(new_dir, basename)
+    if new_extension is not None:
+        dot_str = '.' if not new_extension.startswith('.') else ''
+        dot_extension = dot_str + new_extension
+    return base_path + dot_extension
 
 def safe_move(previous_path, new_path, data=None):
     if data is None:
