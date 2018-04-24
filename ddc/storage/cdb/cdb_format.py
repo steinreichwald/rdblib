@@ -43,7 +43,7 @@ class CDBFormat(object):
         ('rejects',           'i'),
         ('recognizer_result', '40s'),
         ('corrected_result',  '40s'),
-        ('_valid',             'i'),
+        ('valid',             'i'), # Walther error marker: 0=not valid, 1=valid
         ('left',              'i'),
         ('top',               'i'),
         ('right',             'i'),

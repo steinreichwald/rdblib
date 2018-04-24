@@ -81,7 +81,7 @@ class BinaryMeta(type):
         def __str__(self):
             result = ['%s:' % self.__class__.__name__]
             for field_name in self.field_names:
-                if (not field_name.startswith('_ign')) and (field_name != '_valid'):
+                if not field_name.startswith('_ign'):
                     str_part = '    %s = %s' % (field_name, getattr(self.rec, field_name))
                     result.append(str_part)
             return '\n'.join(result)
