@@ -207,6 +207,9 @@ class Form(object):
         self.record_size = 0
         self.parent = parent
         self.offset = offset
+        self.form_header = None
+        self.fields = None
+        self._fields_loaded = False
 
         self._field_names = []
         self.field_offsets = []
