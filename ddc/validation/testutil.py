@@ -25,6 +25,7 @@ def valid_prescription_values(*, with_pic=False, **values):
     })
     valid_values.update(values)
     if with_pic:
+        # with_pic='...' will ensure we use a specific PIC
         pic_str = '10501200042024' if (with_pic == True) else with_pic
         valid_values['pic'] = pic_str
     return valid_values
