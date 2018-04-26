@@ -15,7 +15,7 @@ class CDBWritingTest(PythonicTestCase):
             'rejects': 0,
             'recognizer_result': b'12345' + 35 * b'\x00',
             'corrected_result': b'12345' + 35 * b'\x00',
-            '_valid': 0,
+            'valid': 0,
             'left': 0,
             'top': 0,
             'right': 0,
