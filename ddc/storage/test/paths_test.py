@@ -77,7 +77,7 @@ class PathTest(PythonicTestCase):
         )
 
     @data('cdb', 'ibf', 'db', 'ask')
-    def test_can_guess_bunch_with_path(self, missing):
+    def test_can_guess_bunch_from_path(self, missing):
         bunch = DataBunch(cdb=f('/tmp/foo.CDB'), ibf=f('/tmp/00000001/FOO.ibf'),
                           db=f('/tmp/Foo.db'), ask=f('/tmp/00000001/FOO.ask'))
         noise = f('/foo.' + missing)
