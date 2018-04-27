@@ -10,3 +10,5 @@ please commit the verbatim code first and modify it later so we have a
 meaningful git commit history.
 """
 
+from .dict_merger import *
+
