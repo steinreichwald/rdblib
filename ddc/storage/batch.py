@@ -22,7 +22,7 @@ from .ibf.tiff_handler import TiffHandler
 from .paths import assemble_new_path, guess_path, safe_move, simple_bunch, DataBunch
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
-from .utils import DELETE
+from .utils import create_backup, DELETE
 
 
 __all__ = ['Batch']
@@ -129,25 +129,7 @@ class Batch(object):
         self.cdb.commit()
         cdb_content = bytes(self.cdb.filecontent)
         if backup_dir:
-            os.makedirs(backup_dir, exist_ok=True)
-            ext_nr = 0
-            # Adding .BAK to the filename ensures the backup file can not be
-            # opened accidentally by users.
-            extension = previous_extension + '.BAK'
-            while True:
-                backup_path = os.path.join(backup_dir, basename+extension)
-                try:
-                    # mode "xb" (Python 3.3+) ensures we never overwrite an
-                    # existing backup file
-                    with open(backup_path, 'xb') as fp:
-                        fp.write(cdb_content)
-                    log.debug('created backup in %s', backup_path)
-                    break
-                except FileExistsError:
-                    log.debug('file %s already exists, must try another backup filename', os.path.basename(backup_path))
-                    ext_nr += 1
-                    extension = previous_extension + '.BAK' + '.' + str(ext_nr)
-
+            create_backup(self.cdb, backup_dir, log=log)
         target_dir = os.path.dirname(target_path)
         if target_dir is not None:
             os.makedirs(target_dir, exist_ok=True)
