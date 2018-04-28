@@ -7,7 +7,6 @@ import re
 import shutil
 import sys
 
-from ddc.lib import merge_dicts
 from ddc.lib.attribute_dict import AttrDict
 from ddc.lib.result import Result
 
@@ -32,16 +31,7 @@ __all__ = [
 ibf_subdir = '00000001'
 xdb_regex = re.compile('^\..DB$')
 
-class DataBunch(namedtuple('DataBunch', ('cdb', 'ibf', 'db', 'ask'))):
-    def __new__(cls, *args, **kwargs):
-        if len(args) + len(kwargs) > len(cls._fields):
-            raise TypeError('too may arguments for __init__()')
-        defaults = dict([(key, None) for key in cls._fields])
-        kv_args = dict(zip(cls._fields, args))
-        kv = merge_dicts(defaults, kv_args, kwargs)
-        self = super().__new__(cls, *kv.values())
-        return self
-
+class DataBunch(namedtuple('DataBunch', 'cdb ibf db ask')):
     def is_complete(self):
         return (None not in self[:3])
 
