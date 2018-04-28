@@ -80,6 +80,7 @@ class FormBatch(object):
         # optimization:
         # we calculate the record size only once.
         first_header = FormHeader(self.filecontent, offset)
+        nr_forms_in_header = self.form_batch_header.rec.form_count
         field_count = first_header.rec.field_count
         record_size = (first_header.record_size +
                        Form._field_record_size * field_count)
@@ -87,10 +88,12 @@ class FormBatch(object):
             form = self._build_form(offset, record_size)
             self.forms.append(form)
             offset += record_size
-            if len(self.forms) > len(self):
-                raise ValueError('prescription count exceeds header info')
-        if len(self.forms) != len(self):
-            raise ValueError("read prescription count (%d) differs from header info (%d)" % (len(self.forms), len(self)))
+            nr_parsed_forms = len(self.forms)
+            if nr_parsed_forms > nr_forms_in_header:
+                raise ValueError('prescription count (%d) exceeds header info (%d)' % (nr_parsed_forms, nr_forms_in_header))
+        nr_parsed_forms = len(self.forms)
+        if nr_parsed_forms != nr_forms_in_header:
+            raise ValueError("read prescription count (%d) differs from header info (%d)" % (nr_parsed_forms, nr_forms_in_header))
 
     def _build_form(self, offset, record_size):
         def form(self=self, offset=offset, record_size = record_size):
