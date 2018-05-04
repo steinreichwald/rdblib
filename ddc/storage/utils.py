@@ -26,24 +26,41 @@ def filecontent(mmap_or_filelike):
 
 def _as_filelike(source):
     if isinstance(source, str):
-        return open(source, 'rb')
+        return open(source, 'rb'), True
     elif hasattr(source, 'filecontent'):  # FormBatch
         return AttrDict({
             'name': get_path_from_instance(source.mmap_file),
             'read': lambda: source.filecontent,
-        })
-    return source
+        }), False
+    return source, False
 
 def create_backup(source, backup_dir, *, log=None, ignore_errors=False):
     log = l_(log)
     try:
-        source_fp = _as_filelike(source)
+        source_fp, should_close = _as_filelike(source)
     except (FileNotFoundError, PermissionError) as e:
         log.error('unable to open file %s: %s', source, e)
         if ignore_errors:
             return None
         raise
 
+    try:
+        return _create_backup(source_fp, backup_dir, log=log)
+    except (FileNotFoundError, PermissionError):
+        if ignore_errors:
+            return None
+        raise
+    finally:
+        # We should not leave open file handles around because of Windows'
+        # file semantics: You can not delete/move an open file and if Python
+        # does not close the fp automatically (IIRC there are no guarantees
+        # when that happen if the fp is not closed explicitly ) we trip over
+        # exceptions later.
+        if should_close:
+            source_fp.close()
+
+
+def _create_backup(source_fp, backup_dir, *, log):
     file_data = source_fp.read()
     previous_path = source_fp.name
     base_path, previous_extension = os.path.splitext(previous_path)
@@ -52,8 +69,6 @@ def create_backup(source, backup_dir, *, log=None, ignore_errors=False):
         os.makedirs(backup_dir, exist_ok=True)
     except (FileNotFoundError, PermissionError) as e:
         log.error('unable to create backup directory %s: %s', backup_dir, e)
-        if ignore_errors:
-            return None
         raise
 
     ext_nr = 0
@@ -77,8 +92,6 @@ def create_backup(source, backup_dir, *, log=None, ignore_errors=False):
             # This likely means we are not allowed to create any file in this
             # directory, leading to an endless loop so we should abort here.
             log.error('unable to create backup file %s: %s', backup_path, e)
-            if ignore_errors:
-                return None
             raise
     return backup_path
 
