@@ -11,4 +11,5 @@ meaningful git commit history.
 """
 
 from .dict_merger import *
+from .log_proxy import *
 

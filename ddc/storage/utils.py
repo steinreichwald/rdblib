@@ -4,6 +4,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import mmap
 import os
 
+from ddc.lib import l_
 from ddc.lib.attribute_dict import AttrDict
 from .paths import get_path_from_instance
 
@@ -33,7 +34,8 @@ def _as_filelike(source):
         })
     return source
 
-def create_backup(source, backup_dir, *, log):
+def create_backup(source, backup_dir, *, log=None):
+    log = l_(log)
     source_fp = _as_filelike(source)
     file_data = source_fp.read()
     previous_path = source_fp.name
@@ -57,3 +59,5 @@ def create_backup(source, backup_dir, *, log):
             log.debug('file %s already exists, must try another backup filename', os.path.basename(backup_path))
             ext_nr += 1
             extension = previous_extension + '.BAK' + '.' + str(ext_nr)
+    return backup_path
+
