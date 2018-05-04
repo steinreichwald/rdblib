@@ -56,7 +56,14 @@ class MMapFile(mmap.mmap):
         # to save a reference to the underlying file ourself.
         f = io.open(filename, aflags)
         if access != 'DONTCARE':
-            acquire_lock(f, exclusive_lock=(access_mode == mmap.ACCESS_WRITE), log=log)
+            try:
+                acquire_lock(f, exclusive_lock=(access_mode == mmap.ACCESS_WRITE), log=log)
+            except:
+                # On Windows we can not move/rename open files so leaving the
+                # file open would mean we might trigger other exceptions later
+                # on.
+                f.close()
+                raise
         self = super(MMapFile, cls).__new__(cls, f.fileno(), 0, access=access_mode)
         self._file = f
         self._name = filename
