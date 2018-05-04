@@ -48,7 +48,14 @@ def create_backup(source, backup_dir, *, log=None, ignore_errors=False):
     previous_path = source_fp.name
     base_path, previous_extension = os.path.splitext(previous_path)
     basename = os.path.basename(base_path)
-    os.makedirs(backup_dir, exist_ok=True)
+    try:
+        os.makedirs(backup_dir, exist_ok=True)
+    except (FileNotFoundError, PermissionError) as e:
+        log.error('unable to create backup directory %s: %s', backup_dir, e)
+        if ignore_errors:
+            return None
+        raise
+
     ext_nr = 0
     # Adding .BAK to the filename ensures the backup file can not be
     # opened accidentally by users.
@@ -66,5 +73,12 @@ def create_backup(source, backup_dir, *, log=None, ignore_errors=False):
             log.debug('file %s already exists, must try another backup filename', os.path.basename(backup_path))
             ext_nr += 1
             extension = previous_extension + '.BAK' + '.' + str(ext_nr)
+        except PermissionError as e:
+            # This likely means we are not allowed to create any file in this
+            # directory, leading to an endless loop so we should abort here.
+            log.error('unable to create backup file %s: %s', backup_path, e)
+            if ignore_errors:
+                return None
+            raise
     return backup_path
 
