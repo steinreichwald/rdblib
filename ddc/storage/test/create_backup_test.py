@@ -63,11 +63,42 @@ class CreateBackupTest(PythonicTestCase):
         assert_false(os.path.exists(backup_dir))
         assert_none(backup_path)
 
+    def test_can_handle_inability_create_backup_directory(self):
+        source_path = self._create_file('/data/foo.bin', b'some data')
+        foo_dir = '/foo'
+        os.makedirs(foo_dir, mode=0)
+        self._assert_directory_not_accessible(foo_dir)
+        backup_dir = os.path.join(foo_dir, 'backup')
+        assert_false(os.path.exists(backup_dir))
+
+        with assert_raises(Exception):
+            create_backup(source_path, backup_dir)
+
+        backup_path = create_backup(source_path, backup_dir, ignore_errors=True)
+        assert_none(backup_path)
+
+    def test_can_handle_backup_directory_without_permission_to_create_files(self):
+        source_path = self._create_file('/data/foo.bin', b'some data')
+        backup_dir = '/backup'
+        os.makedirs(backup_dir, mode=0)
+        self._assert_directory_not_accessible(backup_dir)
+
+        with assert_raises(PermissionError):
+            create_backup(source_path, backup_dir)
+
+        backup_path = create_backup(source_path, backup_dir, ignore_errors=True)
+        assert_none(backup_path)
+
 
     # --- internal helpers ----------------------------------------------------
     def _assert_not_readable(self, file_path):
         with assert_raises(PermissionError, message='expected insufficient permissions to open %s' % file_path):
             open(file_path, 'r')
+
+    def _assert_directory_not_accessible(self, dir_path):
+        dummy_path = os.path.join(dir_path, 'dummy.txt')
+        with assert_raises(PermissionError, message='was able to create file %s' % dummy_path):
+            open(dummy_path, 'wb')
 
     # --- internal helpers ----------------------------------------------------
     def _create_file(self, file_path, content):
