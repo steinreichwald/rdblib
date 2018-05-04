@@ -1,1 +1,2 @@
+--index-url=http://www.pydica.org/dependencies/ --trusted-host=www.pydica.org
 PythonicTestcase >= 1.1.0  # assert_raises with context_manager
