@@ -34,6 +34,41 @@ class CreateBackupTest(PythonicTestCase):
         md5_backup = md5sum_for_file(backup_path)
         assert_equals(md5_source, md5_backup)
 
+    def test_can_handle_non_existing_source(self):
+        bad_path = '/invalid/test.rdb'
+        backup_dir = '/backup'
+        assert_false(os.path.exists(bad_path))
+        assert_false(os.path.exists(backup_dir))
+
+        with assert_raises(FileNotFoundError):
+            create_backup(bad_path, backup_dir)
+        assert_false(os.path.exists(backup_dir))
+
+        backup_path = create_backup(bad_path, backup_dir, ignore_errors=True)
+        assert_false(os.path.exists(backup_dir))
+        assert_none(backup_path)
+
+    def test_can_handle_source_with_insufficient_privileges(self):
+        source_path = self._create_file('/data/foo.bin', b'some data')
+        os.chmod(source_path, 0)
+        self._assert_not_readable(source_path)
+        backup_dir = '/backup'
+        assert_false(os.path.exists(backup_dir))
+
+        with assert_raises(PermissionError):
+            create_backup(source_path, backup_dir)
+        assert_false(os.path.exists(backup_dir))
+
+        backup_path = create_backup(source_path, backup_dir, ignore_errors=True)
+        assert_false(os.path.exists(backup_dir))
+        assert_none(backup_path)
+
+
+    # --- internal helpers ----------------------------------------------------
+    def _assert_not_readable(self, file_path):
+        with assert_raises(PermissionError, message='expected insufficient permissions to open %s' % file_path):
+            open(file_path, 'r')
+
     # --- internal helpers ----------------------------------------------------
     def _create_file(self, file_path, content):
         dirname = os.path.dirname(file_path)

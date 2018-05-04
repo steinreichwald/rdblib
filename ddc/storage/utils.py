@@ -34,9 +34,16 @@ def _as_filelike(source):
         })
     return source
 
-def create_backup(source, backup_dir, *, log=None):
+def create_backup(source, backup_dir, *, log=None, ignore_errors=False):
     log = l_(log)
-    source_fp = _as_filelike(source)
+    try:
+        source_fp = _as_filelike(source)
+    except (FileNotFoundError, PermissionError) as e:
+        log.error('unable to open file %s: %s', source, e)
+        if ignore_errors:
+            return None
+        raise
+
     file_data = source_fp.read()
     previous_path = source_fp.name
     base_path, previous_extension = os.path.splitext(previous_path)
