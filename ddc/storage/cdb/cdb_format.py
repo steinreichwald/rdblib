@@ -26,7 +26,13 @@ class CDBFormat(object):
         ('field_count',        'i'),
         ('pharmacy_rejects',   'i'),
         ('doctor_rejects',     'i'),
-        ('_valid',              'i'),
+        # Walther uses per-field and per-form error markers. It seems as if the
+        # old Walther software first checks the form header to jump to the
+        # right form and uses the per-field marker only to locate the invalid
+        # field.
+        # If we leave the form header marker untouched users might notice
+        # "surprising" behavior in the legacy software.
+        ('valid',              'i'), # Walther error marker: 0=not valid, 1=valid
         ('left_margin',        'i'),
         ('top_margin',         'i'),
         ('right_margin',       'i'),
