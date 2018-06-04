@@ -167,6 +167,8 @@ def assemble_new_path(current_path, new_dir=None, new_extension=None):
     return base_path + dot_extension
 
 def safe_move(previous_path, new_path, data=None):
+    if previous_path == new_path:
+        return
     if data is None:
         with open(previous_path, 'rb') as source_fp:
             data = source_fp.read()
