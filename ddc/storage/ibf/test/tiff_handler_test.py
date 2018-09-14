@@ -8,7 +8,7 @@ from pythonic_testcase import *
 
 import ddc
 from ddc.storage.ibf import ImageBatch, TiffHandler
-from ddc.tool.datamanager import bunch_from_cdb_name
+from ddc.storage.paths import guess_path
 
 
 # XXX add some tests for images. They are completely missing, and cdb_tool
@@ -21,7 +21,7 @@ CDB_PATH = os.path.join(DATABASE_PATH, '00099201.CDB')
 class TiffHandlerTest(PythonicTestCase):
     @data('write', 'copy')
     def test_tiff_access(self, access):
-        fname = bunch_from_cdb_name(CDB_PATH).ibf
+        fname = guess_path(CDB_PATH, 'IBF')
         imbatch = ImageBatch(fname, access=access)
         th = TiffHandler(imbatch, 0)
         assert_equals(27, th.ifd.rec.num_tags)
@@ -31,7 +31,7 @@ class TiffHandlerTest(PythonicTestCase):
 
     @data('write', 'copy')
     def test_tiff_write(self, access):
-        fname = bunch_from_cdb_name(CDB_PATH).ibf
+        fname = guess_path(CDB_PATH, 'IBF')
         imbatch = ImageBatch(fname, access=access)
         th = TiffHandler(imbatch, 0)
         th.long_data.update_rec(page_name = 'DELETED')
