@@ -5,9 +5,9 @@ from io import BytesIO
 
 from pythonic_testcase import *
 
-from ddc.client.config import ALL_FIELD_NAMES
 from ddc.tool.cdb_tool import FormBatch
 from ddc.storage.cdb.cdb_fixtures import create_cdb_with_dummy_data, CDBFile, CDBForm
+from ddc.validation.testutil import VALIDATED_FIELDS
 
 
 class CDBFileTest(PythonicTestCase):
@@ -16,20 +16,21 @@ class CDBFileTest(PythonicTestCase):
         # to get a better view on the lower-level classes even though they are
         # exercised by the helpers as well.
         fields = []
+        ALL_FIELD_NAMES = ('STRASSE', 'WOHNORT')
         for field_name in ALL_FIELD_NAMES:
             fields.append({'name': field_name, 'corrected_result': 'baz'})
         cdb_form = CDBForm(fields)
         cdb_batch = CDBFile([cdb_form])
         cdb_fp = BytesIO(cdb_batch.as_bytes())
 
-        batch = FormBatch(cdb_fp, access='read')
+        batch = FormBatch(cdb_fp, access='read', field_names=ALL_FIELD_NAMES)
         assert_equals(1, batch.count())
         form = batch.forms[0]
         assert_equals('baz', form['STRASSE'].corrected_result)
 
     def test_create_cdb_helper_function(self):
-        cdb_fp = create_cdb_with_dummy_data(nr_forms=3)
-        cdb_batch = FormBatch(cdb_fp, access='read')
+        cdb_fp = create_cdb_with_dummy_data(nr_forms=3, field_names=VALIDATED_FIELDS)
+        cdb_batch = FormBatch(cdb_fp, access='read', field_names=VALIDATED_FIELDS)
         assert_equals(3, len(cdb_batch))
 
     def test_can_generate_form_with_specified_pic(self):
@@ -40,7 +41,7 @@ class CDBFileTest(PythonicTestCase):
         cdb_form = CDBForm(fields, imprint_line_short=pic)
         cdb_fp = BytesIO(CDBFile([cdb_form]).as_bytes())
 
-        batch = FormBatch(cdb_fp, access='read')
+        batch = FormBatch(cdb_fp, access='read', field_names=('AUSSTELLUNGSDATUM',))
         assert_equals(1, batch.count())
         form = batch.forms[0]
         assert_equals(pic, form.pic_nr)
@@ -52,7 +53,7 @@ class CDBFileTest(PythonicTestCase):
         cdb_form = CDBForm(fields, imprint_line_short='DELETED')
         cdb_fp = BytesIO(CDBFile([cdb_form]).as_bytes())
 
-        batch = FormBatch(cdb_fp, access='read')
+        batch = FormBatch(cdb_fp, access='read', field_names=('AUSSTELLUNGSDATUM',))
         assert_equals(1, batch.count())
         form = batch.forms[0]
         assert_true(form.is_deleted())

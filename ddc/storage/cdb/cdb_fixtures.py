@@ -5,6 +5,7 @@ from io import BytesIO
 
 from .cdb_format import CDBFormat
 from ddc.storage.fixture_helpers import BinaryFixture, UnclosableBytesIO
+from ddc.validation.testutil import valid_prescription_values
 
 
 __all__ = [
@@ -76,12 +77,13 @@ class CDBField(BinaryFixture):
         return super(CDBField, self).as_bytes(self.values)
 
 
-def create_cdb_with_dummy_data(nr_forms=1, filename=None):
-    from ddc.validation.testutil import valid_prescription_values
-
-    field = valid_prescription_values()
-    form_values = (field,) * nr_forms
-    return create_cdb_with_form_values(form_values, filename=filename)
+def create_cdb_with_dummy_data(nr_forms=1, filename=None, *, field_names):
+    default_values = valid_prescription_values()
+    form_values = {}
+    for field_name in field_names:
+        form_values[field_name] = default_values.get(field_name, '')
+    values_for_forms = (form_values,) * nr_forms
+    return create_cdb_with_form_values(values_for_forms, filename=filename)
 
 
 def create_cdb_with_form_values(form_values, filename=None):

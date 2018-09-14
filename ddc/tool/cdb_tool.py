@@ -7,7 +7,6 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import os
 import warnings
 
-from ddc.client.config import ALL_FIELD_NAMES
 from ddc.storage import filecontent, MMapFile
 from ddc.storage.cdb import CDBFormat
 from ddc.storage.meta import WithBinaryMeta
@@ -25,7 +24,7 @@ class FormHeader(WithBinaryMeta):
 
 class FormBatch(object):
 
-    def __init__(self, batch_file, delay_load=False, access='write', log=None):
+    def __init__(self, batch_file, delay_load=False, access='write', log=None, field_names=None):
         assert delay_load == False
         if not hasattr(batch_file, 'close'):
             # the regular case, given a file name.
@@ -38,6 +37,7 @@ class FormBatch(object):
 
         self.form_batch_header = None
         self.forms = None
+        self._field_names = field_names
 
         self.load_form_batch_header()
         self._load_delayed = delay_load
@@ -100,8 +100,7 @@ class FormBatch(object):
             form = Form(self, offset)
             if form.record_size != record_size:
                 raise TypeError('wrong form record size, this is no CDB')
-            known_fields = ALL_FIELD_NAMES
-            unknown_fields = set(form._field_names).difference(set(known_fields))
+            unknown_fields = set(form._field_names).difference(set(self._field_names))
             # The old software sometimes writes junk for some form fields. That
             # seems to happen in the old software if a user entered more characters
             # than the field definition actually allows. The extra character will
