@@ -1,5 +1,4 @@
 ddt
 pyfakefs
 PythonicTestcase
-six
 testfixtures
