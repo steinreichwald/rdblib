@@ -2,13 +2,16 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import os
+import platform
 
 import six
 
 from .lib.log_proxy import l_
-from .platform_quirks import is_windows
 
-if is_windows():
+
+is_windows = (platform.system() == 'Windows')
+
+if is_windows:
     import win32con, win32file, pywintypes # http://sf.net/projects/pywin32/
 else:
     import fcntl
@@ -40,7 +43,7 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
     log = l_(log)
     log_type = 'exclusive ' if exclusive_lock else ''
     log.debug('acquire %slock for "%s" [PID %d]', log_type, file_.name, os.getpid())
-    if is_windows():
+    if is_windows:
         fd = win32file._get_osfhandle(file_.fileno())
         if exclusive_lock:
             lock_flags = (win32con.LOCKFILE_EXCLUSIVE_LOCK | win32con.LOCKFILE_FAIL_IMMEDIATELY)
@@ -70,7 +73,7 @@ def acquire_lock(file_, exclusive_lock=True, raise_on_error=True, log=None):
 def unlock(file_, log=None):
     log = l_(log)
     log.debug('unlocking "%s" [PID %d]', file_.name, os.getpid())
-    if is_windows():
+    if is_windows:
         fd = win32file._get_osfhandle(file_.fileno())
         win32file.UnlockFileEx(fd, 0, -65536, pywintypes.OVERLAPPED())
     else:

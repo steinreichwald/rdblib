@@ -9,8 +9,7 @@ import time
 
 from pythonic_testcase import *
 
-from ..locking import acquire_lock, unlock
-from ..platform_quirks import is_windows
+from ..locking import acquire_lock, is_windows, unlock
 
 
 def unlink_with_retry(filename, tries=10):
@@ -48,7 +47,7 @@ class LockingTest(PythonicTestCase):
         acquire_lock(fp)
         self.assert_is_locked(fp.name)
         unlock(fp)
-        if is_windows():
+        if is_windows:
             # Windows does not allow opening the file twice so we need to close
             # it first.
             fp.close()
@@ -65,7 +64,7 @@ class LockingTest(PythonicTestCase):
         self.assert_is_locked(fp.name, exclusive_lock=True,
             message='file %r should have a shared lock so we must not be able to lock it exclusively.' % temp_name)
         unlock(fp)
-        if is_windows():
+        if is_windows:
             # Windows does not allow opening the file twice so we need to close
             # it first.
             fp.close()
