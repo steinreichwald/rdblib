@@ -25,6 +25,7 @@ setup(
     version='1.0',
     license = '3-clause BSD',
     packages=find_packages(),
+    namespace_packages = ['srw'],
     include_package_data=True,
     install_requires=requires_from_file('requirements.txt'),
 )
