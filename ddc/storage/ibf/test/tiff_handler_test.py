@@ -14,7 +14,8 @@ from ddc.storage.paths import guess_path
 # XXX add some tests for images. They are completely missing, and cdb_tool
 # has the potential to hang on bad image files.
 
-DATABASE_PATH = os.path.join(ddc.rootpath, 'private', 'srw', 'data')
+ddc_rootpath = os.path.dirname(ddc.__path__[0])
+DATABASE_PATH = os.path.join(ddc_rootpath, 'private', 'srw', 'data')
 CDB_PATH = os.path.join(DATABASE_PATH, '00099201.CDB')
 
 @DataDrivenTestCase
