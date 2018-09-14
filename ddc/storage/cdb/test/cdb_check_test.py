@@ -7,7 +7,6 @@ from tempfile import mkdtemp
 
 from pythonic_testcase import *
 
-from ddc.client.config import ALL_FIELD_NAMES
 from ddc.storage.cdb import (
     create_cdb_with_dummy_data,
     create_cdb_with_form_values,
@@ -19,6 +18,8 @@ from ddc.storage.locking import acquire_lock
 from ddc.tool.cdb_tool import FormBatch
 from ddc.validation.testutil import valid_prescription_values
 
+
+ALL_FIELD_NAMES = set(valid_prescription_values(with_pic=False))
 
 class CDBCheckTest(PythonicTestCase):
     def setUp(self):
