@@ -21,6 +21,8 @@ CDB_PATH = os.path.join(DATABASE_PATH, '00099201.CDB')
 class TiffHandlerTest(PythonicTestCase):
     @data('write', 'copy')
     def test_tiff_access(self, access):
+        if not os.path.exists(CDB_PATH):
+            raise SkipTest('private data not available')
         fname = guess_path(CDB_PATH, 'IBF')
         imbatch = ImageBatch(fname, access=access)
         th = TiffHandler(imbatch, 0)
@@ -31,6 +33,8 @@ class TiffHandlerTest(PythonicTestCase):
 
     @data('write', 'copy')
     def test_tiff_write(self, access):
+        if not os.path.exists(CDB_PATH):
+            raise SkipTest('private data not available')
         fname = guess_path(CDB_PATH, 'IBF')
         imbatch = ImageBatch(fname, access=access)
         th = TiffHandler(imbatch, 0)
