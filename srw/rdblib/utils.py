@@ -9,10 +9,7 @@ from .lib.attribute_dict import AttrDict
 from .paths import get_path_from_instance
 
 
-__all__ = ['create_backup', 'filecontent', 'DELETE']
-
-class DELETE(object):
-    pass
+__all__ = ['create_backup', 'filecontent']
 
 def filecontent(mmap_or_filelike):
     if isinstance(mmap_or_filelike, mmap.mmap):
