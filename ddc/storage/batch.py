@@ -18,6 +18,7 @@ from srw.rdblib.ibf import ImageBatch, TiffHandler
 from srw.rdblib import (assemble_new_path, create_backup, guess_path, safe_move,
     simple_bunch, DataBunch, FormBatch)
 
+from ddc.client.config import ALL_FIELD_NAMES
 from ddc.lib.log_proxy import l_
 from .batch_form import BatchForm
 from .sqlite import get_or_add, DBForm, SQLiteDB
@@ -60,7 +61,7 @@ class Batch(object):
         # This complicates the code a lot and I think delaying the loading does
         # not affect the performance that much.
         assert delay_load == False
-        cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log)
+        cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log, field_names=ALL_FIELD_NAMES)
         ibf = ImageBatch(databunch.ibf, delay_load=delay_load, access=access, log=log)
         db_path = databunch.db
         if db_path is None:
@@ -123,6 +124,7 @@ class Batch(object):
         base_path, previous_extension = os.path.splitext(previous_path)
         basename = os.path.basename(base_path)
         self.cdb.commit()
+        cdb_field_names = self.cdb._field_names
         cdb_content = bytes(self.cdb.filecontent)
         if backup_dir:
             create_backup(self.cdb, backup_dir, log=log)
@@ -139,7 +141,7 @@ class Batch(object):
         # the wrong (RDB) context. The log is stored in several places and I think
         # it would be more confusing if some parts log with the old context while
         # others already use the new context.
-        self.cdb = FormBatch(target_path, log=log)
+        self.cdb = FormBatch(target_path, log=log, field_names=cdb_field_names)
 
     # --- accessing data ------------------------------------------------------
     def tasks(self, type_=None, status=None, form_index=None):

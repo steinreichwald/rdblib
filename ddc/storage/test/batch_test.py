@@ -9,6 +9,7 @@ from srw.rdblib import assemble_new_path, guess_path, DataBunch
 from srw.rdblib.cdb import create_cdb_with_dummy_data
 from srw.rdblib.ibf import create_ibf
 
+from ddc.client.config import ALL_FIELD_NAMES
 from ddc.storage import Batch, TaskStatus, TaskType, DELETE
 from ddc.storage.ask import create_ask
 from ddc.storage.sqlite import create_sqlite_db, db_schema, get_model
@@ -221,7 +222,7 @@ class BatchTest(PythonicTestCase):
         with use_tempdir() as temp_dir:
             cdb_path = os.path.join(temp_dir, '00042100.CDB')
             ibf_path = guess_path(cdb_path, type_='ibf')
-            create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path)
+            create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path, field_names=ALL_FIELD_NAMES)
             create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
             bunch = DataBunch(cdb_path, ibf_path, db=None, ask=None)
 
@@ -249,7 +250,7 @@ class BatchTest(PythonicTestCase):
         cdb_dir = os.path.dirname(cdb_path)
         os.makedirs(cdb_dir, exist_ok=True)
         ibf_path = guess_path(cdb_path, type_='ibf')
-        create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path)
+        create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path, field_names=ALL_FIELD_NAMES)
         create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
         bunch = DataBunch(cdb_path, ibf_path, db=None, ask=None)
         batch = Batch.init_from_bunch(
@@ -265,7 +266,7 @@ class BatchTest(PythonicTestCase):
 
     def _create_batch(self, *, nr_forms=1, tasks=(), ignored_warnings=(), model=None):
         databunch = DataBunch(
-            cdb=create_cdb_with_dummy_data(nr_forms=nr_forms),
+            cdb=create_cdb_with_dummy_data(nr_forms=nr_forms, field_names=ALL_FIELD_NAMES),
             ibf=create_ibf(nr_images=nr_forms),
             db=create_sqlite_db(tasks=tasks, ignored_warnings=ignored_warnings, model=model),
             ask=create_ask(),

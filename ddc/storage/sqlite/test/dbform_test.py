@@ -8,6 +8,7 @@ from srw.rdblib import DataBunch
 from srw.rdblib.cdb import create_cdb_with_dummy_data
 from srw.rdblib.ibf import create_ibf
 
+from ddc.client.config import ALL_FIELD_NAMES
 from ddc.storage import Batch
 from ddc.storage.ask import create_ask
 from ddc.storage.sqlite import create_sqlite_db
@@ -62,7 +63,7 @@ class DBFormTest(PythonicTestCase):
     # --- helpers -------------------------------------------------------------
     def _create_batch(self, *, nr_forms=1, tasks=(), ignored_warnings=(), model=None):
         databunch = DataBunch(
-            cdb=create_cdb_with_dummy_data(nr_forms=nr_forms),
+            cdb=create_cdb_with_dummy_data(nr_forms=nr_forms, field_names=ALL_FIELD_NAMES),
             ibf=create_ibf(nr_images=nr_forms),
             db=create_sqlite_db(tasks=tasks, ignored_warnings=ignored_warnings, model=model),
             ask=create_ask(),
