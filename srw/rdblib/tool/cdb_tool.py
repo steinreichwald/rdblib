@@ -7,10 +7,13 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import os
 import warnings
 
-from .. import filecontent, MMapFile
 from ..cdb import CDBFormat
+from ..mmap_file import MMapFile
 from ..meta import WithBinaryMeta
+from ..utils import filecontent
 
+
+__all__ = ['FormBatch']
 
 ########################################################################
 
