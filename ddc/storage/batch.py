@@ -14,15 +14,15 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import os
 
 from sqlalchemy import and_
+from srw.rdblib.ibf import ImageBatch, TiffHandler
+from srw.rdblib import (assemble_new_path, create_backup, guess_path, safe_move,
+    simple_bunch, DataBunch, FormBatch)
 
 from ddc.lib.log_proxy import l_
 from .batch_form import BatchForm
-from .ibf import ImageBatch
-from .ibf.tiff_handler import TiffHandler
-from .paths import assemble_new_path, guess_path, safe_move, simple_bunch, DataBunch
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
-from .utils import create_backup, DELETE
+from .utils import DELETE
 
 
 __all__ = ['Batch']
@@ -60,10 +60,6 @@ class Batch(object):
         # This complicates the code a lot and I think delaying the loading does
         # not affect the performance that much.
         assert delay_load == False
-        # prevent recursive imports
-        # ideally classes from cdb_tool should be located below ".storage" as
-        # they deal with the on-disk data layout.
-        from ddc.tool.cdb_tool import FormBatch
         cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log)
         ibf = ImageBatch(databunch.ibf, delay_load=delay_load, access=access, log=log)
         db_path = databunch.db
@@ -139,8 +135,6 @@ class Batch(object):
         safe_move(previous_path, target_path, data=cdb_content)
         self.bunch = DataBunch.merge(self.bunch, cdb=target_path)
 
-        # (prevent recursive imports)
-        from ddc.tool.cdb_tool import FormBatch
         # Just assume that it is ok if reuse the old logger even if it might contain
         # the wrong (RDB) context. The log is stored in several places and I think
         # it would be more confusing if some parts log with the old context while

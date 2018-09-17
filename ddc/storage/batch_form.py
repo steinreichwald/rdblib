@@ -2,8 +2,6 @@
 
 import enum
 
-from .ibf import TiffHandler
-
 
 __all__ = []
 

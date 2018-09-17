@@ -5,15 +5,14 @@ import hashlib
 import os
 
 from pythonic_testcase import *
+from srw.rdblib import assemble_new_path, guess_path, DataBunch
+from srw.rdblib.cdb import create_cdb_with_dummy_data
+from srw.rdblib.ibf import create_ibf
 
-from ddc.storage import guess_path, Batch, DataBunch, TaskStatus, TaskType
+from ddc.storage import Batch, TaskStatus, TaskType, DELETE
 from ddc.storage.ask import create_ask
-from ddc.storage.cdb import create_cdb_with_dummy_data
-from ddc.storage.ibf import create_ibf
-from ..paths import assemble_new_path
 from ddc.storage.sqlite import create_sqlite_db, db_schema, get_model
 from ddc.storage.testhelpers import use_tempdir
-from ddc.storage.utils import DELETE
 
 
 class BatchTest(PythonicTestCase):

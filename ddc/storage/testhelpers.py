@@ -3,12 +3,13 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from io import BytesIO
 
+from srw.rdblib import DataBunch
+from srw.rdblib.cdb import CDBFile, CDBForm
+from srw.rdblib.ibf import create_ibf
+
 from ddc.lib.attribute_dict import AttrDict
 from .batch import Batch
-from .cdb import CDBFile, CDBForm
-from ddc.storage.ibf import create_ibf
 from ddc.storage.sqlite import create_sqlite_db
-from ddc.storage.paths import DataBunch
 
 
 __all__ = [

@@ -4,11 +4,12 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from pythonic_testcase import *
 
 from sqlalchemy import and_
+from srw.rdblib import DataBunch
+from srw.rdblib.cdb import create_cdb_with_dummy_data
+from srw.rdblib.ibf import create_ibf
 
-from ddc.storage import Batch, DataBunch
+from ddc.storage import Batch
 from ddc.storage.ask import create_ask
-from ddc.storage.cdb import create_cdb_with_dummy_data
-from ddc.storage.ibf import create_ibf
 from ddc.storage.sqlite import create_sqlite_db
 from ddc.storage.utils import DELETE
 
