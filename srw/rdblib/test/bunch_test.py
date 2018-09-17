@@ -3,7 +3,8 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from ddt import ddt as DataDrivenTestCase, data
 from pythonic_testcase import *
-from srw.rdblib import DataBunch
+
+from ..paths import DataBunch
 
 
 @DataDrivenTestCase
