@@ -8,6 +8,12 @@ python:
  - "pypy3"
 
 install:
+ # our "pillow" wheel for pypy3 was built (locally on Fedora 28) against
+ # libjpeg.so.62 which is not available by default in shippable
+ # (machine image v6.5.4 / Ubuntu 14.04).
+ - apt-get update
+ - apt-get install libjpeg62
+
  - pip install -r requirements.txt
  - pip install -r dev_requirements.txt
  - python setup.py develop
