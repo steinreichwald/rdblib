@@ -28,5 +28,11 @@ setup(
     namespace_packages = ['srw'],
     include_package_data=True,
     install_requires=requires_from_file('requirements.txt'),
+
+    entry_points = {
+        'console_scripts': [
+            'srw-extract-image = srw.rdblib.cli:extract_image_main',
+        ]
+    },
 )
 
