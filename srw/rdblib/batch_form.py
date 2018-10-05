@@ -77,6 +77,9 @@ class BatchForm(object):
     def delete(self):
         self._set_deletion_state(True)
 
+    def undelete(self):
+        self._set_deletion_state(False)
+
     def _set_deletion_state(self, set_as_deleted):
         cdb_form = self.batch.cdb.forms[self.form_index]
         ibf_data = self.ibf.image_entries[self.form_index]
