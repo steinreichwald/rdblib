@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+from contextlib import contextmanager
 from io import BytesIO
+import shutil
+from tempfile import mkdtemp
 
 from srw.rdblib import DataBunch
 from srw.rdblib.lib import AttrDict
@@ -16,6 +19,7 @@ __all__ = [
     'batch_with_pic_forms',
     'fake_tiff_handler',
     'ibf_mock',
+    'use_tempdir',
 ]
 
 def _update_attr(container, **kwargs):
@@ -74,4 +78,11 @@ def batch_with_pic_forms(pics, *, model=None):
     batch.ibf = ibf_mock(pics)
     batch._tiff_handlers = [fake_tiff_handler(pic) for pic in pics]
     return batch
+
+
+@contextmanager
+def use_tempdir():
+    tempdir_path = mkdtemp()
+    yield tempdir_path
+    shutil.rmtree(tempdir_path)
 
