@@ -15,18 +15,13 @@ class BatchFormTest(PythonicTestCase):
         assert_equals(pic1, batch.batch_form(0).pic())
         assert_equals(pic2, batch.batch_form(1).pic())
 
-    def test_can_retrieve_deletion_state(self):
-        raise SkipTest('need to port form deletion without CDB_Collection')
+    def test_can_delete_forms_and_retrieve_deletion_state(self):
         pic1 = '12345600100024'
         batch = batch_with_pic_forms([pic1])
         form = batch.batch_form(0)
         assert_false(form.is_deleted())
 
-        # LATER: CDB_Collection should not be necessary, this should be possible
-        # by just using the BatchForm...
-        cdb_collection = CDB_Collection(batch)
-        cdb_form = cdb_collection.forms[0]
-        cdb_form.delete()
+        form.delete()
         assert_true(form.is_deleted())
         assert_true(form.is_deleted(cdb=True, ibf=False))
         assert_true(form.is_deleted(cdb=False, ibf=True))
@@ -42,6 +37,7 @@ class BatchFormTest(PythonicTestCase):
         )
         # This happens also in the ".delete()" method even though it is known
         # to be hackish (should only be done by ".commit()")
+        cdb_form = batch.form(form.form_index)
         cdb_form.write_back()
         assert_true(form.is_deleted())
         assert_true(form.is_deleted(cdb=False, ibf=True))

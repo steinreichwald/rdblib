@@ -3,7 +3,7 @@
 import enum
 
 
-__all__ = []
+__all__ = ['BatchForm']
 
 @enum.unique
 class Source(enum.Enum):
@@ -71,6 +71,51 @@ class BatchForm(object):
             is_deleted = (is_cdb_deleted or is_ibf_deleted)
         # not (not ...) to ensure we always return a bool (not None)
         return not (not is_deleted)
+
+    def delete(self):
+        self._set_deletion_state(True)
+
+    def _set_deletion_state(self, set_as_deleted):
+        cdb_form = self.batch.cdb.forms[self.form_index]
+        ibf_data = self.ibf.image_entries[self.form_index]
+        tiff_handler = self.batch.tiff_handler(self.form_index)
+        if set_as_deleted:
+            repl_str = 'DELETED'
+        else:
+            # Note: long_data2 is the second version of the tiff header.
+            # This is never written, but kept as a backup for un-deleting.
+            repl_str = tiff_handler.long_data2.rec.page_name
+        #
+        # First, change the data of the form header.
+        cdb_form.form_header.update_rec(
+            imprint_line_long = repl_str,
+            imprint_line_short = repl_str)
+        #
+        # Second, change the data of the tiff header.
+        #
+        # Note that we update only the first copy of the tiff structure (page 1).
+        # The second copy will always remain unchanged, because the old software
+        # ignores that. Therefore, the second copy is used to restore a "deleted"
+        # scan.
+        #
+        # This line puts the new record data into the tiff header struc (in memory).
+        tiff_handler.long_data.update_rec(page_name = repl_str)
+        # This line also patches the new data into the tiff structure (in memory).
+        ibf_data.update_rec(codnr = repl_str)
+        #
+        # Upto here, no data was physically written.
+        # We do that now. Actually, that should logically be a transaction,
+        # but we ignore this for CDB/IBF.
+        #
+        # First, we actualize the form data:
+        # - move the data in memory back to the structure on disk.
+        cdb_form.write_back()
+        #
+        # Then we update the index info in the IBF:
+        self.ibf.update_entry(ibf_data)
+        #
+        # And as the last step, we also ask the tiff handler to write its data to disk.
+        tiff_handler.update()
 
     def pic(self):
         image_data = self.ibf.image_entries[self.form_index]
