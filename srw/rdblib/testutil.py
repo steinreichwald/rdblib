@@ -5,21 +5,24 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from datetime import date as Date
 from io import BytesIO
+import os
 import shutil
 from tempfile import mkdtemp
 
 from .batch import Batch
-from .cdb import CDBFile, CDBForm
+from .cdb import create_cdb_with_form_values, CDBFile, CDBForm
 from .ibf import create_ibf
 from .lib import AttrDict
-from .paths import DataBunch
+from .paths import assemble_new_path, guess_path, DataBunch
 from .sqlite import create_sqlite_db
 
 
 __all__ = [
     'batch_with_pic_forms',
-    'valid_prescription_values',
+    'create_cdb_and_ibf_file',
+    'generate_pic',
     'use_tempdir',
+    'valid_prescription_values',
 ]
 
 VALIDATED_FIELDS = (
@@ -110,6 +113,53 @@ def batch_with_pic_forms(pics, *, model=None):
     batch.ibf = ibf_mock(pics)
     batch._tiff_handlers = [fake_tiff_handler(pic) for pic in pics]
     return batch
+
+
+def generate_pic(scan_nr=1):
+    today = Date.today()
+    year_digit_str = str(today.year)[-1]
+    month_str = '%02d' % today.month
+    date_prefix = year_digit_str + month_str
+    customer_str = '123'
+    nr_str = '%05d' % scan_nr
+    return date_prefix + customer_str + nr_str + '024'
+
+
+def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=None):
+    """Create a xDB file and a corresponding IBF."""
+    assert (pic_nrs is None) ^ (form_data is None)
+    if form_data is None:
+        form_data = pic_nrs
+    _form_data = []
+    for i, data in enumerate(form_data):
+        is_pic = isinstance(data, str)
+        if is_pic:
+            pic_nr = data
+            extra_fields = {}
+        else:
+            pic_nr = generate_pic(scan_nr=i+1)
+            extra_fields = data
+        form_values = valid_prescription_values(**extra_fields, with_pic=pic_nr)
+        _form_data.append(form_values)
+    pic_nrs = [form_values['pic'] for form_values in _form_data]
+
+    cdb_fp = create_cdb_with_form_values(_form_data, filename=cdb_path)
+    cdb_fp.close()
+
+    if ibf_dir is None:
+        ibf_path = guess_path(cdb_path, 'IBF')
+        ibf_dir = os.path.dirname(ibf_path)
+    else:
+        ibf_path = assemble_new_path(cdb_path, new_dir=ibf_dir, new_extension='IBF')
+    os.makedirs(ibf_dir, exist_ok=True)
+    ibf_fp = create_ibf(
+        nr_images=len(pic_nrs),
+        pic_nrs=pic_nrs,
+        fake_tiffs=False,
+        filename=ibf_path
+    )
+    ibf_fp.close()
+    return (cdb_path, ibf_path)
 
 
 @contextmanager
