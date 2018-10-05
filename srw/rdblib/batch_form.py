@@ -5,6 +5,8 @@ import enum
 
 __all__ = ['BatchForm']
 
+DELETION_MARKER = 'DELETED'
+
 @enum.unique
 class Source(enum.Enum):
     CDB = 2
@@ -64,7 +66,7 @@ class BatchForm(object):
         if ibf:
             image_data = self.ibf.image_entries[self.form_index]
             ibf_rec_pic = image_data.rec.codnr
-            is_ibf_deleted = (ibf_rec_pic == 'DELETED')
+            is_ibf_deleted = (ibf_rec_pic == DELETION_MARKER)
         if operator == Source.AND:
             is_deleted = (is_cdb_deleted and is_ibf_deleted)
         else:
@@ -80,7 +82,7 @@ class BatchForm(object):
         ibf_data = self.ibf.image_entries[self.form_index]
         tiff_handler = self.batch.tiff_handler(self.form_index)
         if set_as_deleted:
-            repl_str = 'DELETED'
+            repl_str = DELETION_MARKER
         else:
             # Note: long_data2 is the second version of the tiff header.
             # This is never written, but kept as a backup for un-deleting.
@@ -120,7 +122,7 @@ class BatchForm(object):
     def pic(self):
         image_data = self.ibf.image_entries[self.form_index]
         ibf_rec_pic = image_data.rec.codnr
-        if ibf_rec_pic != 'DELETED':
+        if ibf_rec_pic != DELETION_MARKER:
             return ibf_rec_pic
 
         th = self.batch.tiff_handler(self.form_index)
