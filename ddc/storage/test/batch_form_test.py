@@ -5,7 +5,7 @@ from pythonic_testcase import *
 
 from ddc.storage.batch_form import Source
 from ddc.storage.testhelpers import batch_with_pic_forms
-from ddc.tool.cdb_collection import CDB_Collection
+#from ddc.tool.cdb_collection import CDB_Collection
 
 
 class BatchFormTest(PythonicTestCase):
@@ -17,6 +17,7 @@ class BatchFormTest(PythonicTestCase):
         assert_equals(pic2, batch.batch_form(1).pic())
 
     def test_can_retrieve_deletion_state(self):
+        raise SkipTest('need to port form deletion without CDB_Collection')
         pic1 = '12345600100024'
         batch = batch_with_pic_forms([pic1])
         form = batch.batch_form(0)

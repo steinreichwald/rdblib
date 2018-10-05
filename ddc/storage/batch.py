@@ -19,7 +19,6 @@ from srw.rdblib.ibf import ImageBatch, TiffHandler
 from srw.rdblib import (assemble_new_path, create_backup, guess_path, safe_move,
     simple_bunch, DataBunch, FormBatch)
 
-from ddc.client.config import ALL_FIELD_NAMES
 from .batch_form import BatchForm
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
@@ -52,7 +51,7 @@ class Batch(object):
 
     @classmethod
     def init_from_bunch(cls, databunch, create_persistent_db=False,
-                        delay_load=False, access='write', log=None):
+                        delay_load=False, access='write', log=None, *, field_names):
         """
         Return a new Batch instance based on the given databunch.
         """
@@ -61,7 +60,7 @@ class Batch(object):
         # This complicates the code a lot and I think delaying the loading does
         # not affect the performance that much.
         assert delay_load == False
-        cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log, field_names=ALL_FIELD_NAMES)
+        cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log, field_names=field_names)
         ibf = ImageBatch(databunch.ibf, delay_load=delay_load, access=access, log=log)
         db_path = databunch.db
         if db_path is None:
