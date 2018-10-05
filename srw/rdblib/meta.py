@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+from collections import namedtuple
 import struct
 
 from six import text_type, with_metaclass
 
-from .tool.tupletool import namedtuple
 
 
 class BinaryMeta(type):

@@ -5,7 +5,6 @@ from io import BytesIO
 
 from .cdb_format import CDBFormat
 from ..fixture_helpers import BinaryFixture, UnclosableBytesIO
-from ..testutil import valid_prescription_values
 
 
 __all__ = [
@@ -78,6 +77,8 @@ class CDBField(BinaryFixture):
 
 
 def create_cdb_with_dummy_data(nr_forms=1, filename=None, *, field_names):
+    # avoid recursive imports
+    from srw.rdblib.testutil import valid_prescription_values
     default_values = valid_prescription_values()
     form_values = {}
     for field_name in field_names:

@@ -6,11 +6,11 @@ from datetime import datetime as DateTime_
 
 from sqlalchemy import Column, Integer, String, UnicodeText
 from sqlalchemy.ext.declarative import declarative_base
-from srw.rdblib.lib import AttrDict
 
-from ddc.lib.jsontype_column import JSONType
-from ddc.lib.utc_datetime_column import UTCDateTime
-from ddc.storage.task import TaskStatus
+from ..lib import AttrDict
+from ..lib.jsontype_column import JSONType
+from ..lib.utc_datetime_column import UTCDateTime
+from ..task import TaskStatus
 
 
 __all__ = ['get_model', 'DBVersion', 'LATEST']

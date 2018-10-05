@@ -8,9 +8,8 @@ from srw.rdblib import DataBunch
 from srw.rdblib.cdb import create_cdb_with_dummy_data
 from srw.rdblib.ibf import create_ibf
 
-from ddc.storage import Batch
-from ddc.storage.sqlite import create_sqlite_db
-from ddc.storage.utils import DELETE
+from srw.rdblib import Batch
+from .. import create_sqlite_db, DELETE
 
 
 class DBFormTest(PythonicTestCase):

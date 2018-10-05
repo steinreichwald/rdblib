@@ -10,6 +10,7 @@ please commit the verbatim code first and modify it later so we have a
 meaningful git commit history.
 """
 
+from .attribute_dict import *
 from .dict_merger import *
 from .log_proxy import *
 

@@ -3,9 +3,8 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from pythonic_testcase import *
 
-from ddc.storage.batch_form import Source
-from ddc.storage.testhelpers import batch_with_pic_forms
-#from ddc.tool.cdb_collection import CDB_Collection
+from ..batch_form import Source
+from ..testutil import batch_with_pic_forms
 
 
 class BatchFormTest(PythonicTestCase):

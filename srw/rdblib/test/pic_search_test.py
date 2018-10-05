@@ -3,8 +3,8 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from pythonic_testcase import *
 
-from ddc.storage.testhelpers import batch_with_pic_forms
-from ddc.storage.pic_search import form_index_for_pic
+from ..pic_search import form_index_for_pic
+from ..testutil import batch_with_pic_forms
 
 
 class FormIndexForPICTest(PythonicTestCase):

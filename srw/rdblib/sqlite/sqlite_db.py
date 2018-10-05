@@ -9,8 +9,8 @@ from srw.rdblib.lib import l_
 
 from . import model as db_schema
 from .dbform import DBForm
+from .db_utils import DELETE as DELETE_
 from .model import get_model, DBVersion
-from ..utils import DELETE as DELETE_
 
 
 __all__ = ['create_sqlite_db', 'SQLiteDB']

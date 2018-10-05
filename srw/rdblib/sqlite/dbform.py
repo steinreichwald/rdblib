@@ -13,10 +13,10 @@ hides all implementation details (as much as possible/sensible).
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 from sqlalchemy import and_
-from srw.rdblib.lib import merge_dicts
 
+from ..lib import merge_dicts
+from .db_utils import DELETE
 from ..task import TaskStatus
-from ..utils import DELETE
 
 
 __all__ = ['get_or_add', 'DBForm']

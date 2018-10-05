@@ -14,15 +14,15 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import os
 
 from sqlalchemy import and_
-from srw.rdblib.lib import l_
-from srw.rdblib.ibf import ImageBatch, TiffHandler
-from srw.rdblib import (assemble_new_path, create_backup, guess_path, safe_move,
-    simple_bunch, DataBunch, FormBatch)
 
 from .batch_form import BatchForm
-from .sqlite import get_or_add, DBForm, SQLiteDB
+from .lib import l_
+from .ibf import ImageBatch, TiffHandler
+from .paths import assemble_new_path, guess_path, safe_move, simple_bunch, DataBunch
+from .utils import create_backup
+from .sqlite import get_or_add, DELETE, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType
-from .utils import DELETE
+from .tool import FormBatch
 
 
 __all__ = ['Batch']

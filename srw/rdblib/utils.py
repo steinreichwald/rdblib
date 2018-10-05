@@ -4,8 +4,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import mmap
 import os
 
-from .lib import l_
-from .lib.attribute_dict import AttrDict
+from .lib import l_, AttrDict
 from .paths import get_path_from_instance
 
 

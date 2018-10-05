@@ -6,9 +6,10 @@ import os
 
 from pythonic_testcase import *
 
-from ddc.storage.task import TaskType
-from ddc.storage.testhelpers import use_tempdir
-from ddc.storage import create_sqlite_db, DBVersion, SQLiteDB
+from srw.rdblib import TaskType
+from .. import create_sqlite_db, DBVersion, SQLiteDB
+from srw.rdblib.testutil import use_tempdir
+
 
 
 class SQLiteDBTest(PythonicTestCase):

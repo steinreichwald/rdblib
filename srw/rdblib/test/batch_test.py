@@ -9,9 +9,10 @@ from srw.rdblib import assemble_new_path, guess_path, DataBunch
 from srw.rdblib.cdb import create_cdb_with_dummy_data
 from srw.rdblib.ibf import create_ibf
 
-from ddc.storage import Batch, TaskStatus, TaskType, DELETE
-from ddc.storage.sqlite import create_sqlite_db, db_schema, get_model
-from ddc.storage.testhelpers import use_tempdir
+from .. import TaskStatus, TaskType
+from ..batch import Batch
+from ..sqlite import create_sqlite_db, db_schema, get_model, DELETE
+from ..testutil import use_tempdir
 
 
 class BatchTest(PythonicTestCase):
