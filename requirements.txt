@@ -5,3 +5,4 @@ docopt
 #     TIFFSetField: tempfile.tif: Unknown pseudo-tag 65538.
 pillow < 5.3
 six
+SQLAlchemy
