@@ -14,12 +14,12 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import os
 
 from sqlalchemy import and_
+from srw.rdblib.lib import l_
 from srw.rdblib.ibf import ImageBatch, TiffHandler
 from srw.rdblib import (assemble_new_path, create_backup, guess_path, safe_move,
     simple_bunch, DataBunch, FormBatch)
 
 from ddc.client.config import ALL_FIELD_NAMES
-from ddc.lib.log_proxy import l_
 from .batch_form import BatchForm
 from .sqlite import get_or_add, DBForm, SQLiteDB
 from .task import TaskStatus, TaskType

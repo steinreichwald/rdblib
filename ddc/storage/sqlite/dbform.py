@@ -13,8 +13,8 @@ hides all implementation details (as much as possible/sensible).
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 from sqlalchemy import and_
+from srw.rdblib.lib import merge_dicts
 
-from ddc.lib.dict_merger import merge_dicts
 from ..task import TaskStatus
 from ..utils import DELETE
 

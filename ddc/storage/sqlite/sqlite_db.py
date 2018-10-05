@@ -5,8 +5,8 @@ import os
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
+from srw.rdblib.lib import l_
 
-from ddc.lib.log_proxy import l_
 from . import model as db_schema
 from .dbform import DBForm
 from .model import get_model, DBVersion

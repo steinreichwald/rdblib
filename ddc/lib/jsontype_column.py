@@ -3,7 +3,8 @@
 # v1.1 / 2016-09-01 (fs)
 #   - MutableDict should inherit from AttrDict
 
-from .attribute_dict import AttrDict
+from srw.rdblib.lib import AttrDict
+
 
 __all__ = ['JSONType']
 
