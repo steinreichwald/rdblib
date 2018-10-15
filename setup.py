@@ -22,7 +22,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='rdblib',
-    version='1.1',
+    version='1.2',
     license = '3-clause BSD',
     packages=find_packages(),
     namespace_packages = ['srw'],
