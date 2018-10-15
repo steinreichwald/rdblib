@@ -125,11 +125,13 @@ def generate_pic(scan_nr=1):
     return date_prefix + customer_str + nr_str + '024'
 
 
-def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=None):
+def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=None, valid_values_generator=None):
     """Create a xDB file and a corresponding IBF."""
     assert (pic_nrs is None) ^ (form_data is None)
     if form_data is None:
         form_data = pic_nrs
+    if valid_values_generator is None:
+        valid_values_generator = valid_prescription_values
     _form_data = []
     for i, data in enumerate(form_data):
         is_pic = isinstance(data, str)
@@ -139,7 +141,7 @@ def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=N
         else:
             pic_nr = generate_pic(scan_nr=i+1)
             extra_fields = data
-        form_values = valid_prescription_values(**extra_fields, with_pic=pic_nr)
+        form_values = valid_values_generator(**extra_fields, with_pic=pic_nr)
         _form_data.append(form_values)
     pic_nrs = [form_values['pic'] for form_values in _form_data]
 
