@@ -29,6 +29,14 @@ class FormBatch(object):
 
     def __init__(self, batch_file, delay_load=False, access='write', log=None, field_names=None):
         assert delay_load == False
+        if field_names is not None:
+            # The FormBatch class does not check anymore for broken CDB files
+            # (via "unknown" field names). "open_cdb()" does a much better job
+            # at that task so callers should always use that function first and
+            # pass the CDB fp here.
+            # This pattern helps us removing the number of places where have to
+            # pass the list of field names.
+            warnings.warn('"FormBatch()": deprecated parameter "field_names" used', DeprecationWarning)
         if not hasattr(batch_file, 'close'):
             # the regular case, given a file name.
             batch_filename = batch_file
@@ -40,7 +48,6 @@ class FormBatch(object):
 
         self.form_batch_header = None
         self.forms = None
-        self._field_names = field_names
 
         self.load_form_batch_header()
         self._load_delayed = delay_load
@@ -103,19 +110,6 @@ class FormBatch(object):
             form = Form(self, offset)
             if form.record_size != record_size:
                 raise TypeError('wrong form record size, this is no CDB')
-            unknown_fields = set(form._field_names).difference(set(self._field_names))
-            # The old software sometimes writes junk for some form fields. That
-            # seems to happen in the old software if a user entered more characters
-            # than the field definition actually allows. The extra character will
-            # overflow in a new "field".
-            # We can catch that by ensuring that we only accept known field names.
-            # LATER: catching the error here is a bit annoying because it
-            # basically means we're hard-coding all known field names which makes
-            # it less convenient to work with.
-            if unknown_fields:
-                form_position = len(self.forms)
-                msg = 'Form %d contains unknown field(s): %r' % (form_position, tuple(unknown_fields))
-                raise ValueError(msg)
             return form
         if not self._load_delayed:
             form = form()

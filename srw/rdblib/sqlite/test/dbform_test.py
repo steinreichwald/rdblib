@@ -66,5 +66,5 @@ class DBFormTest(PythonicTestCase):
             db=create_sqlite_db(tasks=tasks, ignored_warnings=ignored_warnings, model=model),
             ask=None,
         )
-        batch = Batch.init_from_bunch(databunch, create_persistent_db=False, field_names=field_names)
+        batch = Batch.init_from_bunch(databunch, create_persistent_db=False)
         return batch

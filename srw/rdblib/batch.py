@@ -12,6 +12,7 @@ hides all implementation details (as much as possible/sensible).
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import os
+import warnings
 
 from sqlalchemy import and_
 
@@ -51,7 +52,7 @@ class Batch(object):
 
     @classmethod
     def init_from_bunch(cls, databunch, create_persistent_db=False,
-                        delay_load=False, access='write', log=None, *, field_names):
+                        delay_load=False, access='write', log=None, *, field_names=None):
         """
         Return a new Batch instance based on the given databunch.
         """
@@ -60,7 +61,10 @@ class Batch(object):
         # This complicates the code a lot and I think delaying the loading does
         # not affect the performance that much.
         assert delay_load == False
-        cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log, field_names=field_names)
+        if field_names is not None:
+            # see "FormBatch.__init__()" for more information
+            warnings.warn('".init_from_bunch()": deprecated parameter "field_names" used', DeprecationWarning)
+        cdb = FormBatch(databunch.cdb, delay_load=False, access=access, log=log)
         ibf = ImageBatch(databunch.ibf, delay_load=delay_load, access=access, log=log)
         db_path = databunch.db
         if db_path is None:
@@ -123,7 +127,6 @@ class Batch(object):
         base_path, previous_extension = os.path.splitext(previous_path)
         basename = os.path.basename(base_path)
         self.cdb.commit()
-        cdb_field_names = self.cdb._field_names
         cdb_content = bytes(self.cdb.filecontent)
         if backup_dir:
             create_backup(self.cdb, backup_dir, log=log)
@@ -140,7 +143,7 @@ class Batch(object):
         # the wrong (RDB) context. The log is stored in several places and I think
         # it would be more confusing if some parts log with the old context while
         # others already use the new context.
-        self.cdb = FormBatch(target_path, log=log, field_names=cdb_field_names)
+        self.cdb = FormBatch(target_path, log=log)
 
     # --- accessing data ------------------------------------------------------
     def tasks(self, type_=None, status=None, form_index=None):

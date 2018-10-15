@@ -23,14 +23,14 @@ class CDBFileTest(PythonicTestCase):
         cdb_batch = CDBFile([cdb_form])
         cdb_fp = BytesIO(cdb_batch.as_bytes())
 
-        batch = FormBatch(cdb_fp, access='read', field_names=ALL_FIELD_NAMES)
+        batch = FormBatch(cdb_fp, access='read')
         assert_equals(1, batch.count())
         form = batch.forms[0]
         assert_equals('baz', form['STRASSE'].corrected_result)
 
     def test_create_cdb_helper_function(self):
         cdb_fp = create_cdb_with_dummy_data(nr_forms=3, field_names=VALIDATED_FIELDS)
-        cdb_batch = FormBatch(cdb_fp, access='read', field_names=VALIDATED_FIELDS)
+        cdb_batch = FormBatch(cdb_fp, access='read')
         assert_equals(3, len(cdb_batch))
 
     def test_can_generate_form_with_specified_pic(self):
@@ -41,7 +41,7 @@ class CDBFileTest(PythonicTestCase):
         cdb_form = CDBForm(fields, imprint_line_short=pic)
         cdb_fp = BytesIO(CDBFile([cdb_form]).as_bytes())
 
-        batch = FormBatch(cdb_fp, access='read', field_names=('AUSSTELLUNGSDATUM',))
+        batch = FormBatch(cdb_fp, access='read')
         assert_equals(1, batch.count())
         form = batch.forms[0]
         assert_equals(pic, form.pic_nr)
@@ -53,7 +53,7 @@ class CDBFileTest(PythonicTestCase):
         cdb_form = CDBForm(fields, imprint_line_short='DELETED')
         cdb_fp = BytesIO(CDBFile([cdb_form]).as_bytes())
 
-        batch = FormBatch(cdb_fp, access='read', field_names=('AUSSTELLUNGSDATUM',))
+        batch = FormBatch(cdb_fp, access='read')
         assert_equals(1, batch.count())
         form = batch.forms[0]
         assert_true(form.is_deleted())

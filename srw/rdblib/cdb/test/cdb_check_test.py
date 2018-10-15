@@ -38,7 +38,7 @@ class CDBCheckTest(PythonicTestCase):
         assert_true(result)
         assert_not_none(result.cdb_fp)
 
-        cdb = FormBatch(result.cdb_fp, field_names=VALIDATED_FIELDS)
+        cdb = FormBatch(result.cdb_fp)
         assert_equals(1, cdb.count())
         cdb.close()
 

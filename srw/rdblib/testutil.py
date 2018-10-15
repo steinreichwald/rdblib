@@ -91,7 +91,6 @@ def fake_tiff_handler(pic):
     )
 
 def batch_with_pic_forms(pics, *, model=None):
-    field_names = ('AUSSTELLUNGSDATUM',)
     def _form(pic):
         fields = [
             {'name': 'AUSSTELLUNGSDATUM', 'corrected_result': '01.01.2016'}
@@ -109,7 +108,7 @@ def batch_with_pic_forms(pics, *, model=None):
         db=create_sqlite_db(model=model),
         ask=None,
     )
-    batch = Batch.init_from_bunch(databunch, create_persistent_db=False, access='read', field_names=field_names)
+    batch = Batch.init_from_bunch(databunch, create_persistent_db=False, access='read')
     batch.ibf = ibf_mock(pics)
     batch._tiff_handlers = [fake_tiff_handler(pic) for pic in pics]
     return batch
