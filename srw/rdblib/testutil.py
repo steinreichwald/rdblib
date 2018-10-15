@@ -18,6 +18,7 @@ from .sqlite import create_sqlite_db
 
 
 __all__ = [
+    'add_pic',
     'batch_with_pic_forms',
     'create_cdb_and_ibf_file',
     'generate_pic',
@@ -32,6 +33,13 @@ VALIDATED_FIELDS = (
     'GEBURTSDATUM',
     'LANR',
 )
+
+def add_pic(form_values, pic_str):
+    if not pic_str:
+        return
+    # pic_str=True means fixed ("random") PIC, otherwise use the provided PIC str
+    pic_str = '10501200042024' if (pic_str == True) else pic_str
+    form_values['pic'] = pic_str
 
 def valid_prescription_values(*, with_pic=False, **values):
     # The idea is to return prescription values which should be considered as
@@ -49,10 +57,7 @@ def valid_prescription_values(*, with_pic=False, **values):
         'ABGABEDATUM': '%02d%02d%02d' % (today.day, today.month, today.year),
     })
     valid_values.update(values)
-    if with_pic:
-        # with_pic='...' will ensure we use a specific PIC
-        pic_str = '10501200042024' if (with_pic == True) else with_pic
-        valid_values['pic'] = pic_str
+    add_pic(valid_values, pic_str=with_pic)
     return valid_values
 
 
