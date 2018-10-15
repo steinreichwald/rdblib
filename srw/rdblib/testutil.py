@@ -126,7 +126,6 @@ def generate_pic(scan_nr=1):
 
 def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=None, valid_values_generator=None):
     """Create a xDB file and a corresponding IBF."""
-    assert (pic_nrs is None) ^ (form_data is None)
     if form_data is None:
         form_data = pic_nrs
     if valid_values_generator is None:
@@ -137,6 +136,9 @@ def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=N
         if is_pic:
             pic_nr = data
             extra_fields = {}
+        elif (pic_nrs is not None) and (i < len(pic_nrs)):
+            pic_nr = pic_nrs[i]
+            extra_fields = data
         else:
             pic_nr = generate_pic(scan_nr=i+1)
             extra_fields = data
