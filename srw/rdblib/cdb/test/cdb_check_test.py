@@ -5,6 +5,7 @@ import os
 import shutil
 from tempfile import mkdtemp
 
+from ddt import ddt as DataDrivenTestCase, data
 from pythonic_testcase import *
 
 from .. import (
@@ -19,22 +20,25 @@ from ...tool.cdb_tool import FormBatch
 from ...testutil import valid_prescription_values, VALIDATED_FIELDS
 
 
+@DataDrivenTestCase
 class CDBCheckTest(PythonicTestCase):
     def setUp(self):
-        super(CDBCheckTest, self).setUp()
+        super().setUp()
         self.env_dir = mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.env_dir)
-        super(PythonicTestCase, self).tearDown()
+        super().tearDown()
 
-    def test_can_return_cdb_instance(self):
+    @data(True, False)
+    def test_can_return_cdb_instance(self, explicit_fieldnames):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         form_fields = valid_prescription_values(with_pic=True)
         cdb_fp = create_cdb_with_form_values([form_fields], filename=cdb_path)
         cdb_fp.close()
 
-        result = open_cdb(cdb_path, field_names=VALIDATED_FIELDS)
+        field_names = VALIDATED_FIELDS if explicit_fieldnames else None
+        result = open_cdb(cdb_path, field_names=field_names)
         assert_true(result)
         assert_not_none(result.cdb_fp)
 
@@ -57,14 +61,16 @@ class CDBCheckTest(PythonicTestCase):
 
         cdb_fp.close()
 
-    def test_can_detect_cdb_files_with_trailing_junk(self):
+    @data(True, False)
+    def test_can_detect_cdb_files_with_trailing_junk(self, explicit_fieldnames):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         cdb_fp = create_cdb_with_dummy_data(nr_forms=1, filename=cdb_path, field_names=VALIDATED_FIELDS)
         cdb_fp.seek(0, os.SEEK_END)
         cdb_fp.write(b'\x00' * 100)
         cdb_fp.close()
 
-        result = open_cdb(cdb_path, field_names=VALIDATED_FIELDS)
+        field_names = VALIDATED_FIELDS if explicit_fieldnames else None
+        result = open_cdb(cdb_path, field_names=field_names)
         assert_false(result)
         assert_none(result.cdb_fp)
         assert_contains(u'ungewöhnliche Größe', result.message)
@@ -72,7 +78,8 @@ class CDBCheckTest(PythonicTestCase):
         assert_none(result.form_index)
         assert_none(result.field_index)
 
-    def test_can_detect_cdb_files_with_bad_formcount_in_header(self):
+    @data(True, False)
+    def test_can_detect_cdb_files_with_bad_formcount_in_header(self, explicit_fieldnames):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         cdb_fp = create_cdb_with_dummy_data(nr_forms=1, filename=cdb_path, field_names=VALIDATED_FIELDS)
         nr_fields_per_form = len(valid_prescription_values())
@@ -83,16 +90,24 @@ class CDBCheckTest(PythonicTestCase):
         cdb_fp.write(b'\x00' * bytes_per_form)
         cdb_fp.close()
 
-        result = open_cdb(cdb_path, field_names=VALIDATED_FIELDS)
+        field_names = VALIDATED_FIELDS if explicit_fieldnames else None
+        result = open_cdb(cdb_path, field_names=field_names)
         assert_false(result)
         assert_none(result.cdb_fp)
-        expected_msg = u'Die Datei enthält 1 Belege (Header), es müssten 2 Belege vorhanden sein (Dateigröße).'
-        assert_contains(expected_msg, result.message)
-        assert_equals('file.size_does_not_match_records', result.key)
-        assert_none(result.form_index)
-        assert_none(result.field_index)
+        if explicit_fieldnames:
+            expected_msg = u'Die Datei enthält 1 Belege (Header), es müssten 2 Belege vorhanden sein (Dateigröße).'
+            assert_contains(expected_msg, result.message)
+            assert_equals('file.size_does_not_match_records', result.key)
+            assert_none(result.form_index)
+            assert_none(result.field_index)
+        else:
+            assert_contains(u'Formular #1 enthält 5 Felder, erwartet wurden aber 11.', result.message)
+            assert_equals('form.unusual_number_of_fields', result.key)
+            assert_equals(0, result.form_index)
+            assert_none(result.field_index)
 
-    def test_can_detect_forms_with_unusual_number_of_fields(self):
+    @data(True, False)
+    def test_can_detect_forms_with_unusual_number_of_fields(self, explicit_fieldnames):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         fields_form1 = valid_prescription_values(with_pic=True)
         nr_fields1 = len(fields_form1) - 1 # -1 because of PIC
@@ -109,7 +124,8 @@ class CDBCheckTest(PythonicTestCase):
         cdb_fp = create_cdb_with_form_values(cdb_forms, filename=cdb_path)
         cdb_fp.close()
 
-        result = open_cdb(cdb_path, field_names=VALIDATED_FIELDS)
+        field_names = VALIDATED_FIELDS if explicit_fieldnames else None
+        result = open_cdb(cdb_path, field_names=field_names)
         assert_false(result)
         assert_none(result.cdb_fp)
         expected_msg = u'Formular #2 ist vermutlich fehlerhaft (%d Felder statt %d)'
@@ -122,7 +138,6 @@ class CDBCheckTest(PythonicTestCase):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         fields_form1 = valid_prescription_values()
         missing_fieldname = 'ABGABEDATUM'
-        index_missing_field = tuple(fields_form1).index(missing_fieldname)
         del fields_form1[missing_fieldname]
         fields_form1['extra'] = 'anything'
         cdb_forms = (fields_form1,)
@@ -140,7 +155,8 @@ class CDBCheckTest(PythonicTestCase):
         assert_equals(0, result.form_index)
         assert_equals(len(fields_form1)-1, result.field_index)
 
-    def test_can_detect_forms_with_empty_pic(self):
+    @data(True, False)
+    def test_can_detect_forms_with_empty_pic(self, explicit_fieldnames):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         fields = []
         for field_name, field_value in valid_prescription_values().items():
@@ -151,7 +167,8 @@ class CDBCheckTest(PythonicTestCase):
         with open(cdb_path, 'wb') as fp:
             fp.write(cdb_bytes)
 
-        result = open_cdb(cdb_path, field_names=VALIDATED_FIELDS)
+        field_names = VALIDATED_FIELDS if explicit_fieldnames else None
+        result = open_cdb(cdb_path, field_names=field_names)
         assert_true(result,
             message='empty PIC numbers should be treated as warnings (can recover them from IBF)')
         assert_not_none(result.cdb_fp)

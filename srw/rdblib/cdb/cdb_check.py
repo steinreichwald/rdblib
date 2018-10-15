@@ -3,6 +3,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from io import BytesIO
 import os
+import re
 
 from ..lib.filesize import format_filesize
 from ..lib import l_
@@ -15,39 +16,71 @@ from .cdb_format import BatchHeader, Field, FormHeader, CDB_ENCODING
 __all__ = ['open_cdb']
 
 _100mb = 100 * 1024 * 1024
+re_fieldname = re.compile('^[A-Za-z\-_0-9]+$')
 
-def open_cdb(cdb_path, *, field_names, access='write', log=None):
+def open_cdb(cdb_path, *, field_names=None, access='write', log=None):
     log = l_(log)
     filesize = os.stat(cdb_path).st_size
     warnings = []
+    filesize_str = format_filesize(filesize, locale='de')
     if filesize >= _100mb:
-        size_str = format_filesize(filesize, locale='de')
-        return _error('Die CDB-Datei ist defekt (%s groß)' % size_str, warnings=warnings, key='file.too_big')
-
-    encode_ = lambda s: s.encode(CDB_ENCODING)
-    b_field_names = tuple(map(encode_, field_names))
-    nr_fields_per_form = len(b_field_names)
-    bytes_batch_header = BatchHeader.size
-    bytes_per_field = Field.size
-    bytes_per_form = FormHeader.size + (nr_fields_per_form * bytes_per_field)
-    calculated_form_count = (filesize - bytes_batch_header) // bytes_per_form
-    expected_file_size = bytes_batch_header + (calculated_form_count * bytes_per_form)
-    if expected_file_size != filesize:
-        extra_bytes = filesize - expected_file_size
-        msg = 'Die CDB hat eine ungewöhnliche Größe (%d Bytes zu viel bei %d Belegen)'
-        return _error(msg % (extra_bytes, calculated_form_count), warnings=warnings, key='file.junk_after_last_record')
+        return _error('Die CDB-Datei ist defekt (%s groß)' % filesize_str, warnings=warnings, key='file.too_big')
 
     try:
         cdb_fp = MMapFile(cdb_path, access=access, log=log)
     except OSError:
         return _error('Die CDB-Datei ist vermutlich noch in Bearbeitung.', warnings=warnings, key='file.is_locked')
-
     cdb_data = BytesIO(filecontent(cdb_fp))
-    header_data = cdb_data.read(bytes_batch_header)
+
+    filesize = len(cdb_fp)
+    min_bytes = BatchHeader.size + FormHeader.size + Field.size
+    if filesize < min_bytes:
+        min_size_str = format_filesize(min_bytes, locale='de')
+        msg = 'Die CDB-Datei ist zu klein: %s, mindestens %s erwartet' % (min_size_str, filesize_str)
+        cdb_fp.close()
+        return _error(msg, warnings=warnings, key='file.too_small')
+
+    header_data = cdb_data.read(BatchHeader.size)
     assert len(header_data) == BatchHeader.size
     batch_header = BatchHeader.parse(header_data)
     form_count = batch_header['form_count']
-    expected_file_size = bytes_batch_header + (form_count * bytes_per_form)
+    if form_count < 1:
+        msg = 'CDB enthält laut Header keine Belege (form_count=%d)' % form_count
+        cdb_fp.close()
+        return _error(msg, warnings=warnings, key='file.no_records')
+
+    bytes_per_form = (filesize - BatchHeader.size) // form_count
+    expected_file_size = BatchHeader.size + (form_count * bytes_per_form)
+    if expected_file_size != filesize:
+        msg = 'Die CDB hat eine ungewöhnliche Größe (%d Bytes zu viel bei %d Belegen laut Header)' % (expected_file_size, form_count)
+        cdb_fp.close()
+        return _error(msg, warnings=warnings, key='file.junk_after_last_record')
+
+    expected_fields_per_form = (bytes_per_form - FormHeader.size) // Field.size
+    if expected_fields_per_form < 1:
+        msg = 'Die CDB ist zu klein (%d Belege laut Header)' % form_count
+        cdb_fp.close()
+        return _error(msg, warnings=warnings, key='file.too_small')
+
+    if field_names is None:
+        result = gather_field_names(cdb_data, expected_fields_per_form)
+        if not result:
+            cdb_fp.close()
+            return result
+        field_names = result.field_names
+
+    encode_ = lambda s: s.encode(CDB_ENCODING)
+    b_field_names = tuple(map(encode_, field_names))
+    nr_fields_per_form = len(b_field_names)
+    bytes_per_form = FormHeader.size + (nr_fields_per_form * Field.size)
+    calculated_form_count = (filesize - BatchHeader.size) // bytes_per_form
+    expected_file_size = BatchHeader.size + (calculated_form_count * bytes_per_form)
+    if expected_file_size != filesize:
+        extra_bytes = filesize - expected_file_size
+        msg = 'Die CDB hat eine ungewöhnliche Größe (%d Bytes zu viel bei %d Belegen)'
+        return _error(msg % (extra_bytes, calculated_form_count), warnings=warnings, key='file.junk_after_last_record')
+
+    expected_file_size = BatchHeader.size + (form_count * bytes_per_form)
     if expected_file_size != filesize:
         extra_bytes = filesize - expected_file_size
         msg = u'Die Datei enthält %d Belege (Header), es müssten %d Belege vorhanden sein (Dateigröße).'
@@ -75,8 +108,8 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
         seen_names = []
         index_of_bad_field = None
         for i in range(field_count):
-            field_data = cdb_data.read(bytes_per_field)
-            assert len(field_data) == bytes_per_field
+            field_data = cdb_data.read(Field.size)
+            assert len(field_data) == Field.size
             field = Field.parse(field_data)
             b_field_name = field['name'].rstrip(b'\x00')
             if b_field_name not in b_field_names:
@@ -108,6 +141,43 @@ def open_cdb(cdb_path, *, field_names, access='write', log=None):
             warnings.append(msg)
 
     return Result(True, cdb_fp=cdb_fp, warnings=warnings, key=None, form_index=None, field_index=None)
+
+def gather_field_names(cdb_data, expected_nr):
+    offset = cdb_data.tell()
+    form_index = 0
+    form_nr = form_index + 1
+    header_data = cdb_data.read(FormHeader.size)
+    assert len(header_data) == FormHeader.size
+    form_header = FormHeader.parse(header_data)
+    field_count = form_header['field_count']
+    if field_count != expected_nr:
+        msg = 'Formular #%d enthält %d Felder, erwartet wurden aber %d.' % (form_nr, field_count, expected_nr)
+        return _error(msg, key='form.unusual_number_of_fields', form_index=form_index)
+
+    field_names = []
+    for i in range(field_count):
+        field_data = cdb_data.read(Field.size)
+        assert len(field_data) == Field.size
+        field = Field.parse(field_data)
+        b_field_name = field['name'].rstrip(b'\x00')
+        if not is_plausible_field_name(b_field_name):
+            msg = 'Formular #%d enthält ungültiges Feld "%r"' % (form_nr, b_field_name)
+            return _error(msg, key='form.bad_field_name', form_index=form_index)
+        field_name = b_field_name.decode(CDB_ENCODING)
+        field_names.append(field_name)
+    cdb_data.seek(offset)
+    return Result(True, field_names=field_names)
+
+
+def is_plausible_field_name(b_name):
+    try:
+        name = b_name.decode(CDB_ENCODING)
+    except UnicodeDecodeError:
+        return False
+    if not re_fieldname.search(name):
+        return False
+    return True
+
 
 def _error(msg, warnings=(), form_index=None, field_index=None, *, key):
     return Result(False,
