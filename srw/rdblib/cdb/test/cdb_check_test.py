@@ -46,6 +46,24 @@ class CDBCheckTest(PythonicTestCase):
         assert_equals(1, cdb.count())
         cdb.close()
 
+    def test_can_ensure_all_required_field_names_are_present(self):
+        cdb_path = os.path.join(self.env_dir, 'foo.cdb')
+        form_fields = valid_prescription_values(with_pic=True)
+        cdb_fp = create_cdb_with_form_values([form_fields], filename=cdb_path)
+        cdb_fp.close()
+        required_fields = tuple(form_fields)[:2]
+        assert_not_equals(tuple(form_fields), required_fields)
+
+        result = open_cdb(cdb_path, required_fields=required_fields)
+        assert_true(result, message='all required fields are present, should work as expected')
+        result.cdb_fp.close()
+
+        result = open_cdb(cdb_path, required_fields=required_fields + ('NONEXISTENT',))
+        assert_false(result, message='field "NONEXISTENT" is not present in CDB')
+        assert_equals('form.missing_field', result.key)
+        assert_equals(0, result.form_index)
+        assert_none(result.field_index)
+
     def test_can_detect_locked_cdb_files(self):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         cdb_fp = create_cdb_with_dummy_data(nr_forms=1, filename=cdb_path, field_names=VALIDATED_FIELDS)

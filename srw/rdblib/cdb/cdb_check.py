@@ -18,7 +18,7 @@ __all__ = ['open_cdb']
 _100mb = 100 * 1024 * 1024
 re_fieldname = re.compile('^[A-Za-z\-_0-9]+$')
 
-def open_cdb(cdb_path, *, field_names=None, access='write', log=None):
+def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write', log=None):
     log = l_(log)
     filesize = os.stat(cdb_path).st_size
     warnings = []
@@ -68,6 +68,13 @@ def open_cdb(cdb_path, *, field_names=None, access='write', log=None):
             cdb_fp.close()
             return result
         field_names = result.field_names
+    if required_fields is not None:
+        missing_set = set(required_fields).difference(field_names)
+        if missing_set:
+            missing_fields = tuple(sorted(missing_set))
+            msg = 'Fehlende Felder in Formular #1: %s' % ', '.join(missing_fields)
+            cdb_fp.close()
+            return _error(msg, warnings=warnings, key='form.missing_field', form_index=0)
 
     encode_ = lambda s: s.encode(CDB_ENCODING)
     b_field_names = tuple(map(encode_, field_names))
