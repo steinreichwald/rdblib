@@ -147,7 +147,7 @@ def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=N
         else:
             pic_nr = generate_pic(scan_nr=i+1)
             extra_fields = data
-        form_values = valid_values_generator(**extra_fields, with_pic=pic_nr)
+        form_values = valid_values_generator(with_pic=pic_nr, **extra_fields)
         _form_data.append(form_values)
     pic_nrs = [form_values['pic'] for form_values in _form_data]
 
