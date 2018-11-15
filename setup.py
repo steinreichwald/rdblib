@@ -24,7 +24,7 @@ setup(
     name='rdblib',
     version='1.3.1',
     license = '3-clause BSD',
-    packages=find_packages(),
+    packages=find_packages(exclude=['*.tests', '*.test']),
     namespace_packages = ['srw'],
     include_package_data=True,
     install_requires=requires_from_file('requirements.txt'),
