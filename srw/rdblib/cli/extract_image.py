@@ -46,10 +46,16 @@ def extract_image_main():
         sys.exit(20)
 
     output_path = os.path.abspath(output_arg)
-    output_dir = os.path.dirname(output_path)
+    if os.path.isdir(output_path):
+        output_dir = output_path
+        output_filename = None
+    else:
+        output_dir = os.path.dirname(output_path)
+        output_filename = os.path.basename(output_path)
     if not os.path.exists(output_dir):
         sys.stderr.write('Zielverzeichnis "%s" existiert nicht.\n' % os.path.basename(output_arg))
         sys.exit(20)
+    get_target_path = lambda form_nr: os.path.join(output_dir, output_filename or 'form-%03d.jpg' % form_nr)
 
     ibf = ImageBatch(ibf_path, delay_load=False, access='read')
     nr_forms = ibf.image_count()
@@ -58,4 +64,5 @@ def extract_image_main():
         sys.exit(21)
 
     form_idx = form_nr - 1
+    target_path = get_target_path(form_nr)
     _store_image(ibf, form_idx, target_path)
