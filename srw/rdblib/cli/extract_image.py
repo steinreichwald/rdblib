@@ -55,4 +55,5 @@ def extract_image_main():
         sys.stderr.write('Kein Formular mit Nr. %s, IBF enthält nur %d Belege.\n' % (arguments['<FORM_NR>'], nr_forms))
         sys.exit(21)
 
-    _store_image(ibf, form_nr, target_path)
+    form_idx = form_nr - 1
+    _store_image(ibf, form_idx, target_path)
