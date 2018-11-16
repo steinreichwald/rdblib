@@ -22,6 +22,14 @@ from ..ibf import ImageBatch
 
 __all__ = ['extract_image_main']
 
+def _store_image(ibf, form_idx, target_path):
+    tiff_data = ibf.get_tiff_image(form_idx)
+    img = Image.open(BytesIO(tiff_data))
+    img.seek(1)
+    img.save(target_path, quality=90)
+    img.close()
+
+
 def extract_image_main():
     arguments = docopt(__doc__)
     ibf_arg = arguments['<IBF_PATH>']
@@ -47,8 +55,4 @@ def extract_image_main():
         sys.stderr.write('Kein Formular mit Nr. %s, IBF enthält nur %d Belege.\n' % (arguments['<FORM_NR>'], nr_forms))
         sys.exit(21)
 
-    tiff_data = ibf.get_tiff_image(form_nr)
-    img = Image.open(BytesIO(tiff_data))
-    img.seek(1)
-    img.save(output_path, quality=90)
-    img.close()
+    _store_image(ibf, form_nr, target_path)
