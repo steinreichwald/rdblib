@@ -40,13 +40,15 @@ def extract_image_main():
     if not os.path.exists(ibf_path):
         sys.stderr.write('IBF-Datei "%s" existiert nicht.\n' % ibf_arg)
         sys.exit(20)
+
+    if form_nr < 1:
+        sys.stderr.write('FORM_NR muss größer/gleich "1" sein ("%s").\n' % arguments['<FORM_NR>'])
+        sys.exit(20)
+
     output_path = os.path.abspath(output_arg)
     output_dir = os.path.dirname(output_path)
     if not os.path.exists(output_dir):
         sys.stderr.write('Zielverzeichnis "%s" existiert nicht.\n' % os.path.basename(output_arg))
-        sys.exit(20)
-    if form_nr < 1:
-        sys.stderr.write('FORM_NR muss größer/gleich "1" sein ("%s").\n' % arguments['<FORM_NR>'])
         sys.exit(20)
 
     ibf = ImageBatch(ibf_path, delay_load=False, access='read')
