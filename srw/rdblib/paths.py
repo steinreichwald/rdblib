@@ -29,7 +29,7 @@ __all__ = [
 ]
 
 ibf_subdir = '00000001'
-xdb_regex = re.compile('^\..DB$')
+xdb_regex = re.compile('^\.(.DB)|(RDX)$')
 
 class DataBunch(namedtuple('DataBunch', 'cdb ibf db ask')):
     def is_complete(self):
