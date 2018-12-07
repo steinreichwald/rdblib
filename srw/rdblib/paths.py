@@ -169,14 +169,23 @@ def assemble_new_path(current_path, new_dir=None, new_extension=None):
 def safe_move(previous_path, new_path, data=None):
     if previous_path == new_path:
         return
+    source_fp = None
     if data is None:
-        with open(previous_path, 'rb') as source_fp:
-            data = source_fp.read()
+        source_fp = open(previous_path, 'rb')
     # os.rename() overwrites existing files on Unix (but raises OSError on
     # Windows). Still we must ensure that we never overwrite anything.
     # The current "naive" approach means we are loosing metadata but that
     # seems to be fine currently.
     with open(new_path, 'xb') as target_fp:
-        target_fp.write(data)
+        if source_fp is None:
+            target_fp.write(data)
+        else:
+            one_mb = 1024 * 1024
+            while True:
+                data = source_fp.read(one_mb)
+                if data is None:
+                    break
+                target_fp.write(data)
+            source_fp.close()
     shutil.copystat(previous_path, new_path)
     os.unlink(previous_path)
