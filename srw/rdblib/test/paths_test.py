@@ -6,7 +6,6 @@ import os
 from ddt import ddt as DataDrivenTestCase, data
 from pythonic_testcase import *
 
-from ..lib.fake_fs_utils import FakeFS
 from ..paths import *
 
 
@@ -134,11 +133,3 @@ class PathTest(PythonicTestCase):
             f('/tmp/00000001/foo.IBF'),
             guess_path(f('/tmp/foo.CDB'), type_='IBF'),
             message='ignores "type_" casing')
-
-    def test_safe_move_handles_source_equals_target(self):
-        path = f('/foo')
-        fs = FakeFS.set_up(test=self)
-        fs.create_file(path)
-        with assert_not_raises():
-            safe_move(path, path)
-
