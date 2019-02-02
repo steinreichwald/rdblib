@@ -183,7 +183,7 @@ def safe_move(previous_path, new_path, data=None):
             one_mb = 1024 * 1024
             while True:
                 data = source_fp.read(one_mb)
-                if data is None:
+                if (data is None) or (len(data) == 0):
                     break
                 target_fp.write(data)
             source_fp.close()
