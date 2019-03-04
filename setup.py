@@ -32,6 +32,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'srw-extract-image = srw.rdblib.cli:extract_image_main',
+            'find-broken-form = srw.rdblib.cli.find_broken_form:main'
         ]
     },
 )
