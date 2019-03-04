@@ -7,7 +7,7 @@ from ..cdb import open_cdb, BatchHeader, Field, FormHeader, CDB_ENCODING
 from ..mmap_file import MMapFile
 
 
-__all__ = []
+__all__ = ['find_broken_form_main']
 
 try:
     from ddc.client.config import ALL_FIELD_NAMES
@@ -48,7 +48,7 @@ def repair_form(cdb_path, form_index, field_index, *, field_names):
     cdb_bytes.flush()
     cdb_bytes.close()
 
-def main():
+def find_broken_form_main():
     if len(sys.argv) < 2:
         sys.stderr.write('usage: %r [--try-repair] CDB\n' % sys.argv[0])
         sys.exit(1)
