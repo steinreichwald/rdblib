@@ -48,22 +48,13 @@ def repair_form(cdb_path, form_index, field_index, *, field_names):
     cdb_bytes.flush()
     cdb_bytes.close()
 
-def find_broken_form_main():
-    if len(sys.argv) < 2:
-        sys.stderr.write('usage: %r [--try-repair] CDB\n' % sys.argv[0])
-        sys.exit(1)
-    try_repair = (len(sys.argv) >= 3) and ('--try-repair' in sys.argv)
-    cdb_index = 2 if try_repair else 1
-    cdb_path = os.path.abspath(sys.argv[cdb_index])
-    if not os.path.isfile(cdb_path):
-        sys.stderr.write('no such file "%s"\n' % sys.argv[1])
-        sys.exit(2)
 
-    result = open_cdb(cdb_path, field_names=ALL_FIELD_NAMES, access='read')
+def check_for_broken_form(cdb_path, field_names=None, try_repair=False):
+    result = open_cdb(cdb_path, field_names=field_names, access='read')
     if result == False:
         can_repair_error = (result.form_index is not None) and (result.key == 'form.unknown_fields')
         if try_repair and can_repair_error:
-            repair_form(cdb_path, result.form_index, result.field_index, field_names=ALL_FIELD_NAMES)
+            repair_form(cdb_path, result.form_index, result.field_index, field_names=field_names)
         else:
             print(result.message)
     if getattr(result, 'warnings'):
@@ -74,6 +65,15 @@ def find_broken_form_main():
     return
 
 
-if __name__ == '__main__':
-    main()
+def find_broken_form_main():
+    if len(sys.argv) < 2:
+        sys.stderr.write('usage: %r [--try-repair] CDB\n' % sys.argv[0])
+        sys.exit(1)
+    try_repair = (len(sys.argv) >= 3) and ('--try-repair' in sys.argv)
+    cdb_index = 2 if try_repair else 1
+    cdb_path = os.path.abspath(sys.argv[cdb_index])
+    if not os.path.isfile(cdb_path):
+        sys.stderr.write('no such file "%s"\n' % sys.argv[1])
+        sys.exit(2)
+    check_for_broken_form(cdb_path, field_names=ALL_FIELD_NAMES, try_repair=try_repair)
 
