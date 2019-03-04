@@ -113,7 +113,7 @@ class CDBCheckTest(PythonicTestCase):
         assert_false(result)
         assert_none(result.cdb_fp)
         if explicit_fieldnames:
-            expected_msg = u'Die Datei enthält 1 Belege (Header), es müssten 2 Belege vorhanden sein (Dateigröße).'
+            expected_msg = u'Die Datei enthält 1 Belege (Header), es müssten 2 Belege vorhanden sein (Dateigröße): %d Bytes zu viel' % bytes_per_form
             assert_contains(expected_msg, result.message)
             assert_equals('file.size_does_not_match_records', result.key)
             assert_none(result.form_index)

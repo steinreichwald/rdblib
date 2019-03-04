@@ -82,16 +82,16 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
     bytes_per_form = FormHeader.size + (nr_fields_per_form * Field.size)
     calculated_form_count = (filesize - BatchHeader.size) // bytes_per_form
     expected_file_size = BatchHeader.size + (calculated_form_count * bytes_per_form)
-    if expected_file_size != filesize:
-        extra_bytes = filesize - expected_file_size
+    extra_bytes = filesize - expected_file_size
+    if extra_bytes:
         msg = 'Die CDB hat eine ungewöhnliche Größe (%d Bytes zu viel bei %d Belegen)'
         return _error(msg % (extra_bytes, calculated_form_count), warnings=warnings, key='file.junk_after_last_record')
 
     expected_file_size = BatchHeader.size + (form_count * bytes_per_form)
-    if expected_file_size != filesize:
-        extra_bytes = filesize - expected_file_size
-        msg = u'Die Datei enthält %d Belege (Header), es müssten %d Belege vorhanden sein (Dateigröße).'
-        msg_text = msg % (form_count, calculated_form_count)
+    extra_bytes = filesize - expected_file_size
+    if extra_bytes:
+        msg = u'Die Datei enthält %d Belege (Header), es müssten %d Belege vorhanden sein (Dateigröße): %s Bytes zu viel'
+        msg_text = msg % (form_count, calculated_form_count, extra_bytes)
         cdb_fp.close()
         return _error(msg_text, warnings=warnings, key='file.size_does_not_match_records')
 
