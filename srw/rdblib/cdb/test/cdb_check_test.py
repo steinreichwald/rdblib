@@ -13,7 +13,7 @@ from .. import (
     create_cdb_with_form_values,
     open_cdb,
 )
-from ..cdb_check import calculate_bytes_per_form
+from ..cdb_check import calculate_bytes_per_form, calculate_filesize
 from ..cdb_fixtures import CDBFile, CDBForm
 from ...locking import acquire_lock
 from ...tool.cdb_tool import FormBatch
@@ -130,6 +130,27 @@ class CDBCheckTest(PythonicTestCase):
         assert_none(result.form_index)
         assert_none(result.field_index)
 
+    def test_can_detect_cdb_files_with_trailing_junk_when_guessing_field_names(self):
+        nr_forms_in_cdb = 1
+        nr_fields = len(VALIDATED_FIELDS)
+        # Carefully craft a RDB file where the filesize matches a "valid" file
+        # with exactly one more field per form. This should trigger a helpful
+        # error message with the exact number of junk bytes to facilitate
+        # repairs.
+        nr_junk_bytes = calculate_filesize(nr_forms_in_cdb, nr_fields+1) - calculate_filesize(nr_forms_in_cdb, nr_fields)
+        cdb_path = self._create_cdb(nr_forms_in_cdb, nr_junk_bytes=nr_junk_bytes, field_names=VALIDATED_FIELDS)
+
+        result = open_cdb(cdb_path, field_names=None)
+        assert_false(result)
+        assert_none(result.cdb_fp)
+        assert_equals('form.unusual_number_of_fields', result.key, message=result.message)
+        assert_equals(
+            'Formular #1 enthält %d Felder, erwartet wurden aber %d (oder %d extra Bytes?).' % (nr_fields, nr_fields+1, nr_junk_bytes),
+            result.message
+        )
+        assert_equals(0, result.form_index)
+        assert_none(result.field_index)
+
     @data(True, False)
     def test_can_detect_forms_with_unusual_number_of_fields(self, explicit_fieldnames):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
@@ -206,9 +227,11 @@ class CDBCheckTest(PythonicTestCase):
         assert_none(result.field_index)
 
     # --- helpers -------------------------------------------------------------
-    def _create_cdb(self, nr_forms, *, nr_junk_bytes=0):
+    def _create_cdb(self, nr_forms, *, nr_junk_bytes=0, field_names=None):
+        if field_names is None:
+            field_names= VALIDATED_FIELDS
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
-        cdb_fp = create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path, field_names=VALIDATED_FIELDS)
+        cdb_fp = create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path, field_names=field_names)
         if nr_junk_bytes:
             cdb_fp.seek(0, os.SEEK_END)
             cdb_fp.write(b'\x00' * nr_junk_bytes)

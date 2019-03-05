@@ -71,7 +71,7 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
         return _error(msg, warnings=warnings, key='file.too_small')
 
     if field_names is None:
-        result = gather_field_names(cdb_data, expected_fields_per_form, warnings=warnings)
+        result = gather_field_names(cdb_data, expected_fields_per_form, warnings=warnings, filesize=filesize, form_count=form_count)
         if not result:
             cdb_fp.close()
             return result
@@ -160,7 +160,7 @@ def calculate_bytes_per_form(nr_fields):
 def calculate_filesize(nr_forms, nr_fields):
     return nr_forms * calculate_bytes_per_form(nr_fields) + BatchHeader.size
 
-def gather_field_names(cdb_data, expected_nr, warnings=()):
+def gather_field_names(cdb_data, expected_nr, *, warnings=(), filesize=None, form_count=None):
     offset = cdb_data.tell()
     form_index = 0
     form_nr = form_index + 1
@@ -169,7 +169,11 @@ def gather_field_names(cdb_data, expected_nr, warnings=()):
     form_header = FormHeader.parse(header_data)
     field_count = form_header['field_count']
     if field_count != expected_nr:
-        msg = 'Formular #%d enthält %d Felder, erwartet wurden aber %d.' % (form_nr, field_count, expected_nr)
+        extra_bytes_msg = ''
+        if filesize and form_count:
+            extra_bytes = filesize - calculate_filesize(form_count, field_count)
+            extra_bytes_msg = ' (oder %d extra Bytes?)' % extra_bytes
+        msg = 'Formular #%d enthält %d Felder, erwartet wurden aber %d%s.' % (form_nr, field_count, expected_nr, extra_bytes_msg)
         return _error(msg, warnings=warnings, key='form.unusual_number_of_fields', form_index=form_index)
 
     field_names = []
