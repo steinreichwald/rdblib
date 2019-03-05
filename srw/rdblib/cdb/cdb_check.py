@@ -49,10 +49,18 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
         cdb_fp.close()
         return _error(msg, warnings=warnings, key='file.no_records')
 
-    bytes_per_form = (filesize - BatchHeader.size) // form_count
+    if not field_names:
+        estimated_bytes_per_form = (filesize - BatchHeader.size) // form_count
+        calculated_nr_fields = (estimated_bytes_per_form - FormHeader.size) // Field.size
+        bytes_per_form = calculated_nr_fields * Field.size + FormHeader.size
+    else:
+        nr_fields = len(field_names)
+        bytes_per_form = FormHeader.size + nr_fields * Field.size
+
     expected_file_size = BatchHeader.size + (form_count * bytes_per_form)
+    extra_bytes = filesize - expected_file_size
     if expected_file_size != filesize:
-        msg = 'Die CDB hat eine ungewöhnliche Größe (%d Bytes zu viel bei %d Belegen laut Header)' % (expected_file_size, form_count)
+        msg = 'Die CDB hat eine ungewöhnliche Größe (mindestens %d Bytes zu viel bei %d Belegen laut Header)' % (extra_bytes, form_count)
         cdb_fp.close()
         return _error(msg, warnings=warnings, key='file.junk_after_last_record')
 
@@ -63,7 +71,7 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
         return _error(msg, warnings=warnings, key='file.too_small')
 
     if field_names is None:
-        result = gather_field_names(cdb_data, expected_fields_per_form)
+        result = gather_field_names(cdb_data, expected_fields_per_form, warnings=warnings)
         if not result:
             cdb_fp.close()
             return result
@@ -149,7 +157,7 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
 
     return Result(True, cdb_fp=cdb_fp, warnings=warnings, key=None, form_index=None, field_index=None)
 
-def gather_field_names(cdb_data, expected_nr):
+def gather_field_names(cdb_data, expected_nr, warnings=()):
     offset = cdb_data.tell()
     form_index = 0
     form_nr = form_index + 1
@@ -159,7 +167,7 @@ def gather_field_names(cdb_data, expected_nr):
     field_count = form_header['field_count']
     if field_count != expected_nr:
         msg = 'Formular #%d enthält %d Felder, erwartet wurden aber %d.' % (form_nr, field_count, expected_nr)
-        return _error(msg, key='form.unusual_number_of_fields', form_index=form_index)
+        return _error(msg, warnings=warnings, key='form.unusual_number_of_fields', form_index=form_index)
 
     field_names = []
     for i in range(field_count):

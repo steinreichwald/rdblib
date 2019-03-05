@@ -97,32 +97,47 @@ class CDBCheckTest(PythonicTestCase):
         assert_none(result.field_index)
 
     @data(True, False)
-    def test_can_detect_cdb_files_with_bad_formcount_in_header(self, explicit_fieldnames):
+    def test_can_detect_cdb_files_with_trailing_junk_forms(self, explicit_fieldnames):
+        nr_forms_in_cdb = 3
+        nr_junk_forms = 1
+        nr_fields = len(VALIDATED_FIELDS)
+        # test setup: if there are more/less validated fields we may have to
+        # adapt the number of forms in the cdb/junk forms so validation really
+        # fails with the expected error message.
+        if nr_fields != 5:
+            # nosetests will show this message only when the test fails...
+            print('number of fields per form changed, may need to adapt variables')
+
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
-        cdb_fp = create_cdb_with_dummy_data(nr_forms=1, filename=cdb_path, field_names=VALIDATED_FIELDS)
-        nr_fields_per_form = len(valid_prescription_values())
-        bytes_per_form = FormHeader.size + (nr_fields_per_form * Field.size)
-        # simulate a (faulty) form so the total file size is ok but the sanity
-        # checker should detect that condition before parsing the fields.
+        cdb_fp = create_cdb_with_dummy_data(nr_forms=nr_forms_in_cdb, filename=cdb_path, field_names=VALIDATED_FIELDS)
         cdb_fp.seek(0, os.SEEK_END)
-        cdb_fp.write(b'\x00' * bytes_per_form)
+        bytes_per_form = FormHeader.size + nr_fields * Field.size
+        nr_junk_bytes = nr_junk_forms * bytes_per_form
+        cdb_fp.write(b'\x00' * nr_junk_bytes)
         cdb_fp.close()
 
         field_names = VALIDATED_FIELDS if explicit_fieldnames else None
         result = open_cdb(cdb_path, field_names=field_names)
         assert_false(result)
         assert_none(result.cdb_fp)
+        assert_equals('file.junk_after_last_record', result.key, message=result.message)
+        # Need to test the error messages in detail to ensure that the error
+        # message is as helpful as possible.
         if explicit_fieldnames:
-            expected_msg = u'Die Datei enthält 1 Belege (Header), es müssten 2 Belege vorhanden sein (Dateigröße): %d Bytes zu viel' % bytes_per_form
-            assert_contains(expected_msg, result.message)
-            assert_equals('file.size_does_not_match_records', result.key)
-            assert_none(result.form_index)
-            assert_none(result.field_index)
+            # error message mentions exact number of junk bytes (as we passed the correct field count)
+            assert_equals(
+                'Die CDB hat eine ungewöhnliche Größe (mindestens %d Bytes zu viel bei %d Belegen laut Header)' % (nr_junk_bytes, nr_forms_in_cdb),
+                result.message
+            )
         else:
-            assert_contains(u'Formular #1 enthält 5 Felder, erwartet wurden aber 11.', result.message)
-            assert_equals('form.unusual_number_of_fields', result.key)
-            assert_equals(0, result.form_index)
-            assert_none(result.field_index)
+            # code has to guess the number of fields but it points at least in
+            # the right direction.
+            assert_equals(
+                'Die CDB hat eine ungewöhnliche Größe (mindestens 28 Bytes zu viel bei %d Belegen laut Header)' % nr_forms_in_cdb,
+                result.message
+            )
+        assert_none(result.form_index)
+        assert_none(result.field_index)
 
     @data(True, False)
     def test_can_detect_forms_with_unusual_number_of_fields(self, explicit_fieldnames):
