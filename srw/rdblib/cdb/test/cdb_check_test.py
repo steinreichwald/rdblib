@@ -11,9 +11,9 @@ from pythonic_testcase import *
 from .. import (
     create_cdb_with_dummy_data,
     create_cdb_with_form_values,
-    Field, FormHeader,
     open_cdb,
 )
+from ..cdb_check import calculate_bytes_per_form
 from ..cdb_fixtures import CDBFile, CDBForm
 from ...locking import acquire_lock
 from ...tool.cdb_tool import FormBatch
@@ -111,8 +111,7 @@ class CDBCheckTest(PythonicTestCase):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')
         cdb_fp = create_cdb_with_dummy_data(nr_forms=nr_forms_in_cdb, filename=cdb_path, field_names=VALIDATED_FIELDS)
         cdb_fp.seek(0, os.SEEK_END)
-        bytes_per_form = FormHeader.size + nr_fields * Field.size
-        nr_junk_bytes = nr_junk_forms * bytes_per_form
+        nr_junk_bytes = nr_junk_forms * calculate_bytes_per_form(nr_fields)
         cdb_fp.write(b'\x00' * nr_junk_bytes)
         cdb_fp.close()
 

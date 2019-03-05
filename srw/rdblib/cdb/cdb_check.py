@@ -52,10 +52,10 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
     if not field_names:
         estimated_bytes_per_form = (filesize - BatchHeader.size) // form_count
         calculated_nr_fields = (estimated_bytes_per_form - FormHeader.size) // Field.size
-        bytes_per_form = calculated_nr_fields * Field.size + FormHeader.size
+        bytes_per_form = calculate_bytes_per_form(calculated_nr_fields)
     else:
         nr_fields = len(field_names)
-        bytes_per_form = FormHeader.size + nr_fields * Field.size
+        bytes_per_form = calculate_bytes_per_form(nr_fields)
 
     expected_file_size = BatchHeader.size + (form_count * bytes_per_form)
     extra_bytes = filesize - expected_file_size
@@ -87,9 +87,9 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
     encode_ = lambda s: s.encode(CDB_ENCODING)
     b_field_names = tuple(map(encode_, field_names))
     nr_fields_per_form = len(b_field_names)
-    bytes_per_form = FormHeader.size + (nr_fields_per_form * Field.size)
+    bytes_per_form = calculate_bytes_per_form(nr_fields_per_form)
     calculated_form_count = (filesize - BatchHeader.size) // bytes_per_form
-    expected_file_size = BatchHeader.size + (calculated_form_count * bytes_per_form)
+    expected_file_size = calculate_filesize(calculated_form_count, nr_fields_per_form)
     extra_bytes = filesize - expected_file_size
     if extra_bytes:
         msg = 'Die CDB hat eine ungewöhnliche Größe (%d Bytes zu viel bei %d Belegen)'
@@ -156,6 +156,12 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
             warnings.append(msg)
 
     return Result(True, cdb_fp=cdb_fp, warnings=warnings, key=None, form_index=None, field_index=None)
+
+def calculate_bytes_per_form(nr_fields):
+    return (nr_fields * Field.size) + FormHeader.size
+
+def calculate_filesize(nr_forms, nr_fields):
+    return nr_forms * calculate_bytes_per_form(nr_fields) + BatchHeader.size
 
 def gather_field_names(cdb_data, expected_nr, warnings=()):
     offset = cdb_data.tell()
