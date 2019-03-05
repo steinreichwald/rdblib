@@ -81,11 +81,7 @@ class CDBCheckTest(PythonicTestCase):
 
     @data(True, False)
     def test_can_detect_cdb_files_with_trailing_junk(self, explicit_fieldnames):
-        cdb_path = os.path.join(self.env_dir, 'foo.cdb')
-        cdb_fp = create_cdb_with_dummy_data(nr_forms=1, filename=cdb_path, field_names=VALIDATED_FIELDS)
-        cdb_fp.seek(0, os.SEEK_END)
-        cdb_fp.write(b'\x00' * 100)
-        cdb_fp.close()
+        cdb_path = self._create_cdb(nr_forms=1, nr_junk_bytes=100)
 
         field_names = VALIDATED_FIELDS if explicit_fieldnames else None
         result = open_cdb(cdb_path, field_names=field_names)
@@ -108,12 +104,8 @@ class CDBCheckTest(PythonicTestCase):
             # nosetests will show this message only when the test fails...
             print('number of fields per form changed, may need to adapt variables')
 
-        cdb_path = os.path.join(self.env_dir, 'foo.cdb')
-        cdb_fp = create_cdb_with_dummy_data(nr_forms=nr_forms_in_cdb, filename=cdb_path, field_names=VALIDATED_FIELDS)
-        cdb_fp.seek(0, os.SEEK_END)
         nr_junk_bytes = nr_junk_forms * calculate_bytes_per_form(nr_fields)
-        cdb_fp.write(b'\x00' * nr_junk_bytes)
-        cdb_fp.close()
+        cdb_path = self._create_cdb(nr_forms_in_cdb, nr_junk_bytes=nr_junk_bytes)
 
         field_names = VALIDATED_FIELDS if explicit_fieldnames else None
         result = open_cdb(cdb_path, field_names=field_names)
@@ -212,3 +204,13 @@ class CDBCheckTest(PythonicTestCase):
         assert_none(result.key)
         assert_none(result.form_index)
         assert_none(result.field_index)
+
+    # --- helpers -------------------------------------------------------------
+    def _create_cdb(self, nr_forms, *, nr_junk_bytes=0):
+        cdb_path = os.path.join(self.env_dir, 'foo.cdb')
+        cdb_fp = create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path, field_names=VALIDATED_FIELDS)
+        if nr_junk_bytes:
+            cdb_fp.seek(0, os.SEEK_END)
+            cdb_fp.write(b'\x00' * nr_junk_bytes)
+        cdb_fp.close()
+        return cdb_path
