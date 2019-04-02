@@ -7,6 +7,8 @@ import re
 import shutil
 import sys
 
+import bitmath
+
 from .lib.attribute_dict import AttrDict
 from .lib.result import Result
 
@@ -180,9 +182,9 @@ def safe_move(previous_path, new_path, data=None):
         if source_fp is None:
             target_fp.write(data)
         else:
-            one_mb = 1024 * 1024
+            one_mb_in_bytes = int(bitmath.MiB(1).to_Byte())
             while True:
-                data = source_fp.read(one_mb)
+                data = source_fp.read(one_mb_in_bytes)
                 if (data is None) or (len(data) == 0):
                     break
                 target_fp.write(data)

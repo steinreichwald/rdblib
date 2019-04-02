@@ -5,6 +5,8 @@ from io import BytesIO
 import os
 import re
 
+import bitmath
+
 from ..lib.filesize import format_filesize
 from ..lib import l_
 from ..lib.result import Result
@@ -15,15 +17,15 @@ from .cdb_format import BatchHeader, Field, FormHeader, CDB_ENCODING
 
 __all__ = ['open_cdb']
 
-_100mb = 100 * 1024 * 1024
+MAX_RDB_SIZE = bitmath.MiB(100)
 re_fieldname = re.compile('^[A-Za-z\-_0-9]+$')
 
 def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write', log=None):
     log = l_(log)
-    filesize = os.stat(cdb_path).st_size
+    filesize = bitmath.Byte(os.stat(cdb_path).st_size)
     warnings = []
     filesize_str = format_filesize(filesize, locale='de')
-    if filesize >= _100mb:
+    if filesize >= MAX_RDB_SIZE:
         return _error('Die CDB-Datei ist defekt (%s groß)' % filesize_str, warnings=warnings, key='file.too_big')
 
     try:

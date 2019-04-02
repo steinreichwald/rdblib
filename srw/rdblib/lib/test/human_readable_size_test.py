@@ -1,6 +1,7 @@
 # encoding: utf-8
 # This file was a part of MediaDrop (http://www.mediadrop.net),
 # Copyright 2009-2014 MediaDrop contributors
+# Copyrigth 2019 Felix Schwarz
 # For the exact contribution history, see the git revision log.
 # The source code in this file is is dual licensed under the MIT license or
 # the GPLv3 or (at your option) any later version.
@@ -44,6 +45,14 @@ class FormatFilesizeTestCase(PythonicTestCase):
         assert_equals(u'12,9\xa0MB', format_filesize(12.854*1024**2, locale='de'),
             message='render at most one decimal digit')
         assert_equals(u'-10.240\xa0TB', format_filesize(-10*1024**5, locale='de'))
+
+    def test_can_return_formatted_string_for_bitmath_sizes(self):
+        try:
+            import bitmath
+        except ImportError:
+            raise SkipTest('bitmath not installed')
+        assert_equals(u'4\xa0MB', format_filesize(bitmath.MiB(4)))
+
 
 import unittest
 def suite():

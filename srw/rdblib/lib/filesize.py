@@ -11,6 +11,11 @@ from decimal import Decimal
 
 from babel import Locale
 from babel.numbers import format_decimal
+try:
+    import bitmath
+    has_bitmath = True
+except ImportError:
+    has_bitmath = False
 
 
 __all__ = ['format_filesize', 'human_readable_size']
@@ -31,7 +36,9 @@ def human_readable_size(value):
 # -----------------------------------------------------------------------------
 
 def format_filesize(size, locale='en'):
-    locale = Locale.parse(locale)
+    if has_bitmath and isinstance(size, bitmath.Bitmath):
+        size = int(size.to_Byte())
     value, unit = human_readable_size(size)
+    locale = Locale.parse(locale)
     return format_decimal(value, format=u'#,##0.#', locale=locale) + u'\xa0' + unit
 
