@@ -2,6 +2,8 @@
 ddt
 # contains fix for loading pickled data when pyfakefs is active
 # https://github.com/jmcgeheeiv/pyfakefs/commit/3cdbc6beb3796fe06ad8916b024c0937900bda12
-pyfakefs >= 3.4.3
+# shippable runs tests as "root" so permission checks don't work with pyfakefs >= 3.5.4
+# https://github.com/jmcgeheeiv/pyfakefs/issues/474
+pyfakefs >= 3.4.3, <= 3.5.3
 PythonicTestcase >= 1.1.0  # assert_raises with context_manager
 testfixtures
