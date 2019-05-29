@@ -5,10 +5,13 @@ Dieses Skript extrahiert das angebene Bild aus einer IBF-Datei
 (bzw. alle Bilder, falls "--all" verwendet wurde).
 
 Usage:
-    srw-extract-image [options] <IBF_PATH> <FORM_NR> <OUTPUT_PATH>
-    srw-extract-image --all <IBF_PATH> <OUTPUT_PATH>
+    srw-extract-image <IBF_PATH> <FORM_NR> <OUTPUT_PATH>
+    srw-extract-image [options] <IBF_PATH> <OUTPUT_PATH>
+    srw-extract-image -h
 
 Options:
+    --all           Extract all images
+    --tiff          Store images as tiff (same as in IBF)
     -h, --help      Show this screen
 """
 
@@ -24,17 +27,22 @@ from ..ibf import ImageBatch
 
 __all__ = ['extract_image_main']
 
-def _store_image(ibf, form_idx, target_path):
+def _store_image(ibf, form_idx, target_path, use_tiff=False):
     tiff_data = ibf.get_tiff_image(form_idx)
-    img = Image.open(BytesIO(tiff_data))
-    img.seek(1)
-    img.save(target_path, quality=90)
-    img.close()
+    if use_tiff:
+        with open(target_path, 'wb') as img_fp:
+            img_fp.write(tiff_data)
+    else:
+        img = Image.open(BytesIO(tiff_data))
+        img.seek(1)
+        img.save(target_path, quality=90)
+        img.close()
 
 
 def extract_image_main():
     arguments = docopt(__doc__)
     extract_all_images = arguments['--all']
+    use_tiff = arguments['--tiff']
     ibf_arg = arguments['<IBF_PATH>']
     form_nr = int(arguments['<FORM_NR>']) if not extract_all_images else None
     output_arg = arguments['<OUTPUT_PATH>']
@@ -62,7 +70,9 @@ def extract_image_main():
     if not os.path.exists(output_dir):
         sys.stderr.write('Zielverzeichnis "%s" existiert nicht.\n' % os.path.basename(output_arg))
         sys.exit(20)
-    get_target_path = lambda form_nr: os.path.join(output_dir, output_filename or 'form-%03d.jpg' % form_nr)
+
+    img_extension = 'tiff' if use_tiff else 'jpg'
+    get_target_path = lambda form_nr: os.path.join(output_dir, output_filename or 'form-%03d.%s' % (form_nr, img_extension))
 
     ibf = ImageBatch(ibf_path, delay_load=False, access='read')
     nr_forms = ibf.image_count()
@@ -72,9 +82,9 @@ def extract_image_main():
             sys.exit(21)
         form_idx = form_nr - 1
         target_path = get_target_path(form_nr)
-        _store_image(ibf, form_idx, target_path)
+        _store_image(ibf, form_idx, target_path, use_tiff=use_tiff)
     else:
         for form_idx in range(nr_forms):
             form_nr = form_idx+1
             target_path = get_target_path(form_nr)
-            _store_image(ibf, form_idx, target_path)
+            _store_image(ibf, form_idx, target_path, use_tiff=use_tiff)
