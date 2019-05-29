@@ -7,4 +7,5 @@ docopt
 pillow < 5.3
 pywin32 ; platform_system == 'Windows'
 six
+SmartConstants
 SQLAlchemy
