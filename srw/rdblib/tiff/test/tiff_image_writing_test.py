@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import struct
+
 from pythonic_testcase import *
 
 from ..tag_specification import FT
@@ -53,3 +55,18 @@ class TiffImageWritingTest(PythonicTestCase):
         assert_equals(img_data, img_bytes[img_offset:])
         assert_equals(expected_bytes, img_bytes)
 
+    def test_can_write_rational_tag(self):
+        nr_tags = 2
+        tag_data = (
+            # 258: BitsPerSample
+            ('H', 258), ('H', FT.SHORT), ('i', 1), ('i', 1),
+            # 282: XResolution
+            ('H', 282), ('H', FT.RATIONAL), ('i', 1), ('i', calc_offset(nr_tags)),
+        )
+        expected_long_data = struct.pack('<ii', 200, 1)
+        img_data = b'dummy'
+        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
+
+        tiff_img = TiffImage(tags={258: 1, 282: 200}, img_data=img_data)
+        img_bytes = bytes_from_tiff_writer(tiff_img)
+        assert_equals(expected_bytes, img_bytes)

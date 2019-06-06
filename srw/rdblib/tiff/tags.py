@@ -31,12 +31,17 @@ class TiffTag:
         is_len_field = (field_size is len)
         if is_len_field or (field_size > 4):
             nr_values = len(self.tag_value) if is_len_field else 1
+            extra_values = ()
             data_or_offset = long_offset
             if tag_type == FT.ASCII:
                 long_spec = '%ds' % nr_values
+            elif tag_type == FT.RATIONAL:
+                long_spec = 'ii'
+                # just assume we only have to deal with integers here (denominator = 1)
+                extra_values = (1,)
             else:
                 raise NotImplementedError('tag_type: %r' % FieldType.constant_for(tag_type))
-            long_data = struct.pack('<' + long_spec, self.tag_value)
+            long_data = struct.pack('<' + long_spec, self.tag_value, *extra_values)
         else:
             # nr_values = 1 is a simplification which matches our legacy
             # software
