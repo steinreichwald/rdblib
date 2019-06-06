@@ -48,12 +48,32 @@ FT = FieldType
 TTSpec = TiffTagSpecification
 
 TiffTags = {
+    254: TTSpec('NewSubfileType', FT.LONG),     # 0-7 (bitmask)
     256: TTSpec('ImageWidth', FT._SHORT_OR_LONG),
     257: TTSpec('ImageLength', FT._SHORT_OR_LONG),
     258: TTSpec('BitsPerSample', FT.SHORT),
-    259: TTSpec('Compression', FT.SHORT),
-
+    259: TTSpec('Compression', FT.SHORT),       # 1-6 or 32773
+    262: TTSpec('PhotometricInterpretation', FT.SHORT),
+    266: TTSpec('FillOrder', FT.SHORT),         # 1 or 2
     269: TTSpec('DocumentName', FT.ASCII),
     270: TTSpec('ImageDescription', FT.ASCII),
+    271: TTSpec('Make', FT.ASCII),              # "scanner manufacturer"
+    272: TTSpec('Model', FT.ASCII),             # "scanner model name or number"
+    273: TTSpec('StripOffsets', FT._SHORT_OR_LONG),
+    274: TTSpec('Orientation', FT.SHORT),       # 1-8
+    277: TTSpec('SamplesPerPixel', FT.SHORT),   # 1-8
+    278: TTSpec('RowsPerStrip', FT._SHORT_OR_LONG),
+    279: TTSpec('StripByteCounts', FT._SHORT_OR_LONG),   # aka "image data bytes" for us
+    280: TTSpec('MinSampleValue', FT.SHORT),
+    281: TTSpec('MaxSampleValue', FT.SHORT),
+    282: TTSpec('XResolution', FT.RATIONAL),
+    283: TTSpec('YResolution', FT.RATIONAL),
+    285: TTSpec('PageName', FT.ASCII),          # "name of the page from which this image was scanned"
+    293: TTSpec('T6Options', FT.LONG),
+    296: TTSpec('ResolutionUnit', FT.SHORT),    # 2 = "inch"
+    305: TTSpec('Software', FT.ASCII),          # "Name and version number of the software package(s) used to create the image."
+    306: TTSpec('DateTime', FT.ASCII),          # "Date and time of image creation" (format "YYYY:MM:DD HH:MM:SS")
+    315: TTSpec('Artist', FT.ASCII),            # "Person who created the image"
+    316: TTSpec('HostComputer', FT.ASCII),      # "The computer and/or operating system in use at the time of image creation."
 }
 
