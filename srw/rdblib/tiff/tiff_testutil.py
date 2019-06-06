@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 
+from io import BytesIO
 import struct
 
 from .tags import TAG_SIZE
 
 
 __all__ = [
+    'bytes_from_tiff_writer',
     'calc_offset',
     'ifd_data',
     'pad_string',
-    'tiff_image_to_bytes',
     'to_bytes',
 ]
+
+def bytes_from_tiff_writer(tiff_obj):
+    buffer = BytesIO()
+    tiff_obj.write_bytes(buffer)
+    buffer.seek(0)
+    return buffer.read()
 
 def calc_offset(nr_tags, long_data=b'', img_data=None):
     # excluding TIFF header size because we are only serializing a single
