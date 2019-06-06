@@ -1,16 +1,58 @@
 
 from collections import OrderedDict
+import struct
 
 from .tags import TiffTag, TAG_SIZE
 from ..binary_format import BinaryFormat
 
 
+__all__ = ['TiffImage', 'TiffFile']
+
 class TiffFile:
-    def __init__(self, byte_order=b'II', version=b'42', first_ifd=8):
+    """Convenience class which wraps a simple TIFF parser/writer which can
+    read/write Tiff metadata (aka tags/"IFD") exactly in the structure required
+    by the old Walther software.
+    This is not a full featured TIFF reader (not even baseline).
+    """
+    def __init__(self, byte_order=b'II', version=42, first_ifd=None, tiff_images=None):
         self.byte_order = byte_order
         self.version = version
         self.first_ifd = first_ifd
-        self.tiff_images = []
+        self.tiff_images = list(tiff_images) if tiff_images else []
+        self._header_writer = BinaryFormat(self.header)
+        assert self.byte_order == b'II', 'only little ending encoding supported'
+        assert self.version == 42
+        if first_ifd is not None:
+            assert self.first_ifd >= self.size
+
+    header = (
+        ('byte_order',        'H'),    # in IBF always 'II' = little endian
+        ('version',           'H'),    # always 42 (0x2A 0x00) for TIFF
+        ('first_ifd',         'i'),    # in IBF always 8
+    )
+
+    @property
+    def size(self):
+        return self._header_writer.size
+
+    def write_bytes(self, fp):
+        img_offset = self.first_ifd or self.size
+        header_values = {
+            'byte_order': _to_int(self.byte_order, 'H'),
+            'version': _to_int(self.version, 'H'),
+            'first_ifd': img_offset,
+        }
+        header_bytes = self._header_writer.to_bytes(header_values)
+        fp.write(header_bytes)
+
+        for tiff_img in self.tiff_images:
+            tiff_img.write_bytes(fp, offset=img_offset)
+            img_offset = fp.tell()
+
+def _to_int(value, format_str):
+    if isinstance(value, (int, )):
+        return value
+    return struct.unpack('<'+format_str, value)
 
 
 
@@ -19,7 +61,7 @@ class TiffImage:
         self.tags = OrderedDict(tags or {})
         self.img_data = img_data
 
-    def write_bytes(self, fp):
+    def write_bytes(self, fp, offset=0):
         nr_tags = len(self.tags)
         ifd_spec = (
             ('nr_tags',           'H'),
@@ -31,7 +73,7 @@ class TiffImage:
 
         tag_data_bytes = b''
         long_data = b''
-        long_offset = ifd_size
+        long_offset = offset + ifd_size
         for tag_id, tag_value in sorted(self.tags.items()):
             tag_bytes, tag_long_data = TiffTag(tag_id, tag_value).to_bytes(long_offset=long_offset)
             tag_data_bytes += tag_bytes

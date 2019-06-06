@@ -7,6 +7,7 @@ from .tags import TAG_SIZE
 
 
 __all__ = [
+    'adapt_values',
     'bytes_from_tiff_writer',
     'calc_offset',
     'ifd_data',
@@ -14,20 +15,38 @@ __all__ = [
     'to_bytes',
 ]
 
+def adapt_values(values, bin_structure):
+    """allows to use convenient Python types for fields
+
+    e.g.
+        >>> adapt_values({'byte_order': b'II'}, ('byte_order', 'H'))
+        {'byte_order': <int>}
+    """
+    bin_values = {}
+    field_specs = dict(bin_structure)
+    for name, value in values.items():
+        bin_values[name] = _to_int(value, field_specs[name])
+    return bin_values
+
+def _to_int(value, format_str):
+    if isinstance(value, (int, )):
+        return value
+    return struct.unpack('<'+format_str, value)
+
 def bytes_from_tiff_writer(tiff_obj):
     buffer = BytesIO()
     tiff_obj.write_bytes(buffer)
     buffer.seek(0)
     return buffer.read()
 
-def calc_offset(nr_tags, long_data=b'', img_data=None):
+def calc_offset(nr_tags, long_data=b'', offset=0, img_data=None):
     # excluding TIFF header size because we are only serializing a single
     # TiffImage.
     # 'H' (nr_tags)  -> 2 byte
     # 'i' (next_ifd) -> 4 byte
     IFD_SIZE = 2 + (nr_tags * TAG_SIZE) + 4
     img_size = len(img_data) if (img_data is not None) else 0
-    return IFD_SIZE + len(long_data) + img_size
+    return offset + IFD_SIZE + len(long_data) + img_size
 
 def ifd_data(nr_tags, tag_data, long_data=None):
     tag_data = to_bytes(tag_data)
