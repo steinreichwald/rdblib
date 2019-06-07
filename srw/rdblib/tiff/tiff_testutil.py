@@ -3,7 +3,8 @@
 from io import BytesIO
 import struct
 
-from .tags import TAG_SIZE
+from ..binary_format import BinaryFormat
+from .tags import TiffTag, TAG_SIZE
 
 
 __all__ = [
@@ -12,6 +13,7 @@ __all__ = [
     'calc_offset',
     'ifd_data',
     'pad_string',
+    'print_mismatched_tags',
     'to_bytes',
 ]
 
@@ -71,6 +73,30 @@ def pad_string(string, length):
         nr_fill_bytes = length - len(data)
         data += (b'\x00' * nr_fill_bytes)
     return data
+
+def print_mismatched_tags(nr_tags, expected_bytes, tiff_img_bytes, *, verbose=False):
+    """Convenience function to help debugging generated TIFF tags in unit tests.
+
+    <expected_bytes> and <tiff_img_bytes> represent a TiffImage (not a TiffFile).
+    """
+    ifd_offset = 2      # <nr_tags> field
+    tag_parser = BinaryFormat(TiffTag.spec)
+    for tag_idx in range(nr_tags):
+        tag_nr = tag_idx + 1
+        offset = tag_idx * TAG_SIZE + ifd_offset
+        expected_tag_bytes = expected_bytes[offset:offset + TAG_SIZE]
+        expected_tag = tag_parser.parse(expected_tag_bytes)
+        actual_tag_bytes = tiff_img_bytes[offset:offset + TAG_SIZE]
+        actual_tag = tag_parser.parse(actual_tag_bytes)
+
+        output_prefix = 'Tag %r (#%d): ' % (expected_tag['tag_id'], tag_nr)
+        if expected_tag_bytes == actual_tag_bytes:
+            if verbose:
+                print(output_prefix + 'OK')
+            continue
+        print(output_prefix + 'BAD')
+        print('    expected: %r' % (tuple(expected_tag.items()),))
+        print('    actual:   %r' % (tuple(actual_tag.items()),))
 
 def to_bytes(data):
     formats, data_values = _split_pairs(data)
