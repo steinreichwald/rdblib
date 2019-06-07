@@ -60,7 +60,7 @@ TiffTags = {
     270: TTSpec('ImageDescription', FT.ASCII),
     271: TTSpec('Make', FT.ASCII),              # "scanner manufacturer"
     272: TTSpec('Model', FT.ASCII),             # "scanner model name or number"
-    273: TTSpec('StripOffsets', FT._SHORT_OR_LONG),
+    273: TTSpec('StripOffsets', FT._LONG_OR_SHORT),
     274: TTSpec('Orientation', FT.SHORT),       # 1-8
     277: TTSpec('SamplesPerPixel', FT.SHORT),   # 1-8
     278: TTSpec('RowsPerStrip', FT._SHORT_OR_LONG),

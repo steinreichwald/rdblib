@@ -64,6 +64,8 @@ class TiffImage:
 
     def write_bytes(self, fp, offset=0):
         tags = self.tags.copy()
+        # 273: StripOffsets -- add tag so "nr_tags" is correct
+        value_strip_offsets = tags.setdefault(273, None)
         if (not tags.get(279)) and self.img_data:
             # StripByteCounts (= length of image for our limited case)
             tags[279] = len(self.img_data)
@@ -90,11 +92,19 @@ class TiffImage:
         # that is explicitely allowed by the spec at least).
         long_order = self.long_order or tuple(tags.keys())
         for tag_id in sort_by_list(tags, ordering=long_order, default=9999):
+            if (tag_id == 273) and (value_strip_offsets is None):
+                continue
             tag_value = tags[tag_id]
             tag_bytes, tag_long_data = TiffTag(tag_id, tag_value).to_bytes(long_offset=long_offset)
             tag_id_bytes[tag_id] = tag_bytes
             long_data += tag_long_data
             long_offset += len(tag_long_data)
+
+        if value_strip_offsets is None:
+            strip_offset = long_offset
+            tag_bytes, tag_long_data = TiffTag(273, strip_offset).to_bytes()
+            assert (not tag_long_data)
+            tag_id_bytes[273] = tag_bytes
 
         # the legacy software uses an arbitrary ordering of tags so we just
         # use the order as specified by the caller.

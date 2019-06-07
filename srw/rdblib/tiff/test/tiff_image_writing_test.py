@@ -19,15 +19,17 @@ class TiffImageWritingTest(PythonicTestCase):
         tiff_img = TiffImage(tags={256: 1260, 257: 830}, img_data=img_data)
         tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
 
+        nr_tags = 4
         tag_data = (
             # 258: ImageWidth
             ('H', 256), ('H', FT.SHORT), ('i', 1), ('i', 1260),
             # 257: ImageLength
             ('H', 257), ('H', FT.SHORT), ('i', 1), ('i', 830),
+            # 273: StripOffsets
+            ('H', 273), ('H', FT.LONG), ('i', 1), ('i', calc_offset(nr_tags)),
             # 279: StripByteCounts
             ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
         )
-        nr_tags = 3
         expected_ifd = to_bytes((
             ('H', nr_tags),
             ('%ds' % (nr_tags * TAG_SIZE), to_bytes(tag_data)),
@@ -42,18 +44,21 @@ class TiffImageWritingTest(PythonicTestCase):
         tiff_img = TiffImage(tags={258: 1, 269: document_name}, img_data=img_data)
         tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
 
-        nr_tags = 3
+        nr_tags = 4
         expected_long_data = document_name
         tag_data = (
             # 258: BitsPerSample
             ('H', 258), ('H', FT.SHORT), ('i', 1), ('i', 1),
             # 269: DocumentName
             ('H', 269), ('H', FT.ASCII), ('i', len(document_name)), ('i', calc_offset(nr_tags)),
+            # 273: StripOffsets
+            ('H', 273), ('H', FT.LONG), ('i', 1), ('i', calc_offset(nr_tags, expected_long_data)),
             # 279: StripByteCounts
             ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
         )
         expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
         img_offset = calc_offset(nr_tags, long_data=expected_long_data)
+
         expected_size = img_offset + len(img_data)
         if len(tiff_img_bytes) != expected_size:
             # this eases debugging (nosetests will suppress this output for passing tests)
@@ -66,13 +71,15 @@ class TiffImageWritingTest(PythonicTestCase):
         tiff_img = TiffImage(tags={258: 1, 282: 200}, img_data=img_data)
         tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
 
-        nr_tags = 3
+        nr_tags = 4
         expected_long_data = struct.pack('<ii', 200, 1)
         tag_data = (
             # 258: BitsPerSample
             ('H', 258), ('H', FT.SHORT), ('i', 1), ('i', 1),
             # 282: XResolution
             ('H', 282), ('H', FT.RATIONAL), ('i', 1), ('i', calc_offset(nr_tags)),
+            # 273: StripOffsets
+            ('H', 273), ('H', FT.LONG), ('i', 1), ('i', calc_offset(nr_tags, expected_long_data)),
             # 279: StripByteCounts
             ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
         )
@@ -84,15 +91,17 @@ class TiffImageWritingTest(PythonicTestCase):
         tiff_img = TiffImage(tags=OrderedDict([(257, 830), (256, 1260)]), img_data=img_data)
         tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
 
+        nr_tags = 4
         tag_data = (
             # 257: ImageLength
             ('H', 257), ('H', FT.SHORT), ('i', 1), ('i', 830),
             # 256: ImageWidth
             ('H', 256), ('H', FT.SHORT), ('i', 1), ('i', 1260),
+            # 273: StripOffsets
+            ('H', 273), ('H', FT.LONG), ('i', 1), ('i', calc_offset(nr_tags)),
             # 279: StripByteCounts
             ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
         )
-        nr_tags = 3
         expected_ifd = to_bytes((
             ('H', nr_tags),
             ('%ds' % (nr_tags * TAG_SIZE), to_bytes(tag_data)),
@@ -122,7 +131,7 @@ class TiffImageWritingTest(PythonicTestCase):
         )
         tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
 
-        nr_tags = 4
+        nr_tags = 5
         expected_long_data = software + document_name + page_name
         offset_software = calc_offset(nr_tags)
         offset_document_name = offset_software + len(software)
@@ -135,6 +144,8 @@ class TiffImageWritingTest(PythonicTestCase):
             ('H', 285), ('H', FT.ASCII), ('i', len(page_name)), ('i', offset_document_name + len(document_name)),
             # 305: Software
             ('H', 305), ('H', FT.ASCII), ('i', len(software)), ('i', offset_software),
+            # 273: StripOffsets
+            ('H', 273), ('H', FT.LONG), ('i', 1), ('i', calc_offset(nr_tags, expected_long_data)),
             # 279: StripByteCounts
             ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
         )
