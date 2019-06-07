@@ -22,12 +22,14 @@ class TiffWritingTest(PythonicTestCase):
         expected_header = BinaryFormat(TiffFile.header).to_bytes(header_values)
         assert_equals(expected_header, tiff_bytes[:8])
 
-        nr_tags = 2
+        nr_tags = 3
         tag_data = (
             # 258: BitsPerSample
             ('H', 258), ('H', FT.SHORT), ('i', 1), ('i', 1),
             # 269: DocumentName
             ('H', 269), ('H', FT.ASCII), ('i', len(document_name)), ('i', calc_offset(nr_tags, offset=8)),
+            # 279: StripByteCounts
+            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
         )
         expected_long_data = document_name
         expected_ifd_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data)

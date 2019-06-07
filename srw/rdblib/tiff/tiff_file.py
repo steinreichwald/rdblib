@@ -62,7 +62,11 @@ class TiffImage:
         self.img_data = img_data
 
     def write_bytes(self, fp, offset=0):
-        nr_tags = len(self.tags)
+        tags = self.tags.copy()
+        if (not tags.get(279)) and self.img_data:
+            # StripByteCounts (= length of image for our limited case)
+            tags[279] = len(self.img_data)
+        nr_tags = len(tags)
         ifd_spec = (
             ('nr_tags',           'H'),
             ('tag_data',          '%ds' % (nr_tags * TAG_SIZE)),
@@ -74,7 +78,7 @@ class TiffImage:
         tag_data_bytes = b''
         long_data = b''
         long_offset = offset + ifd_size
-        for tag_id, tag_value in sorted(self.tags.items()):
+        for tag_id, tag_value in sorted(tags.items()):
             tag_bytes, tag_long_data = TiffTag(tag_id, tag_value).to_bytes(long_offset=long_offset)
             tag_data_bytes += tag_bytes
             long_data += tag_long_data

@@ -39,7 +39,8 @@ class FieldType(BaseConstantsClass):
 # TIFF specification allows SHORT or LONG but our legacy software always uses
 # SHORT here
 FieldType._SHORT_OR_LONG = FieldType.SHORT
-
+# same as above but legacy software uses LONG
+FieldType._LONG_OR_SHORT = FieldType.LONG
 
 
 TiffTagSpecification = namedtuple('TiffTagSpecification', ('name', 'type'))
@@ -63,7 +64,7 @@ TiffTags = {
     274: TTSpec('Orientation', FT.SHORT),       # 1-8
     277: TTSpec('SamplesPerPixel', FT.SHORT),   # 1-8
     278: TTSpec('RowsPerStrip', FT._SHORT_OR_LONG),
-    279: TTSpec('StripByteCounts', FT._SHORT_OR_LONG),   # aka "image data bytes" for us
+    279: TTSpec('StripByteCounts', FT._LONG_OR_SHORT),   # aka "image data bytes" for us
     280: TTSpec('MinSampleValue', FT.SHORT),
     281: TTSpec('MaxSampleValue', FT.SHORT),
     282: TTSpec('XResolution', FT.RATIONAL),
