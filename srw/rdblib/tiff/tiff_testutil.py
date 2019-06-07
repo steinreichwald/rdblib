@@ -16,6 +16,7 @@ __all__ = [
     'pad_string',
     'print_mismatched_tags',
     'star_extract',
+    '_tag_StripByteCounts',
     '_tag_StripOffsets',
     'to_bytes',
 ]
@@ -118,6 +119,11 @@ def star_extract(*args):
             for star_arg in arg:
                 output.append(star_arg)
     return tuple(output)
+
+def _tag_StripByteCounts(img_data):
+    # 279: StripByteCounts
+    tag_spec = (('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)))
+    return tag_spec
 
 def _tag_StripOffsets(nr_tags, expected_long_data=b'', offset=0):
     # 273: StripOffsets

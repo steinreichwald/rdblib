@@ -9,7 +9,7 @@ from ..tag_specification import FT
 from ..tags import TAG_SIZE
 from ..tiff_file import TiffImage
 from ..tiff_testutil import (bytes_from_tiff_writer, calc_offset, ifd_data,
-    pad_string, _tag_StripOffsets, to_bytes)
+    pad_string, _tag_StripByteCounts, _tag_StripOffsets, to_bytes)
 from ..tiff_testutil import star_extract as _se
 
 
@@ -27,8 +27,7 @@ class TiffImageWritingTest(PythonicTestCase):
             # 257: ImageLength
             ('H', 257), ('H', FT.SHORT), ('i', 1), ('i', 830),
             _tag_StripOffsets(nr_tags),
-            # 279: StripByteCounts
-            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
+            _tag_StripByteCounts(img_data),
         )
         expected_ifd = to_bytes((
             ('H', nr_tags),
@@ -52,8 +51,7 @@ class TiffImageWritingTest(PythonicTestCase):
             # 269: DocumentName
             ('H', 269), ('H', FT.ASCII), ('i', len(document_name)), ('i', calc_offset(nr_tags)),
             _tag_StripOffsets(nr_tags, expected_long_data),
-            # 279: StripByteCounts
-            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
+            _tag_StripByteCounts(img_data),
         )
         expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
         img_offset = calc_offset(nr_tags, long_data=expected_long_data)
@@ -78,8 +76,7 @@ class TiffImageWritingTest(PythonicTestCase):
             # 282: XResolution
             ('H', 282), ('H', FT.RATIONAL), ('i', 1), ('i', calc_offset(nr_tags)),
             _tag_StripOffsets(nr_tags, expected_long_data),
-            # 279: StripByteCounts
-            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
+            _tag_StripByteCounts(img_data),
         )
         expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
         assert_equals(expected_bytes, tiff_img_bytes)
@@ -96,8 +93,7 @@ class TiffImageWritingTest(PythonicTestCase):
             # 256: ImageWidth
             ('H', 256), ('H', FT.SHORT), ('i', 1), ('i', 1260),
             _tag_StripOffsets(nr_tags),
-            # 279: StripByteCounts
-            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
+            _tag_StripByteCounts(img_data),
         )
         expected_ifd = to_bytes((
             ('H', nr_tags),
@@ -142,8 +138,7 @@ class TiffImageWritingTest(PythonicTestCase):
             # 305: Software
             ('H', 305), ('H', FT.ASCII), ('i', len(software)), ('i', offset_software),
             _tag_StripOffsets(nr_tags, expected_long_data),
-            # 279: StripByteCounts
-            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
+            _tag_StripByteCounts(img_data),
         )
         expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
         expected_ifd_bytes = expected_bytes[:offset_software]

@@ -6,7 +6,7 @@ from srw.rdblib.binary_format import BinaryFormat
 from ..tag_specification import FT
 from ..tiff_file import TiffFile, TiffImage
 from ..tiff_testutil import (adapt_values, bytes_from_tiff_writer, calc_offset,
-    ifd_data, pad_string, _tag_StripOffsets)
+    ifd_data, pad_string, _tag_StripByteCounts, _tag_StripOffsets)
 from ..tiff_testutil import star_extract as _se
 
 
@@ -31,8 +31,7 @@ class TiffWritingTest(PythonicTestCase):
             # 269: DocumentName
             ('H', 269), ('H', FT.ASCII), ('i', len(document_name)), ('i', calc_offset(nr_tags, offset=8)),
             _tag_StripOffsets(nr_tags, expected_long_data, offset=8),
-            # 279: StripByteCounts
-            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
+            _tag_StripByteCounts(img_data),
         )
         expected_ifd_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data)
         end_ifd = len(expected_header) + len(expected_ifd_bytes)
