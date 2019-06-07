@@ -4,6 +4,7 @@ from io import BytesIO
 import struct
 
 from ..binary_format import BinaryFormat
+from .tag_specification import FT
 from .tags import TiffTag, TAG_SIZE
 
 
@@ -14,6 +15,8 @@ __all__ = [
     'ifd_data',
     'pad_string',
     'print_mismatched_tags',
+    'star_extract',
+    '_tag_StripOffsets',
     'to_bytes',
 ]
 
@@ -97,6 +100,30 @@ def print_mismatched_tags(nr_tags, expected_bytes, tiff_img_bytes, *, verbose=Fa
         print(output_prefix + 'BAD')
         print('    expected: %r' % (tuple(expected_tag.items()),))
         print('    actual:   %r' % (tuple(actual_tag.items()),))
+
+
+def star_extract(*args):
+    """Python >= 3.5 supports a handy syntax: foo = (1, 2, *_bar(), 4, 5)
+    This syntax was introduced in PEP 448 (Python 3.5).
+
+    This function implements a workaround for Python 3.3/3.4 so we can use
+    almost the same code and churn will be minimal once we can drop support
+    for Python < 3.5.
+    """
+    output = []
+    for arg in args:
+        if len(arg) == 2:
+            output.append(arg)
+        else:
+            for star_arg in arg:
+                output.append(star_arg)
+    return tuple(output)
+
+def _tag_StripOffsets(nr_tags, expected_long_data=b'', offset=0):
+    # 273: StripOffsets
+    tag_spec = (('H', 273), ('H', FT.LONG), ('i', 1), ('i', calc_offset(nr_tags, expected_long_data, offset=offset)))
+    return tag_spec
+
 
 def to_bytes(data):
     formats, data_values = _split_pairs(data)
