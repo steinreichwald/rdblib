@@ -4,7 +4,7 @@ from pythonic_testcase import *
 
 from srw.rdblib.binary_format import BinaryFormat
 from ..tag_specification import FT
-from ..tiff_file import TiffFile, TiffImage
+from ..tiff_file import align_to_8_offset, TiffFile, TiffImage
 from ..tiff_testutil import (adapt_values, bytes_from_tiff_writer, calc_offset,
     ifd_data, pad_string, _tag_StripByteCounts, _tag_StripOffsets)
 from ..tiff_testutil import star_extract as _se
@@ -38,5 +38,6 @@ class TiffWritingTest(PythonicTestCase):
         actual_ifd_bytes = tiff_bytes[8:end_ifd]
         assert_equals(expected_ifd_bytes, actual_ifd_bytes)
 
-        assert_equals(img_data, tiff_bytes[end_ifd:])
+        nr_pad_bytes = align_to_8_offset(end_ifd)
+        assert_equals(img_data, tiff_bytes[end_ifd+nr_pad_bytes:])
 

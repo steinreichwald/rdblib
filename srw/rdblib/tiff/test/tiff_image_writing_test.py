@@ -9,7 +9,7 @@ from ..tag_specification import FT
 from ..tags import TAG_SIZE
 from ..tiff_file import TiffImage
 from ..tiff_testutil import (bytes_from_tiff_writer, calc_offset, ifd_data,
-    pad_string, _tag_StripByteCounts, _tag_StripOffsets, to_bytes)
+    pad_string, padding, _tag_StripByteCounts, _tag_StripOffsets, to_bytes)
 from ..tiff_testutil import star_extract as _se
 
 
@@ -34,7 +34,7 @@ class TiffImageWritingTest(PythonicTestCase):
             ('%ds' % (nr_tags * TAG_SIZE), to_bytes(tag_data)),
             ('i', 0),       # next_ifd
         ))
-        expected_bytes = expected_ifd + img_data
+        expected_bytes = expected_ifd + padding(2) + img_data
         assert_equals(expected_bytes, tiff_img_bytes)
 
     def test_can_write_mixed_short_and_long_data(self):
@@ -53,8 +53,8 @@ class TiffImageWritingTest(PythonicTestCase):
             _tag_StripOffsets(nr_tags, expected_long_data),
             _tag_StripByteCounts(img_data),
         )
-        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
-        img_offset = calc_offset(nr_tags, long_data=expected_long_data)
+        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + padding(6) + img_data
+        img_offset = calc_offset(nr_tags, long_data=expected_long_data, padding=True)
 
         expected_size = img_offset + len(img_data)
         if len(tiff_img_bytes) != expected_size:
@@ -78,7 +78,7 @@ class TiffImageWritingTest(PythonicTestCase):
             _tag_StripOffsets(nr_tags, expected_long_data),
             _tag_StripByteCounts(img_data),
         )
-        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
+        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + padding(2) + img_data
         assert_equals(expected_bytes, tiff_img_bytes)
 
     def test_can_specify_tag_order(self):
@@ -100,7 +100,7 @@ class TiffImageWritingTest(PythonicTestCase):
             ('%ds' % (nr_tags * TAG_SIZE), to_bytes(tag_data)),
             ('i', 0),       # next_ifd
         ))
-        expected_bytes = expected_ifd + img_data
+        expected_bytes = expected_ifd + padding(2) + img_data
         assert_equals(expected_bytes, tiff_img_bytes)
 
 
@@ -140,7 +140,7 @@ class TiffImageWritingTest(PythonicTestCase):
             _tag_StripOffsets(nr_tags, expected_long_data),
             _tag_StripByteCounts(img_data),
         )
-        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
+        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + padding(4) + img_data
         expected_ifd_bytes = expected_bytes[:offset_software]
         ifd_bytes = tiff_img_bytes[:offset_software]
         assert_equals(expected_ifd_bytes, ifd_bytes)

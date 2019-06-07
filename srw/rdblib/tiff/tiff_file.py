@@ -1,5 +1,6 @@
 
 from collections import OrderedDict
+import math
 import struct
 
 from .tags import TiffTag, TAG_SIZE
@@ -100,8 +101,11 @@ class TiffImage:
             long_data += tag_long_data
             long_offset += len(tag_long_data)
 
+        img_pre_padding = b''
         if value_strip_offsets is None:
-            strip_offset = long_offset
+            strip_offset = align_to_8(long_offset)
+            nr_pad_bytes = strip_offset - long_offset
+            img_pre_padding = nr_pad_bytes * b'\x00'
             tag_bytes, tag_long_data = TiffTag(273, strip_offset).to_bytes()
             assert (not tag_long_data)
             tag_id_bytes[273] = tag_bytes
@@ -118,11 +122,14 @@ class TiffImage:
             'next_ifd': 0,
         }
         ifd_bytes = ifd_writer.to_bytes(ifd_values)
-        fp.write(ifd_bytes)
-        if long_data:
-            fp.write(long_data)
-        fp.write(self.img_data)
+        fp.write(ifd_bytes + long_data + img_pre_padding + self.img_data)
 
+
+def align_to_8(value):
+    return math.ceil(value / 8) * 8
+
+def align_to_8_offset(value):
+    return align_to_8(value) - value
 
 def sort_by_list(values, ordering, default=-1):
     index_of = lambda v: ordering.index(v) if (v in ordering) else default

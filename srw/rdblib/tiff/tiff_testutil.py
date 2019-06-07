@@ -6,6 +6,7 @@ import struct
 from ..binary_format import BinaryFormat
 from .tag_specification import FT
 from .tags import TiffTag, TAG_SIZE
+from .tiff_file import align_to_8_offset
 
 
 __all__ = [
@@ -45,14 +46,20 @@ def bytes_from_tiff_writer(tiff_obj):
     buffer.seek(0)
     return buffer.read()
 
-def calc_offset(nr_tags, long_data=b'', offset=0, img_data=None):
+def calc_offset(nr_tags, long_data=b'', offset=0, *, padding=False, img_data=None):
     # excluding TIFF header size because we are only serializing a single
     # TiffImage.
     # 'H' (nr_tags)  -> 2 byte
     # 'i' (next_ifd) -> 4 byte
     IFD_SIZE = 2 + (nr_tags * TAG_SIZE) + 4
-    img_size = len(img_data) if (img_data is not None) else 0
-    return offset + IFD_SIZE + len(long_data) + img_size
+    final_offset = offset + IFD_SIZE + len(long_data)
+    if padding or (img_data is not None):
+        nr_pad_bytes = align_to_8_offset(final_offset)
+        final_offset += nr_pad_bytes
+    if img_data:
+        img_size = len(img_data)
+        final_offset += img_size
+    return final_offset
 
 def ifd_data(nr_tags, tag_data, long_data=None):
     tag_data = to_bytes(tag_data)
@@ -77,6 +84,9 @@ def pad_string(string, length):
         nr_fill_bytes = length - len(data)
         data += (b'\x00' * nr_fill_bytes)
     return data
+
+def padding(nr_bytes):
+    return nr_bytes * b'\x00'
 
 def print_mismatched_tags(nr_tags, expected_bytes, tiff_img_bytes, *, verbose=False):
     """Convenience function to help debugging generated TIFF tags in unit tests.
@@ -126,8 +136,9 @@ def _tag_StripByteCounts(img_data):
     return tag_spec
 
 def _tag_StripOffsets(nr_tags, expected_long_data=b'', offset=0):
+    offset_to_image = calc_offset(nr_tags, expected_long_data, offset=offset, padding=True)
     # 273: StripOffsets
-    tag_spec = (('H', 273), ('H', FT.LONG), ('i', 1), ('i', calc_offset(nr_tags, expected_long_data, offset=offset)))
+    tag_spec = (('H', 273), ('H', FT.LONG), ('i', 1), ('i', offset_to_image))
     return tag_spec
 
 
