@@ -57,9 +57,10 @@ def _to_int(value, format_str):
 
 
 class TiffImage:
-    def __init__(self, tags=None, img_data=None):
+    def __init__(self, tags=None, img_data=None, long_order=None):
         self.tags = OrderedDict(tags or {})
         self.img_data = img_data
+        self.long_order = long_order
 
     def write_bytes(self, fp, offset=0):
         tags = self.tags.copy()
@@ -78,17 +79,28 @@ class TiffImage:
         tag_data_bytes = b''
         long_data = b''
         long_offset = offset + ifd_size
+
+        tag_id_bytes = {}
         # The TIFF specification mandates that the entries in the IFD sorted in
         # ascending order (TIFF 6.0 specification, page 15). However the legacy
         # Walther software violates that rule and uses a "custom" ordering
         # (mostly ascending but some tags are out-of-place).
         # Therefore the caller must be able to specify the tag order explicitely.
-        for tag_id, tag_value in tags.items():
+        # The "long" values (> 4 bytes) are placed in yet another order (though
+        # that is explicitely allowed by the spec at least).
+        long_order = self.long_order or tuple(tags.keys())
+        for tag_id in sort_by_list(tags, ordering=long_order, default=9999):
+            tag_value = tags[tag_id]
             tag_bytes, tag_long_data = TiffTag(tag_id, tag_value).to_bytes(long_offset=long_offset)
-            tag_data_bytes += tag_bytes
+            tag_id_bytes[tag_id] = tag_bytes
             long_data += tag_long_data
             long_offset += len(tag_long_data)
-        assert len(tag_data_bytes) == (nr_tags * TAG_SIZE)
+
+        # the legacy software uses an arbitrary ordering of tags so we just
+        # use the order as specified by the caller.
+        for tag_id in tags:
+            tag_bytes = tag_id_bytes[tag_id]
+            tag_data_bytes += tag_bytes
 
         ifd_values = {
             'nr_tags': nr_tags,
@@ -100,4 +112,10 @@ class TiffImage:
         if long_data:
             fp.write(long_data)
         fp.write(self.img_data)
+
+
+def sort_by_list(values, ordering, default=-1):
+    index_of = lambda v: ordering.index(v) if (v in ordering) else default
+    sort_keys = [index_of(v) for v in values]
+    return [v for (_, v) in sorted(zip(sort_keys, values))]
 

@@ -102,3 +102,48 @@ class TiffImageWritingTest(PythonicTestCase):
         assert_equals(expected_bytes, tiff_img_bytes)
 
 
+    def test_can_specify_order_of_long_data(self):
+        "Test that the order of the long data can be specified explicitely"
+        document_name = pad_string('invoice', length=20)
+        software = pad_string('generator', length=40)
+        page_name = pad_string('cover', length=30)
+        img_data = b'dummy'
+        tiff_img = TiffImage(
+            tags=OrderedDict([(269, document_name), (285, page_name), (305, software)]),
+            # Explicitely omit "285" (PageName) from "long_order" to ensure
+            # the code can handle missing tags (and just uses the tag order).
+            # This is helpful to make the code more robust (if the caller
+            # forgets to list some tags) and helps reducing boilerplate code
+            # on the caller's side (if the special ordering affects only the
+            # first fields fields, just list these and the rest fails in place
+            # naturally).
+            long_order=(305, 269),
+            img_data=img_data,
+        )
+        tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
+
+        nr_tags = 4
+        expected_long_data = software + document_name + page_name
+        offset_software = calc_offset(nr_tags)
+        offset_document_name = offset_software + len(software)
+        tag_data = (
+            # 269: DocumentName
+            # long data has "software" before "document_name" so we need to calculate the right offset
+            ('H', 269), ('H', FT.ASCII), ('i', len(document_name)), ('i', offset_document_name),
+            # 285: PageName
+            # this tag was not specified in "long_order" so it should be the last one
+            ('H', 285), ('H', FT.ASCII), ('i', len(page_name)), ('i', offset_document_name + len(document_name)),
+            # 305: Software
+            ('H', 305), ('H', FT.ASCII), ('i', len(software)), ('i', offset_software),
+            # 279: StripByteCounts
+            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
+        )
+        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
+        expected_ifd_bytes = expected_bytes[:offset_software]
+        ifd_bytes = tiff_img_bytes[:offset_software]
+        assert_equals(expected_ifd_bytes, ifd_bytes)
+
+        expected_long_bytes = expected_bytes[offset_software:]
+        long_bytes = tiff_img_bytes[offset_software:]
+        assert_equals(expected_long_bytes, long_bytes)
+
