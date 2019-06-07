@@ -63,7 +63,7 @@ TiffTags = {
     273: TTSpec('StripOffsets', FT._LONG_OR_SHORT),
     274: TTSpec('Orientation', FT.SHORT),       # 1-8
     277: TTSpec('SamplesPerPixel', FT.SHORT),   # 1-8
-    278: TTSpec('RowsPerStrip', FT._SHORT_OR_LONG),
+    278: TTSpec('RowsPerStrip', FT._LONG_OR_SHORT),
     279: TTSpec('StripByteCounts', FT._LONG_OR_SHORT),   # aka "image data bytes" for us
     280: TTSpec('MinSampleValue', FT.SHORT),
     281: TTSpec('MaxSampleValue', FT.SHORT),
@@ -71,7 +71,8 @@ TiffTags = {
     283: TTSpec('YResolution', FT.RATIONAL),
     285: TTSpec('PageName', FT.ASCII),          # "name of the page from which this image was scanned"
     293: TTSpec('T6Options', FT.LONG),
-    296: TTSpec('ResolutionUnit', FT.SHORT),    # 2 = "inch"
+    # 296: TIFF specification says SHORT but the legacy software uses LONG
+    296: TTSpec('ResolutionUnit', FT.LONG),     # 2 = "inch"
     305: TTSpec('Software', FT.ASCII),          # "Name and version number of the software package(s) used to create the image."
     306: TTSpec('DateTime', FT.ASCII),          # "Date and time of image creation" (format "YYYY:MM:DD HH:MM:SS")
     315: TTSpec('Artist', FT.ASCII),            # "Person who created the image"
