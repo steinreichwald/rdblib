@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from io import BytesIO
+import os
+
+from PIL import Image
 from pythonic_testcase import *
 
 from srw.rdblib.binary_format import BinaryFormat
@@ -40,4 +44,30 @@ class TiffWritingTest(PythonicTestCase):
 
         nr_pad_bytes = align_to_8_offset(end_ifd)
         assert_equals(img_data, tiff_bytes[end_ifd+nr_pad_bytes:])
+
+    def test_serialized_tiff_file_can_be_loaded_with_pillow(self):
+        # pillow needs actual image data
+        path_img_data = os.path.join(os.path.dirname(__file__), 'nnf_image.tiff-data')
+        with open(path_img_data, 'rb') as img_fp:
+            img_data = img_fp.read()
+
+        width = 1152
+        height = 840
+        tiff_tags = {
+            256: width,
+            257: height,
+            269: b'name\x00',
+        }
+        tiff_img = TiffImage(tags=tiff_tags, img_data=img_data)
+        tiff_file = TiffFile(tiff_images=[tiff_img])
+        tiff_bytes = bytes_from_tiff_writer(tiff_file)
+
+        pillow_img = Image.open(BytesIO(tiff_bytes))
+        assert_equals((width, height), pillow_img.size)
+        assert_equals(1, pillow_img.n_frames)
+
+        img_tags = dict(pillow_img.tag_v2.items())
+        assert_equals(width, img_tags.get(256))
+        assert_equals(height, img_tags.get(257))
+        assert_equals('name', img_tags.get(269))
 
