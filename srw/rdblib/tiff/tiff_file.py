@@ -46,8 +46,9 @@ class TiffFile:
         header_bytes = self._header_writer.to_bytes(header_values)
         fp.write(header_bytes)
 
-        for tiff_img in self.tiff_images:
-            tiff_img.write_bytes(fp, offset=img_offset)
+        for img_idx, tiff_img in enumerate(self.tiff_images):
+            is_last_image = (img_idx + 1 == len(self.tiff_images))
+            tiff_img.write_bytes(fp, is_last_image=is_last_image, offset=img_offset)
             img_offset = fp.tell()
 
 def _to_int(value, format_str):
@@ -63,7 +64,7 @@ class TiffImage:
         self.img_data = img_data
         self.long_order = long_order
 
-    def write_bytes(self, fp, offset=0):
+    def write_bytes(self, fp, is_last_image=True, offset=0):
         tags = self.tags.copy()
         # 273: StripOffsets -- add tag so "nr_tags" is correct
         value_strip_offsets = tags.setdefault(273, None)
@@ -116,10 +117,15 @@ class TiffImage:
             tag_bytes = tag_id_bytes[tag_id]
             tag_data_bytes += tag_bytes
 
+        offset_next_ifd = 0
+        if not is_last_image:
+            # long_offset was incremented when tag values were serialized above
+            offset_end_of_long_data = long_offset
+            offset_next_ifd = offset_end_of_long_data + len(img_pre_padding + self.img_data)
         ifd_values = {
             'nr_tags': nr_tags,
             'tag_data': tag_data_bytes,
-            'next_ifd': 0,
+            'next_ifd': offset_next_ifd,
         }
         ifd_bytes = ifd_writer.to_bytes(ifd_values)
         fp.write(ifd_bytes + long_data + img_pre_padding + self.img_data)

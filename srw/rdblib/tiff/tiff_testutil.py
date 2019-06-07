@@ -40,9 +40,9 @@ def _to_int(value, format_str):
         return value
     return struct.unpack('<'+format_str, value)
 
-def bytes_from_tiff_writer(tiff_obj):
+def bytes_from_tiff_writer(tiff_obj, **tiff_args):
     buffer = BytesIO()
-    tiff_obj.write_bytes(buffer)
+    tiff_obj.write_bytes(buffer, **tiff_args)
     buffer.seek(0)
     return buffer.read()
 

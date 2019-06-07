@@ -149,3 +149,27 @@ class TiffImageWritingTest(PythonicTestCase):
         long_bytes = tiff_img_bytes[offset_software:]
         assert_equals(expected_long_bytes, long_bytes)
 
+    def test_can_write_next_ifd(self):
+        img_data = b'dummy'
+        tiff_img = TiffImage(tags={256: 1260, 257: 830}, img_data=img_data)
+        tiff_img_bytes = bytes_from_tiff_writer(tiff_img, is_last_image=False)
+
+        nr_tags = 4
+        tag_data = _se(
+            # 258: ImageWidth
+            ('H', 256), ('H', FT.SHORT), ('i', 1), ('i', 1260),
+            # 257: ImageLength
+            ('H', 257), ('H', FT.SHORT), ('i', 1), ('i', 830),
+            _tag_StripOffsets(nr_tags),
+            _tag_StripByteCounts(img_data),
+        )
+        offset_next_ifd = len(tiff_img_bytes)
+        expected_ifd = to_bytes((
+            ('H', nr_tags),
+            ('%ds' % (nr_tags * TAG_SIZE), to_bytes(tag_data)),
+            ('i', offset_next_ifd),       # next_ifd
+        ))
+        expected_bytes = expected_ifd + padding(2) + img_data
+        ifd_offset = calc_offset(4)
+        assert_equals(expected_bytes, tiff_img_bytes)
+

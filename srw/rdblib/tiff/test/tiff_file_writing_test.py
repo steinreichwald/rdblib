@@ -65,6 +65,17 @@ class TiffWritingTest(PythonicTestCase):
         assert_equals(height, img_tags.get(257))
         assert_equals('name', img_tags.get(269))
 
+    def test_can_serialize_multi_page_tiff(self):
+        img = load_tiff_img()
+        tiff_img1 = TiffImage(tags=img.tags, img_data=img.data)
+        img2 = load_tiff_img()
+        tiff_img2 = TiffImage(tags=img2.tags, img_data=img2.data)
+        tiff_file = TiffFile(tiff_images=[tiff_img1, tiff_img2])
+        tiff_bytes = bytes_from_tiff_writer(tiff_file)
+
+        pillow_img = Image.open(BytesIO(tiff_bytes))
+        assert_equals(img.size, pillow_img.size)
+        assert_equals(2, pillow_img.n_frames)
 
 
 ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))
