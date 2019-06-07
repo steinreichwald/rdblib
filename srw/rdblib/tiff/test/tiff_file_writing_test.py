@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from collections import namedtuple
 from io import BytesIO
 import os
 
@@ -47,18 +48,11 @@ class TiffWritingTest(PythonicTestCase):
 
     def test_serialized_tiff_file_can_be_loaded_with_pillow(self):
         # pillow needs actual image data
-        path_img_data = os.path.join(os.path.dirname(__file__), 'nnf_image.tiff-data')
-        with open(path_img_data, 'rb') as img_fp:
-            img_data = img_fp.read()
+        img = load_tiff_img()
+        img.tags[269] = b'name\x00'
+        (width, height) = img.size
 
-        width = 1152
-        height = 840
-        tiff_tags = {
-            256: width,
-            257: height,
-            269: b'name\x00',
-        }
-        tiff_img = TiffImage(tags=tiff_tags, img_data=img_data)
+        tiff_img = TiffImage(tags=img.tags, img_data=img.data)
         tiff_file = TiffFile(tiff_images=[tiff_img])
         tiff_bytes = bytes_from_tiff_writer(tiff_file)
 
@@ -71,3 +65,21 @@ class TiffWritingTest(PythonicTestCase):
         assert_equals(height, img_tags.get(257))
         assert_equals('name', img_tags.get(269))
 
+
+
+ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))
+
+def load_tiff_img():
+    path_img_data = os.path.join(os.path.dirname(__file__), 'nnf_image.tiff-data')
+    with open(path_img_data, 'rb') as img_fp:
+        img_data = img_fp.read()
+
+    width = 1152
+    height = 840
+    tiff_tags = {
+        256: width,
+        257: height,
+        259: 4,         # Compression ("Group 4 Fax")
+        262: 0,         # PhotometricInterpretation ("WhiteIsZero")
+    }
+    return ImgInfo(img_data, tiff_tags, (width, height))
