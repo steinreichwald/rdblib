@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
 import struct
 
 from pythonic_testcase import *
@@ -70,11 +71,34 @@ class TiffImageWritingTest(PythonicTestCase):
         tag_data = (
             # 258: BitsPerSample
             ('H', 258), ('H', FT.SHORT), ('i', 1), ('i', 1),
-            # 279: StripByteCounts
-            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
             # 282: XResolution
             ('H', 282), ('H', FT.RATIONAL), ('i', 1), ('i', calc_offset(nr_tags)),
+            # 279: StripByteCounts
+            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
         )
         expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + img_data
         assert_equals(expected_bytes, tiff_img_bytes)
+
+    def test_can_specify_tag_order(self):
+        img_data = b'dummy'
+        tiff_img = TiffImage(tags=OrderedDict([(257, 830), (256, 1260)]), img_data=img_data)
+        tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
+
+        tag_data = (
+            # 257: ImageLength
+            ('H', 257), ('H', FT.SHORT), ('i', 1), ('i', 830),
+            # 256: ImageWidth
+            ('H', 256), ('H', FT.SHORT), ('i', 1), ('i', 1260),
+            # 279: StripByteCounts
+            ('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)),
+        )
+        nr_tags = 3
+        expected_ifd = to_bytes((
+            ('H', nr_tags),
+            ('%ds' % (nr_tags * TAG_SIZE), to_bytes(tag_data)),
+            ('i', 0),       # next_ifd
+        ))
+        expected_bytes = expected_ifd + img_data
+        assert_equals(expected_bytes, tiff_img_bytes)
+
 

@@ -78,7 +78,12 @@ class TiffImage:
         tag_data_bytes = b''
         long_data = b''
         long_offset = offset + ifd_size
-        for tag_id, tag_value in sorted(tags.items()):
+        # The TIFF specification mandates that the entries in the IFD sorted in
+        # ascending order (TIFF 6.0 specification, page 15). However the legacy
+        # Walther software violates that rule and uses a "custom" ordering
+        # (mostly ascending but some tags are out-of-place).
+        # Therefore the caller must be able to specify the tag order explicitely.
+        for tag_id, tag_value in tags.items():
             tag_bytes, tag_long_data = TiffTag(tag_id, tag_value).to_bytes(long_offset=long_offset)
             tag_data_bytes += tag_bytes
             long_data += tag_long_data
