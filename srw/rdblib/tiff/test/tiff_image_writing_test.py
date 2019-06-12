@@ -9,8 +9,9 @@ from ..tag_specification import FT
 from ..tags import TAG_SIZE
 from ..tiff_file import TiffImage
 from ..tiff_testutil import (bytes_from_tiff_writer, calc_offset, ifd_data,
-    pad_string, padding, _tag_StripByteCounts, _tag_StripOffsets, to_bytes)
+    padding, _tag_StripByteCounts, _tag_StripOffsets, to_bytes)
 from ..tiff_testutil import star_extract as _se
+from ..tiff_util import pad_bytes
 
 
 
@@ -39,7 +40,7 @@ class TiffImageWritingTest(PythonicTestCase):
 
     def test_can_write_mixed_short_and_long_data(self):
         img_data = b'dummy'
-        document_name = pad_string('foo bar', length=20)
+        document_name = pad_bytes('foo bar', length=20)
         tiff_img = TiffImage(tags={258: 1, 269: document_name}, img_data=img_data)
         tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
 
@@ -106,9 +107,9 @@ class TiffImageWritingTest(PythonicTestCase):
 
     def test_can_specify_order_of_long_data(self):
         "Test that the order of the long data can be specified explicitely"
-        document_name = pad_string('invoice', length=20)
-        software = pad_string('generator', length=40)
-        page_name = pad_string('cover', length=30)
+        document_name = pad_bytes('invoice', length=20)
+        software = pad_bytes('generator', length=40)
+        page_name = pad_bytes('cover', length=30)
         img_data = b'dummy'
         tiff_img = TiffImage(
             tags=OrderedDict([(269, document_name), (285, page_name), (305, software)]),

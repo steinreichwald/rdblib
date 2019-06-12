@@ -11,14 +11,15 @@ from srw.rdblib.binary_format import BinaryFormat
 from ..tag_specification import FT
 from ..tiff_file import align_to_8_offset, TiffFile, TiffImage
 from ..tiff_testutil import (adapt_values, bytes_from_tiff_writer, calc_offset,
-    ifd_data, pad_string, _tag_StripByteCounts, _tag_StripOffsets)
+    ifd_data, _tag_StripByteCounts, _tag_StripOffsets)
 from ..tiff_testutil import star_extract as _se
+from ..tiff_util import pad_bytes
 
 
 
 class TiffWritingTest(PythonicTestCase):
     def test_can_serialize_single_page_tiff(self):
-        document_name = pad_string('doc1', length=20)
+        document_name = pad_bytes('doc1', length=20)
         img_data = b'img1'
         tiff_img = TiffImage(tags={258: 1, 269: document_name}, img_data=img_data)
         tiff_file = TiffFile(tiff_images=[tiff_img])

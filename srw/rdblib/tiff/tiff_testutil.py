@@ -14,7 +14,6 @@ __all__ = [
     'bytes_from_tiff_writer',
     'calc_offset',
     'ifd_data',
-    'pad_string',
     'print_mismatched_tags',
     'star_extract',
     '_tag_StripByteCounts',
@@ -70,20 +69,6 @@ def ifd_data(nr_tags, tag_data, long_data=None):
     ))
     return ifd_header + (long_data or b'')
 
-def pad_string(string, length):
-    data = b''
-    if isinstance(string, str):
-        # TIFF specification (page 15): "8-bit byte that contains a 7-bit ASCII code"
-        data = string.encode('ASCII')
-    else:
-        data += string
-    # TIFF specification (page 15): "the last byte must be NUL (binary zero)"
-    if not data.endswith(b'\x00'):
-        data += b'\x00'
-    if len(data) < length:
-        nr_fill_bytes = length - len(data)
-        data += (b'\x00' * nr_fill_bytes)
-    return data
 
 def padding(nr_bytes):
     return nr_bytes * b'\x00'

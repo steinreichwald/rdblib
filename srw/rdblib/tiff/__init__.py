@@ -1,2 +1,3 @@
 
-from .tiff_file import TiffFile, TiffImage
+from .tiff_file import *
+from .tiff_util import *
