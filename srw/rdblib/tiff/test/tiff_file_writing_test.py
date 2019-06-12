@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from collections import namedtuple
 from io import BytesIO
-import os
 
 from PIL import Image
 from pythonic_testcase import *
@@ -11,7 +9,7 @@ from srw.rdblib.binary_format import BinaryFormat
 from ..tag_specification import FT
 from ..tiff_file import align_to_8_offset, TiffFile, TiffImage
 from ..tiff_testutil import (adapt_values, bytes_from_tiff_writer, calc_offset,
-    ifd_data, _tag_StripByteCounts, _tag_StripOffsets)
+    ifd_data, load_tiff_img, _tag_StripByteCounts, _tag_StripOffsets)
 from ..tiff_testutil import star_extract as _se
 from ..tiff_util import pad_bytes
 
@@ -78,20 +76,3 @@ class TiffWritingTest(PythonicTestCase):
         assert_equals(img.size, pillow_img.size)
         assert_equals(2, pillow_img.n_frames)
 
-
-ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))
-
-def load_tiff_img():
-    path_img_data = os.path.join(os.path.dirname(__file__), 'nnf_image.tiff-data')
-    with open(path_img_data, 'rb') as img_fp:
-        img_data = img_fp.read()
-
-    width = 1152
-    height = 840
-    tiff_tags = {
-        256: width,
-        257: height,
-        259: 4,         # Compression ("Group 4 Fax")
-        262: 0,         # PhotometricInterpretation ("WhiteIsZero")
-    }
-    return ImgInfo(img_data, tiff_tags, (width, height))

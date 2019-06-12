@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from collections import namedtuple
 from io import BytesIO
+import os
 import struct
 
 from ..binary_format import BinaryFormat
@@ -14,6 +16,7 @@ __all__ = [
     'bytes_from_tiff_writer',
     'calc_offset',
     'ifd_data',
+    'load_tiff_img',
     'print_mismatched_tags',
     'star_extract',
     '_tag_StripByteCounts',
@@ -69,6 +72,23 @@ def ifd_data(nr_tags, tag_data, long_data=None):
     ))
     return ifd_header + (long_data or b'')
 
+
+ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))
+
+def load_tiff_img():
+    path_img_data = os.path.join(os.path.dirname(__file__), 'test', 'nnf_image.tiff-data')
+    with open(path_img_data, 'rb') as img_fp:
+        img_data = img_fp.read()
+
+    width = 1152
+    height = 840
+    tiff_tags = {
+        256: width,
+        257: height,
+        259: 4,         # Compression ("Group 4 Fax")
+        262: 0,         # PhotometricInterpretation ("WhiteIsZero")
+    }
+    return ImgInfo(img_data, tiff_tags, (width, height))
 
 def padding(nr_bytes):
     return nr_bytes * b'\x00'
