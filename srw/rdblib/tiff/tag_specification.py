@@ -79,3 +79,28 @@ TiffTags = {
     316: TTSpec('HostComputer', FT.ASCII),      # "The computer and/or operating system in use at the time of image creation."
 }
 
+
+class TIFF_TAG:
+    ImageWidth          = 256
+    ImageLength         = 257
+    BitsPerSample       = 258
+
+    DocumentName        = 269
+    ImageDescription    = 270
+    ScannerManufacturer = 271
+    ScannerModell       = 272
+    StripOffsets        = 273
+
+    RowsPerStrip        = 278
+    StripByteCounts     = 279
+
+    XResolution         = 282
+    YResolution         = 283
+    PageName            = 285
+    Software            = 305
+    DateTime            = 306
+    Artist              = 315
+    HostComputer        = 316
+
+    AUTO                = None
+

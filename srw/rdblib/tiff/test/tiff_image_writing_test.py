@@ -5,7 +5,7 @@ import struct
 
 from pythonic_testcase import *
 
-from ..tag_specification import FT
+from ..tag_specification import FT, TIFF_TAG as TT
 from ..tags import TAG_SIZE
 from ..tiff_file import TiffImage
 from ..tiff_testutil import (bytes_from_tiff_writer, calc_offset, ifd_data,
@@ -23,10 +23,8 @@ class TiffImageWritingTest(PythonicTestCase):
 
         nr_tags = 4
         tag_data = _se(
-            # 258: ImageWidth
-            ('H', 256), ('H', FT.SHORT), ('i', 1), ('i', 1260),
-            # 257: ImageLength
-            ('H', 257), ('H', FT.SHORT), ('i', 1), ('i', 830),
+            ('H', TT.ImageWidth), ('H', FT.SHORT), ('i', 1), ('i', 1260),
+            ('H', TT.ImageLength), ('H', FT.SHORT), ('i', 1), ('i', 830),
             _tag_StripOffsets(nr_tags),
             _tag_StripByteCounts(img_data),
         )
@@ -47,10 +45,8 @@ class TiffImageWritingTest(PythonicTestCase):
         nr_tags = 4
         expected_long_data = document_name
         tag_data = _se(
-            # 258: BitsPerSample
-            ('H', 258), ('H', FT.SHORT), ('i', 1), ('i', 1),
-            # 269: DocumentName
-            ('H', 269), ('H', FT.ASCII), ('i', len(document_name)), ('i', calc_offset(nr_tags)),
+            ('H', TT.BitsPerSample), ('H', FT.SHORT), ('i', 1), ('i', 1),
+            ('H', TT.DocumentName), ('H', FT.ASCII), ('i', len(document_name)), ('i', calc_offset(nr_tags)),
             _tag_StripOffsets(nr_tags, expected_long_data),
             _tag_StripByteCounts(img_data),
         )
@@ -89,10 +85,8 @@ class TiffImageWritingTest(PythonicTestCase):
 
         nr_tags = 4
         tag_data = _se(
-            # 257: ImageLength
-            ('H', 257), ('H', FT.SHORT), ('i', 1), ('i', 830),
-            # 256: ImageWidth
-            ('H', 256), ('H', FT.SHORT), ('i', 1), ('i', 1260),
+            ('H', TT.ImageLength), ('H', FT.SHORT), ('i', 1), ('i', 830),
+            ('H', TT.ImageWidth), ('H', FT.SHORT), ('i', 1), ('i', 1260),
             _tag_StripOffsets(nr_tags),
             _tag_StripByteCounts(img_data),
         )

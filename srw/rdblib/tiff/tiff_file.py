@@ -4,6 +4,7 @@ import math
 import struct
 
 from .tags import TiffTag, TAG_SIZE
+from .tag_specification import TIFF_TAG as TT
 from ..binary_format import BinaryFormat
 
 
@@ -66,11 +67,11 @@ class TiffImage:
 
     def write_bytes(self, fp, is_last_image=True, offset=0):
         tags = self.tags.copy()
-        # 273: StripOffsets -- add tag so "nr_tags" is correct
-        value_strip_offsets = tags.setdefault(273, None)
-        if (not tags.get(279)) and self.img_data:
+        # add tags so "nr_tags" is correct
+        value_strip_offsets = tags.setdefault(TT.StripOffsets, TT.AUTO)
+        if (not tags.get(TT.StripByteCounts)) and self.img_data:
             # StripByteCounts (= length of image for our limited case)
-            tags[279] = len(self.img_data)
+            tags[TT.StripByteCounts] = len(self.img_data)
         nr_tags = len(tags)
         ifd_spec = (
             ('nr_tags',           'H'),
@@ -94,7 +95,7 @@ class TiffImage:
         # that is explicitely allowed by the spec at least).
         long_order = self.long_order or tuple(tags.keys())
         for tag_id in sort_by_list(tags, ordering=long_order, default=9999):
-            if (tag_id == 273) and (value_strip_offsets is None):
+            if (tag_id == TT.StripOffsets) and (value_strip_offsets is TT.AUTO):
                 continue
             tag_value = tags[tag_id]
             tag_bytes, tag_long_data = TiffTag(tag_id, tag_value).to_bytes(long_offset=long_offset)
@@ -109,7 +110,7 @@ class TiffImage:
             img_pre_padding = nr_pad_bytes * b'\x00'
             tag_bytes, tag_long_data = TiffTag(273, strip_offset).to_bytes()
             assert (not tag_long_data)
-            tag_id_bytes[273] = tag_bytes
+            tag_id_bytes[TT.StripOffsets] = tag_bytes
 
         # the legacy software uses an arbitrary ordering of tags so we just
         # use the order as specified by the caller.
