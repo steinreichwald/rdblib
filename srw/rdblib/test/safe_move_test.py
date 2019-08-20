@@ -5,8 +5,8 @@ import multiprocessing
 import os
 
 from pythonic_testcase import *
+from schwarz.fakefs_helpers import FakeFS, TempFS
 
-from ..lib.fake_fs_utils import FakeFS, TempFS
 from ..paths import assemble_new_path, safe_move
 
 

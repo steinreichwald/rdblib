@@ -4,8 +4,8 @@ import hashlib
 import os
 
 from pythonic_testcase import *
+from schwarz.fakefs_helpers import FakeFS
 
-from ..lib.fake_fs_utils import FakeFS
 from ..utils import create_backup
 
 

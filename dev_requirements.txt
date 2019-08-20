@@ -5,5 +5,6 @@ ddt
 # shippable runs tests as "root" so permission checks don't work with pyfakefs >= 3.5.4
 # https://github.com/jmcgeheeiv/pyfakefs/issues/474
 pyfakefs >= 3.4.3, <= 3.5.3
+FakeFSHelpers
 PythonicTestcase >= 1.1.0  # assert_raises with context_manager
 testfixtures
