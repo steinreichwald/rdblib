@@ -1,10 +1,10 @@
 --index-url=https://www.pydica.org/dependencies/
 ddt
-# contains fix for loading pickled data when pyfakefs is active
-# https://github.com/jmcgeheeiv/pyfakefs/commit/3cdbc6beb3796fe06ad8916b024c0937900bda12
 # shippable runs tests as "root" so permission checks don't work with pyfakefs >= 3.5.4
 # https://github.com/jmcgeheeiv/pyfakefs/issues/474
-pyfakefs >= 3.4.3, <= 3.5.3
-FakeFSHelpers
+# https://github.com/jmcgeheeiv/pyfakefs/commit/5e55a35937f9d426b12f4dd7d850995aafa3e062
+pyfakefs >= 3.6
+# >= 1.1: ability to pass FakeFS.set_up(allow_root_user=False), see pyfakefs requirement
+FakeFSHelpers >= 1.1
 PythonicTestcase >= 1.1.0  # assert_raises with context_manager
 testfixtures

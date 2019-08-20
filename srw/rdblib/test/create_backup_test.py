@@ -19,7 +19,7 @@ def md5sum_for_file(path):
 class CreateBackupTest(PythonicTestCase):
     def setUp(self):
         super().setUp()
-        self.fs = FakeFS.set_up(test=self)
+        self.fs = FakeFS.set_up(test=self, allow_root_user=False)
 
     def test_can_create_backup(self):
         source_path = self._create_file('/data/foo.bin', b'some data')
