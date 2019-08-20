@@ -10,10 +10,10 @@ from ..utils import create_backup
 
 
 def md5sum_for_file(path):
+    md5 = hashlib.md5()
     with open(path, 'rb') as fp:
-        md5 = hashlib.md5()
         md5.update(fp.read())
-        return md5.hexdigest()
+    return md5.hexdigest()
 
 
 class CreateBackupTest(PythonicTestCase):
