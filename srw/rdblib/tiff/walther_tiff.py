@@ -2,8 +2,8 @@
 from collections import OrderedDict
 from datetime import datetime as DateTime
 
+from .tag_specification import TIFF_TAG as TT
 from .tiff_file import TiffImage
-from srw.rdblib.tiff.tag_specification import TIFF_TAG as TT
 from .tiff_util import pad_bytes
 
 
