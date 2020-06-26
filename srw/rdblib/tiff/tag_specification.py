@@ -5,7 +5,7 @@ from collections import namedtuple
 from smart_constants import attrs, BaseConstantsClass
 
 
-__all__ = ['FieldType', 'TiffTags']
+__all__ = ['FieldType', 'TiffTags', 'TIFF_TAG']
 
 #  copy of smart_constants.attrs so we can have "**data" instead of "data"
 class _attrs(object):
