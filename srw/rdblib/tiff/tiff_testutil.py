@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from collections import namedtuple
-from io import BytesIO
 import os
 import struct
 
@@ -13,7 +12,6 @@ from .tiff_file import align_to_8_offset
 
 __all__ = [
     'adapt_values',
-    'bytes_from_tiff_writer',
     'calc_offset',
     'ifd_data',
     'load_tiff_img',
@@ -41,12 +39,6 @@ def _to_int(value, format_str):
     if isinstance(value, (int, )):
         return value
     return struct.unpack('<'+format_str, value)
-
-def bytes_from_tiff_writer(tiff_obj, **tiff_args):
-    buffer = BytesIO()
-    tiff_obj.write_bytes(buffer, **tiff_args)
-    buffer.seek(0)
-    return buffer.read()
 
 def calc_offset(nr_tags, long_data=b'', offset=0, *, padding=False, img_data=None):
     # excluding TIFF header size because we are only serializing a single

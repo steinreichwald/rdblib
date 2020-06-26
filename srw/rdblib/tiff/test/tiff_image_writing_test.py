@@ -8,8 +8,8 @@ from pythonic_testcase import *
 from ..tag_specification import FT, TIFF_TAG as TT
 from ..tags import TAG_SIZE
 from ..tiff_file import TiffImage
-from ..tiff_testutil import (bytes_from_tiff_writer, calc_offset, ifd_data,
-    padding, _tag_StripByteCounts, _tag_StripOffsets, to_bytes)
+from ..tiff_testutil import (calc_offset, ifd_data, padding,
+    _tag_StripByteCounts, _tag_StripOffsets, to_bytes)
 from ..tiff_testutil import star_extract as _se
 from ..tiff_util import pad_bytes
 
@@ -19,7 +19,7 @@ class TiffImageWritingTest(PythonicTestCase):
     def test_can_write_image_dimensions_with_short_data(self):
         img_data = b'dummy'
         tiff_img = TiffImage(tags={256: 1260, 257: 830}, img_data=img_data)
-        tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
+        tiff_img_bytes = tiff_img.to_bytes()
 
         nr_tags = 4
         tag_data = _se(
@@ -40,7 +40,7 @@ class TiffImageWritingTest(PythonicTestCase):
         img_data = b'dummy'
         document_name = pad_bytes('foo bar', length=20)
         tiff_img = TiffImage(tags={258: 1, 269: document_name}, img_data=img_data)
-        tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
+        tiff_img_bytes = tiff_img.to_bytes()
 
         nr_tags = 4
         expected_long_data = document_name
@@ -63,7 +63,7 @@ class TiffImageWritingTest(PythonicTestCase):
     def test_can_write_rational_tag(self):
         img_data = b'dummy'
         tiff_img = TiffImage(tags={258: 1, 282: 200}, img_data=img_data)
-        tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
+        tiff_img_bytes = tiff_img.to_bytes()
 
         nr_tags = 4
         expected_long_data = struct.pack('<ii', 200, 1)
@@ -81,7 +81,7 @@ class TiffImageWritingTest(PythonicTestCase):
     def test_can_specify_tag_order(self):
         img_data = b'dummy'
         tiff_img = TiffImage(tags=OrderedDict([(257, 830), (256, 1260)]), img_data=img_data)
-        tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
+        tiff_img_bytes = tiff_img.to_bytes()
 
         nr_tags = 4
         tag_data = _se(
@@ -117,7 +117,7 @@ class TiffImageWritingTest(PythonicTestCase):
             long_order=(305, 269),
             img_data=img_data,
         )
-        tiff_img_bytes = bytes_from_tiff_writer(tiff_img)
+        tiff_img_bytes = tiff_img.to_bytes()
 
         nr_tags = 5
         expected_long_data = software + document_name + page_name
@@ -147,7 +147,7 @@ class TiffImageWritingTest(PythonicTestCase):
     def test_can_write_next_ifd(self):
         img_data = b'dummy'
         tiff_img = TiffImage(tags={256: 1260, 257: 830}, img_data=img_data)
-        tiff_img_bytes = bytes_from_tiff_writer(tiff_img, is_last_image=False)
+        tiff_img_bytes = tiff_img.to_bytes(is_last_image=False)
 
         nr_tags = 4
         tag_data = _se(

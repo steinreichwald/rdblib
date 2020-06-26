@@ -8,8 +8,8 @@ from pythonic_testcase import *
 from srw.rdblib.binary_format import BinaryFormat
 from ..tag_specification import FT
 from ..tiff_file import align_to_8_offset, TiffFile, TiffImage
-from ..tiff_testutil import (adapt_values, bytes_from_tiff_writer, calc_offset,
-    ifd_data, load_tiff_img, _tag_StripByteCounts, _tag_StripOffsets)
+from ..tiff_testutil import (adapt_values, calc_offset, ifd_data, load_tiff_img,
+    _tag_StripByteCounts, _tag_StripOffsets)
 from ..tiff_testutil import star_extract as _se
 from ..tiff_util import pad_bytes
 
@@ -21,7 +21,7 @@ class TiffWritingTest(PythonicTestCase):
         img_data = b'img1'
         tiff_img = TiffImage(tags={258: 1, 269: document_name}, img_data=img_data)
         tiff_file = TiffFile(tiff_images=[tiff_img])
-        tiff_bytes = bytes_from_tiff_writer(tiff_file)
+        tiff_bytes = tiff_file.to_bytes()
 
         header_values = adapt_values({'byte_order': b'II', 'version': 42, 'first_ifd': 8}, TiffFile.header)
         expected_header = BinaryFormat(TiffFile.header).to_bytes(header_values)
@@ -53,7 +53,7 @@ class TiffWritingTest(PythonicTestCase):
 
         tiff_img = TiffImage(tags=img.tags, img_data=img.data)
         tiff_file = TiffFile(tiff_images=[tiff_img])
-        tiff_bytes = bytes_from_tiff_writer(tiff_file)
+        tiff_bytes = tiff_file.to_bytes()
 
         pillow_img = Image.open(BytesIO(tiff_bytes))
         assert_equals((width, height), pillow_img.size)
@@ -70,7 +70,7 @@ class TiffWritingTest(PythonicTestCase):
         img2 = load_tiff_img()
         tiff_img2 = TiffImage(tags=img2.tags, img_data=img2.data)
         tiff_file = TiffFile(tiff_images=[tiff_img1, tiff_img2])
-        tiff_bytes = bytes_from_tiff_writer(tiff_file)
+        tiff_bytes = tiff_file.to_bytes()
 
         pillow_img = Image.open(BytesIO(tiff_bytes))
         assert_equals(img.size, pillow_img.size)

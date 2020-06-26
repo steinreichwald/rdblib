@@ -6,7 +6,7 @@ from pythonic_testcase import *
 
 from srw.rdblib.ibf import IBFFile, IBFImage, ImageBatch, TiffHandler
 from ..tiff_file import TiffFile
-from ..tiff_testutil import bytes_from_tiff_writer, load_tiff_img
+from ..tiff_testutil import load_tiff_img
 from ..walther_tiff import WaltherTiff
 
 
@@ -29,7 +29,7 @@ class WaltherTiffWritingTest(PythonicTestCase):
         img2 = load_tiff_img()
         tiff_img2 = WaltherTiff.create(width=width, height=height, img_data=img2.data, pic=pic_str)
         tiff_file = TiffFile(tiff_images=[tiff_img1, tiff_img2])
-        tiff_bytes = bytes_from_tiff_writer(tiff_file)
+        tiff_bytes = tiff_file.to_bytes()
         ibf_image = IBFImage(tiff_bytes)
         ibf_batch = IBFFile([ibf_image])
         ibf_fp = BytesIO(ibf_batch.as_bytes())

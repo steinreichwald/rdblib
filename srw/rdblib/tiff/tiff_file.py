@@ -1,5 +1,6 @@
 
 from collections import OrderedDict
+from io import BytesIO
 import math
 import struct
 
@@ -51,6 +52,13 @@ class TiffFile:
             is_last_image = (img_idx + 1 == len(self.tiff_images))
             tiff_img.write_bytes(fp, is_last_image=is_last_image, offset=img_offset)
             img_offset = fp.tell()
+
+    def to_bytes(self):
+        buffer = BytesIO()
+        self.write_bytes(buffer)
+        buffer.seek(0)
+        return buffer.read()
+
 
 def _to_int(value, format_str):
     if isinstance(value, (int, )):
@@ -130,6 +138,12 @@ class TiffImage:
         }
         ifd_bytes = ifd_writer.to_bytes(ifd_values)
         fp.write(ifd_bytes + long_data + img_pre_padding + self.img_data)
+
+    def to_bytes(self, **tiff_args):
+        buffer = BytesIO()
+        self.write_bytes(buffer, **tiff_args)
+        buffer.seek(0)
+        return buffer.read()
 
 
 def align_to_8(value):
