@@ -56,22 +56,21 @@ def extract_image_main():
         sys.stderr.write('FORM_NR muss größer/gleich "1" sein ("%s").\n' % arguments['<FORM_NR>'])
         sys.exit(20)
 
+    img_extension = 'tiff' if use_tiff else 'jpg'
     output_path = os.path.abspath(output_arg)
     if extract_all_images:
         output_dir = output_path
         output_filename = None
+    elif os.path.isfile(output_path) or output_path.lower().endswith('.'+img_extension):
+        output_dir = os.path.dirname(output_path)
+        output_filename = os.path.basename(output_path)
     else:
-        if os.path.isdir(output_path):
-            output_dir = output_path
-            output_filename = None
-        else:
-            output_dir = os.path.dirname(output_path)
-            output_filename = os.path.basename(output_path)
+        output_dir = output_path
+        output_filename = None
     if not os.path.exists(output_dir):
         sys.stderr.write('Zielverzeichnis "%s" existiert nicht.\n' % os.path.basename(output_arg))
         sys.exit(20)
 
-    img_extension = 'tiff' if use_tiff else 'jpg'
     get_target_path = lambda form_nr: os.path.join(output_dir, output_filename or 'form-%03d.%s' % (form_nr, img_extension))
 
     ibf = ImageBatch(ibf_path, delay_load=False, access='read')
