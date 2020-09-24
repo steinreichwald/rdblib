@@ -68,7 +68,7 @@ def extract_image_main():
         output_dir = output_path
         output_filename = None
     if not os.path.exists(output_dir):
-        sys.stderr.write('Zielverzeichnis "%s" existiert nicht.\n' % os.path.basename(output_arg))
+        sys.stderr.write('Zielverzeichnis "%s" existiert nicht.\n' % output_arg)
         sys.exit(20)
 
     get_target_path = lambda form_nr: os.path.join(output_dir, output_filename or 'form-%03d.%s' % (form_nr, img_extension))
