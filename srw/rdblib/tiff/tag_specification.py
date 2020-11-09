@@ -84,6 +84,7 @@ class TIFF_TAG:
     ImageWidth          = 256
     ImageLength         = 257
     BitsPerSample       = 258
+    Compression         = 259
 
     DocumentName        = 269
     ImageDescription    = 270

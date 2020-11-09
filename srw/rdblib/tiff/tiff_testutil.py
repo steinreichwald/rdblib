@@ -5,7 +5,7 @@ import os
 import struct
 
 from ..binary_format import BinaryFormat
-from .tag_specification import FT
+from .tag_specification import FT, TIFF_TAG as TT
 from .tags import TiffTag, TAG_SIZE
 from .tiff_file import align_to_8_offset
 
@@ -74,13 +74,13 @@ def load_tiff_img():
 
     width = 1152
     height = 840
-    tiff_tags = {
-        256: width,
-        257: height,
-        259: 4,         # Compression ("Group 4 Fax")
-        262: 0,         # PhotometricInterpretation ("WhiteIsZero")
+    _tiff_tags = {
+        TT.ImageWidth : width,
+        TT.ImageLength: height,
+        TT.Compression: 4,      # Compression ("Group 4 Fax")
+        262           : 0,      # PhotometricInterpretation ("WhiteIsZero")
     }
-    return ImgInfo(img_data, tiff_tags, (width, height))
+    return ImgInfo(img_data, _tiff_tags, (width, height))
 
 def padding(nr_bytes):
     return nr_bytes * b'\x00'
