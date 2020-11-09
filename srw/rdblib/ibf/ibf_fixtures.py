@@ -66,14 +66,14 @@ def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, cre
 
 
 class IBFFile(BinaryFixture):
-    def __init__(self, images, encoding=None):
+    def __init__(self, images, encoding=None, ibf_filename='', scan_date=''):
         self.images = images
         values = dict(
             identifier='WIBF',
             _ign1=1,
             _ign2=1,
-            filename='',
-            scan_date='',
+            filename    = ibf_filename,
+            scan_date   = scan_date,
             # offset_first_index=252  (calculated in as_bytes())
             # offset_last_index (calculated in as_bytes())
             image_count=len(images),
