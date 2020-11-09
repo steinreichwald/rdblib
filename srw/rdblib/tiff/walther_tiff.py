@@ -105,7 +105,11 @@ TAG_LENGTH = {
     TT.HostComputer:        80,
 }
 
+def date_to_string(date):
+    date_str = '%02d.%02d.%d' % (date.day, date.month, date.year)
+    return date_str
+
 def dt_to_string(dt):
-    date_str = '%02d.%02d.%d' % (dt.day, dt.month, dt.year)
+    date_str = date_to_string(dt)
     time_str = '%02d:%02d:%02d' % (dt.hour, dt.minute, dt.second)
     return date_str + ' ' + time_str
