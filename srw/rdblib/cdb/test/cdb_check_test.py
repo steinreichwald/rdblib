@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+from io import BytesIO
 import os
 
 from ddt import ddt as DataDrivenTestCase, data
@@ -40,6 +41,15 @@ class CDBCheckTest(PythonicTestCase):
         cdb = FormBatch(result.cdb_fp)
         assert_equals(1, cdb.count())
         cdb.close()
+
+    def test_can_handle_file_like_instance(self):
+        cdb_path = os.path.join(self.env_dir, 'foo.cdb')
+        form_fields = valid_prescription_values(with_pic=True)
+        cdb_fp = create_cdb_with_form_values([form_fields], filename=cdb_path)
+        cdb_bytes= cdb_fp.read()
+
+        result = open_cdb(BytesIO(cdb_bytes))
+        assert_true(result)
 
     def test_can_ensure_all_required_field_names_are_present(self):
         cdb_path = os.path.join(self.env_dir, 'foo.cdb')

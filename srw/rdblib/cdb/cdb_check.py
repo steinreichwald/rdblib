@@ -22,19 +22,27 @@ re_fieldname = re.compile('^[A-Za-z\-_0-9]+$')
 
 def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write', log=None):
     log = l_(log)
-    filesize = bitmath.Byte(os.stat(cdb_path).st_size)
     warnings = []
-    filesize_str = format_filesize(filesize, locale='de')
-    if filesize >= MAX_RDB_SIZE:
-        return _error('Die CDB-Datei ist defekt (%s groß)' % filesize_str, warnings=warnings, key='file.too_big')
+    is_pathlike = isinstance(cdb_path, (str, os.PathLike))
+    if is_pathlike:
+        filesize = bitmath.Byte(os.stat(cdb_path).st_size)
+        filesize_str = format_filesize(filesize, locale='de')
+        if filesize >= MAX_RDB_SIZE:
+            return _error('Die CDB-Datei ist defekt (%s groß)' % filesize_str, warnings=warnings, key='file.too_big')
 
-    try:
-        cdb_fp = MMapFile(cdb_path, access=access, log=log)
-    except OSError:
-        return _error('Die CDB-Datei ist vermutlich noch in Bearbeitung.', warnings=warnings, key='file.is_locked')
-    cdb_data = BytesIO(filecontent(cdb_fp))
+        try:
+            cdb_fp = MMapFile(cdb_path, access=access, log=log)
+        except OSError:
+            return _error('Die CDB-Datei ist vermutlich noch in Bearbeitung.', warnings=warnings, key='file.is_locked')
+        cdb_bytes = filecontent(cdb_fp)
+    else:
+        cdb_fp = cdb_path
+        previous_pos = cdb_fp.tell()
+        cdb_bytes = cdb_fp.read()
+        cdb_fp.seek(previous_pos)
 
-    filesize = len(cdb_fp)
+    cdb_data = BytesIO(cdb_bytes)
+    filesize = len(cdb_bytes)
     min_bytes = BatchHeader.size + FormHeader.size + Field.size
     if filesize < min_bytes:
         min_size_str = format_filesize(min_bytes, locale='de')
