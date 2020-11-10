@@ -2,11 +2,10 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import os
-import shutil
-from tempfile import mkdtemp
 
 from ddt import ddt as DataDrivenTestCase, data
 from pythonic_testcase import *
+from schwarz.fakefs_helpers import TempFS
 
 from .. import (
     create_cdb_with_dummy_data,
@@ -23,12 +22,8 @@ from ...testutil import valid_prescription_values, VALIDATED_FIELDS
 @DataDrivenTestCase
 class CDBCheckTest(PythonicTestCase):
     def setUp(self):
-        super().setUp()
-        self.env_dir = mkdtemp()
-
-    def tearDown(self):
-        shutil.rmtree(self.env_dir)
-        super().tearDown()
+        self.fs = TempFS.set_up(test=self)
+        self.env_dir = self.fs.create_directory('envdir')
 
     @data(True, False)
     def test_can_return_cdb_instance(self, explicit_fieldnames):

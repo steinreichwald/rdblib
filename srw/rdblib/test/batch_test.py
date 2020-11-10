@@ -5,123 +5,121 @@ import hashlib
 import os
 
 from pythonic_testcase import *
+from schwarz.fakefs_helpers import TempFS
+
 from srw.rdblib import assemble_new_path, guess_path, DataBunch
 from srw.rdblib.cdb import create_cdb_with_dummy_data
 from srw.rdblib.ibf import create_ibf
-
 from .. import TaskStatus, TaskType
 from ..batch import Batch
 from ..sqlite import create_sqlite_db, db_schema, get_model, DELETE
-from ..testutil import use_tempdir
 
 
 class BatchTest(PythonicTestCase):
+    def setUp(self):
+        self.fs = TempFS.set_up(test=self)
+
     def test_can_initialize_batch_without_real_files(self):
         batch = self._create_batch(tasks=())
         assert_isinstance(batch, Batch)
 
     def test_can_create_new_db_when_initializing_with_bunch(self):
-        with use_tempdir() as temp_dir:
-            cdb_path = os.path.join(temp_dir, '00042100.CDB')
-            batch = self._create_cdbibf_batch(cdb_path, nr_forms=2, create_persistent_db=True)
+        cdb_path = os.path.join(self.fs.root, '00042100.CDB')
+        batch = self._create_cdbibf_batch(cdb_path, nr_forms=2, create_persistent_db=True)
 
-            bunch = batch.bunch
-            assert_not_none(bunch.db)
-            assert_true(os.path.exists(bunch.db))
-            batch.close()
+        bunch = batch.bunch
+        assert_not_none(bunch.db)
+        assert_true(os.path.exists(bunch.db))
+        batch.close()
 
-            with assert_not_raises(OSError):
-                batch = Batch.init_from_bunch(bunch, create_persistent_db=False)
-            # close all open files - otherwise Windows won't be able to remove
-            # the temp dir
-            batch.close()
+        with assert_not_raises(OSError):
+            batch = Batch.init_from_bunch(bunch, create_persistent_db=False)
+        # close all open files - otherwise Windows won't be able to remove
+        # the temp dir
+        batch.close()
 
     def test_can_rename_batch(self):
-        with use_tempdir() as temp_dir:
-            canary_value = '00031526'
-            rdb_path = os.path.join(temp_dir, '00042100.RDB')
-            batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
-            id_formbatch = id(batch.cdb)
+        canary_value = '00031526'
+        rdb_path = os.path.join(self.fs.root, '00042100.RDB')
+        batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
+        id_formbatch = id(batch.cdb)
 
-            batch.rename_xdb(to='CDB')
-            cdb_path = os.path.splitext(rdb_path)[0] + '.CDB'
-            assert_not_equals(id_formbatch, id(batch.cdb))
-            assert_equals(cdb_path, batch.bunch.cdb)
-            assert_true(os.path.exists(cdb_path))
-            assert_false(os.path.exists(rdb_path))
-            assert_equals(canary_value, batch.form(0)['PZN_1'].value)
+        batch.rename_xdb(to='CDB')
+        cdb_path = os.path.splitext(rdb_path)[0] + '.CDB'
+        assert_not_equals(id_formbatch, id(batch.cdb))
+        assert_equals(cdb_path, batch.bunch.cdb)
+        assert_true(os.path.exists(cdb_path))
+        assert_false(os.path.exists(rdb_path))
+        assert_equals(canary_value, batch.form(0)['PZN_1'].value)
 
-            # close all open files - otherwise Windows won't be able to remove
-            # the temp dir
-            batch.close()
+        # close all open files - otherwise Windows won't be able to remove
+        # the temp dir
+        batch.close()
 
     def test_fails_rename_if_target_file_already_exists(self):
-        with use_tempdir() as temp_dir:
-            rdb_path = os.path.join(temp_dir, '00042100.RDB')
-            cdb_path = rdb_path.replace('.RDB', '.CDB')
-            batch = self._create_cdbibf_batch(rdb_path, nr_forms=2)
-            with open(cdb_path, 'wb') as fp:
-                fp.write(b'should be kept')
+        rdb_path = os.path.join(self.fs.root, '00042100.RDB')
+        cdb_path = rdb_path.replace('.RDB', '.CDB')
+        batch = self._create_cdbibf_batch(rdb_path, nr_forms=2)
+        with open(cdb_path, 'wb') as fp:
+            fp.write(b'should be kept')
 
-            with assert_raises(FileExistsError):
-                batch.rename_xdb(to='CDB')
-            assert_true(os.path.exists(rdb_path))
-            assert_true(os.path.exists(cdb_path))
-            # close all open files - otherwise Windows won't be able to remove
-            # the temp dir
-            batch.close()
+        with assert_raises(FileExistsError):
+            batch.rename_xdb(to='CDB')
+        assert_true(os.path.exists(rdb_path))
+        assert_true(os.path.exists(cdb_path))
+        # close all open files - otherwise Windows won't be able to remove
+        # the temp dir
+        batch.close()
 
     def test_can_rename_and_move_cdb(self):
-        with use_tempdir() as temp_dir:
-            canary_value = '00031526'
-            rdb_path = os.path.join(temp_dir, 'subdir', '00042100.RDB')
-            batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
-            id_formbatch = id(batch.cdb)
+        canary_value = '00031526'
+        rdb_path = os.path.join(self.fs.root, 'subdir', '00042100.RDB')
+        batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
+        id_formbatch = id(batch.cdb)
 
-            target_dir = os.path.join(temp_dir, 'cdb_dir')
-            assert_false(os.path.exists(target_dir),
-                message='rename_xdb() should create the target dir if necessary')
-            batch.rename_xdb(to='CDB', target_dir=target_dir)
-            cdb_path = os.path.join(target_dir, '00042100.CDB')
-            assert_false(os.path.exists(rdb_path))
-            assert_not_equals(id_formbatch, id(batch.cdb))
-            assert_equals(cdb_path, batch.bunch.cdb)
-            assert_true(os.path.exists(cdb_path))
-            assert_equals(target_dir, os.path.dirname(cdb_path))
-            assert_equals(canary_value, batch.form(0)['PZN_1'].value)
+        target_dir = os.path.join(self.fs.root, 'cdb_dir')
+        assert_false(os.path.exists(target_dir),
+            message='rename_xdb() should create the target dir if necessary')
+        batch.rename_xdb(to='CDB', target_dir=target_dir)
+        cdb_path = os.path.join(target_dir, '00042100.CDB')
+        assert_false(os.path.exists(rdb_path))
+        assert_not_equals(id_formbatch, id(batch.cdb))
+        assert_equals(cdb_path, batch.bunch.cdb)
+        assert_true(os.path.exists(cdb_path))
+        assert_equals(target_dir, os.path.dirname(cdb_path))
+        assert_equals(canary_value, batch.form(0)['PZN_1'].value)
 
-            # close all open files - otherwise Windows won't be able to remove
-            # the temp dir
-            batch.close()
+        # close all open files - otherwise Windows won't be able to remove
+        # the temp dir
+        batch.close()
 
     def test_can_backup_original_file_before_renaming_cdb(self):
-        with use_tempdir() as temp_dir:
-            canary_value = '00031526'
-            rdb_path = os.path.join(temp_dir, '00042100.RDB')
-            batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
-            cdb_hash = hashlib.md5(batch.cdb.filecontent).hexdigest()
+        canary_value = '00031526'
+        rdb_path = os.path.join(self.fs.root, '00042100.RDB')
+        batch = self._create_cdbibf_batch(rdb_path, nr_forms=2, form0_data={'PZN_1': canary_value})
+        cdb_hash = hashlib.md5(batch.cdb.filecontent).hexdigest()
 
-            backup_dir = os.path.join(temp_dir, 'backup')
-            batch.rename_xdb(to='CDB', backup_dir=backup_dir)
-            cdb_path = os.path.join(temp_dir, '00042100.CDB')
-            assert_false(os.path.exists(rdb_path))
-            assert_true(os.path.exists(cdb_path))
+        backup_dir = os.path.join(self.fs.root, 'backup')
+        batch.rename_xdb(to='CDB', backup_dir=backup_dir)
+        cdb_path = os.path.join(self.fs.root, '00042100.CDB')
+        assert_false(os.path.exists(rdb_path))
+        assert_true(os.path.exists(cdb_path))
 
-            rdb_backup_path = assemble_new_path(rdb_path, new_dir=backup_dir, new_extension='RDB.BAK')
-            assert_true(os.path.exists(rdb_backup_path))
-            with open(rdb_backup_path, 'rb') as fp:
-                backup_hash = hashlib.md5(fp.read()).hexdigest()
-            assert_equals(cdb_hash, backup_hash)
+        rdb_backup_path = assemble_new_path(rdb_path, new_dir=backup_dir, new_extension='RDB.BAK')
+        assert_true(os.path.exists(rdb_backup_path))
+        with open(rdb_backup_path, 'rb') as fp:
+            backup_hash = hashlib.md5(fp.read()).hexdigest()
+        assert_equals(cdb_hash, backup_hash)
 
-            # ensure the code does not overwrite backup files
-            batch.rename_xdb(to='RDB')
-            batch.rename_xdb(to='CDB', backup_dir=backup_dir)
-            backup1_path = rdb_backup_path + '.1'
-            assert_true(os.path.exists(backup1_path))
+        # ensure the code does not overwrite backup files
+        batch.rename_xdb(to='RDB')
+        batch.rename_xdb(to='CDB', backup_dir=backup_dir)
+        backup1_path = rdb_backup_path + '.1'
+        assert_true(os.path.exists(backup1_path))
 
-            # close all open files - otherwise Windows won't be able to remove
-            # the temp dir
-            batch.close()
+        # close all open files - otherwise Windows won't be able to remove
+        # the temp dir
+        batch.close()
 
     def test_can_add_tasks_via_batch(self):
         model = get_model(db_schema.LATEST)
@@ -219,30 +217,29 @@ class BatchTest(PythonicTestCase):
     def test_batch_commit_also_stores_cdb_data(self):
         nr_forms = 2
         field_names = ('FOO', 'BAR')
-        with use_tempdir() as temp_dir:
-            cdb_path = os.path.join(temp_dir, '00042100.CDB')
-            ibf_path = guess_path(cdb_path, type_='ibf')
-            create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path, field_names=field_names)
-            create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
-            bunch = DataBunch(cdb_path, ibf_path, db=None, ask=None)
+        cdb_path = os.path.join(self.fs.root, '00042100.CDB')
+        ibf_path = guess_path(cdb_path, type_='ibf')
+        create_cdb_with_dummy_data(nr_forms=nr_forms, filename=cdb_path, field_names=field_names)
+        create_ibf(nr_images=nr_forms, filename=ibf_path, create_directory=True)
+        bunch = DataBunch(cdb_path, ibf_path, db=None, ask=None)
 
-            batch = Batch.init_from_bunch(bunch, create_persistent_db=False, access='write')
-            form = batch.form(0)
-            field_name = tuple(form.fields)[0]
-            previous_value = form.fields[field_name].value
-            new_value = 'foobar'
-            form.fields[field_name].value = new_value
-            assert_not_equals(previous_value, new_value,
-                message='must set a different value so we test the real thing')
-            batch.commit()
-            batch.close()
+        batch = Batch.init_from_bunch(bunch, create_persistent_db=False, access='write')
+        form = batch.form(0)
+        field_name = tuple(form.fields)[0]
+        previous_value = form.fields[field_name].value
+        new_value = 'foobar'
+        form.fields[field_name].value = new_value
+        assert_not_equals(previous_value, new_value,
+            message='must set a different value so we test the real thing')
+        batch.commit()
+        batch.close()
 
-            batch = Batch.init_from_bunch(bunch, create_persistent_db=False, access='write')
-            form = batch.form(0)
-            assert_equals(new_value, form.fields[field_name].value)
-            # close all open files - otherwise Windows won't be able to remove
-            # the temp dir
-            batch.close()
+        batch = Batch.init_from_bunch(bunch, create_persistent_db=False, access='write')
+        form = batch.form(0)
+        assert_equals(new_value, form.fields[field_name].value)
+        # close all open files - otherwise Windows won't be able to remove
+        # the temp dir
+        batch.close()
 
     # --- helpers -------------------------------------------------------------
 

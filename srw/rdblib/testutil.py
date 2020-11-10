@@ -2,12 +2,9 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 from collections import OrderedDict
-from contextlib import contextmanager
 from datetime import date as Date
 from io import BytesIO
 import os
-import shutil
-from tempfile import mkdtemp
 
 from .batch import Batch
 from .cdb import create_cdb_with_form_values, CDBFile, CDBForm
@@ -168,11 +165,4 @@ def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=N
     )
     ibf_fp.close()
     return (cdb_path, ibf_path)
-
-
-@contextmanager
-def use_tempdir():
-    tempdir_path = mkdtemp()
-    yield tempdir_path
-    shutil.rmtree(tempdir_path)
 
