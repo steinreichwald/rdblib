@@ -4,7 +4,7 @@ from datetime import datetime as DateTime
 
 from .tag_specification import TIFF_TAG as TT
 from .tiff_file import TiffImage
-from .tiff_util import pad_bytes
+from .tiff_util import pad_tiff_bytes
 
 
 __all__ = [
@@ -89,7 +89,7 @@ def walther_tags(*, width, height, page_name, dpi=200, dt=None, extra_tags=None)
         tags.update(extra_tags)
 
     for tag_id, tag_length in TAG_LENGTH.items():
-        tags[tag_id] = pad_bytes(tags[tag_id], tag_length)
+        tags[tag_id] = pad_tiff_bytes(tags[tag_id], tag_length)
     return tags
 
 

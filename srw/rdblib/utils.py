@@ -8,7 +8,7 @@ from .lib import l_, AttrDict
 from .paths import get_path_from_instance
 
 
-__all__ = ['create_backup', 'filecontent']
+__all__ = ['create_backup', 'filecontent', 'pad_bytes']
 
 def filecontent(mmap_or_filelike):
     if isinstance(mmap_or_filelike, mmap.mmap):
@@ -90,4 +90,12 @@ def _create_backup(source_fp, backup_dir, *, log):
             log.error('unable to create backup file %s: %s', backup_path, e)
             raise
     return backup_path
+
+
+def pad_bytes(bytes_, length, pad_right=True, pad_byte=b' '):
+    if bytes_ is None:
+        bytes_ = b''
+    pad_bytes_ = length - len(bytes_)
+    padding = (pad_byte * pad_bytes_)
+    return (bytes_ + padding) if pad_right else (padding + bytes_)
 
