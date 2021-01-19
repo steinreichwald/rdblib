@@ -19,7 +19,6 @@ __all__ = [
     'batch_with_pic_forms',
     'create_cdb_and_ibf_file',
     'generate_pic',
-    'use_tempdir',
     'valid_prescription_values',
 ]
 
