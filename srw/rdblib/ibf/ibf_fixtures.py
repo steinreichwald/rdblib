@@ -112,9 +112,9 @@ class IBFFile(BinaryFixture):
             current_offset = buffer_.tell()
             offset_next_index = 0 if is_last_index else (current_offset + index_size)
             index_data = ibf_form_image.index_as_bytes(
-                offset_next_index=offset_next_index,
-                image_nr=1,
-                image_offset=image_offset
+                offset_next_indexblock = offset_next_index,
+                image_nr               = 1,
+                image_offset           = image_offset
             )
             buffer_.write(index_data)
 
@@ -130,11 +130,11 @@ class IBFImage(BinaryFixture):
     def __init__(self, img_data, image_nr=None, encoding=None, **values):
         self.img_data = img_data
         values_ = dict(
-            first_index_entry=0,
+            is_first_index_entry   = 0,
             _ign1=0,                   # _ign1
-            # offset_next_index (calculated in as_bytes())
-            offset_next_index=0,
-            indexblock_len=1,
+            # offset_next_indexblock (calculated in as_bytes())
+            offset_next_indexblock = 0,
+            images_in_indexblock   = 1,
             _ign2=1,                   # _ign2
             image_nr=image_nr,
             # image_offset (calculated in as_bytes())

@@ -15,30 +15,30 @@ __all__ = [
 # data even though that is also included within the IBF file).
 class IBFFormat(object):
     batch_header = (
-        ('identifier',         '4s'), # 'WIBF'
-        ('_ign1',              'i'),
-        ('_ign2',              'i'),
-        ('filename',           '16s'),
-        ('scan_date',          '12s'),
+        ('identifier',         '4s'),  # 'WIBF'
+        ('_ign1',              'i'),   # =1 (statisch)
+        ('_ign2',              'i'),   # =1 (statisch)
+        ('filename',           '16s'), # '12345678.IBF' + 0x00 termination/padding
+        ('scan_date',          '12s'), # 'DD.MM.JJJJ' + 0x00 termination/padding
         ('offset_first_index', 'i'),
-        ('offset_last_index',  'i'),
+        ('offset_last_index',  'i'),   # *starting* offset of the last index
         ('image_count',        'i'),
         ('file_size',          'i'),
         ('_ign3',              '196s'), # ''
     )
 
     index_entry = (
-        ('first_index_entry', 'i'),
-        ('_ign1',             'i'),
-        ('offset_next_index', 'i'),
-        ('indexblock_len',    'i'),
-        ('_ign2',             'i'),
-        ('_ign3',             'i'),
-        ('image_nr',          'i'),
-        ('image_offset',      'i'),    # points to tiff header
-        ('image_size',        'i'),
-        ('identifier',        '80s'),  # 'REZEPT'
-        ('codnr',             '140s'), # 14 used
+        ('is_first_index_entry',   'i'), # =1, wenn es der erste Eintrag in einem Index-Verzeichnis mit 64 Rezepten ist
+        ('_ign1',                  'i'), # =0 (statisch)
+        ('offset_next_indexblock', 'i'), # nur im ersten Index-Eintrag jedes Index-Blocks belegt (sonst 0)
+        ('images_in_indexblock',   'i'), # Anzahl der Images in diesem Index-Verzeichnis (nur bei erstem Eintrag)
+        ('_ign2',                  'i'), # =1 (statisch)
+        ('_ign3',                  'i'), # =0 (statisch)
+        ('image_nr',               'i'), # Nummer des Images innerhalb der IBF-Datei
+        ('image_offset',           'i'), # points to tiff header
+        ('image_size',             'i'),
+        ('identifier',           '80s'), # 'REZEPT' + 0x00 termination/padding
+        ('codnr',               '140s'), # 14 used + 0x00 termination/padding
     )
 
 

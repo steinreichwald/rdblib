@@ -55,8 +55,8 @@ class ImageBatch(object):
                 entry = Image(self.filecontent, offset)
                 entries.append(entry)
                 if image_count == -1:
-                    offset_next_index = entry.rec.offset_next_index
-                    image_count = entry.rec.indexblock_len
+                    offset_next_index = entry.rec.offset_next_indexblock
+                    image_count = entry.rec.images_in_indexblock
                 image_count -= 1
                 offset += len(entry)
             return entries, offset_next_index
