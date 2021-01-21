@@ -12,11 +12,13 @@ from ..ibf import create_ibf
 from ..lib import AttrDict
 from ..paths import assemble_new_path, guess_path, DataBunch
 from ..sqlite import create_sqlite_db
+from .bindiff import colorized_diff
 
 
 __all__ = [
     'add_pic',
     'batch_with_pic_forms',
+    'colorized_diff',
     'create_cdb_and_ibf_file',
     'generate_pic',
     'valid_prescription_values',
