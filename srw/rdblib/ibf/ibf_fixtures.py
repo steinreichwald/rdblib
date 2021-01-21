@@ -132,16 +132,16 @@ class IBFImage(BinaryFixture):
         self.img_data = img_data
         values_ = dict(
             is_first_index_entry   = 0,
-            _ign1=0,                   # _ign1
+            _ign1      = 0,
             # offset_next_indexblock (calculated in as_bytes())
             offset_next_indexblock = 0,
             images_in_indexblock   = 1,
-            _ign2=1,                   # _ign2
-            image_nr=image_nr,
+            _ign2      = 1,
+            image_nr   = image_nr,
             # image_offset (calculated in as_bytes())
-            image_size=len(img_data),
-            identifier='REZEPT',
-            codnr='',
+            image_size = len(img_data),
+            identifier = 'REZEPT',
+            codnr      = '',
         )
         values_.update(values)
         bin_structure = IBFFormat.index_entry
