@@ -11,12 +11,14 @@ ImageBatch.load_directories() for the complete parsing implementation).
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 from io import BytesIO
+import math
 import os
 
 import pkg_resources
 
 from .ibf_format import IBFFormat, BatchHeader, ImageIndexEntry
 from ..fixture_helpers import BinaryFixture, UnclosableBytesIO
+from srw.rdblib.lib import merge_dicts
 
 
 __all__ = ['create_ibf', 'dummy_tiff_data', 'IBFFile', 'IBFImage']
@@ -86,38 +88,61 @@ class IBFFile(BinaryFixture):
 
     def as_bytes(self):
         buffer_ = BytesIO()
-        header_size = BatchHeader.size
         index_size = ImageIndexEntry.size
-        max_index = self.values['image_count'] - 1
         image_sizes = [img.values['image_size'] for img in self.images]
 
+        imgs_per_block = 64
+        index_block_size = imgs_per_block * index_size
+        index_padding = 256
+        index_block_count = math.ceil(len(self.images) / imgs_per_block)
+        assert (index_block_count >= 1) # just to ensure we use float division
+        assert (index_block_count == 1), 'multiple indexes not yet implemented'
+
         # --- serializing the global header -----------------------------------
-        offset_first_index = header_size
-        offset_last_index = offset_first_index + (max_index * index_size)
-        offset_first_image = offset_last_index + index_size
+        offset_first_index = BatchHeader.size
+        # "-1" because "offset_last_index" contains the *starting* positing of
+        # the last index
+        offset_last_index = offset_first_index + ((index_block_count - 1) * index_size)
+        offset_first_image = BatchHeader.size + (index_block_count * index_block_size) + index_padding
         file_size = offset_first_image + sum(image_sizes)
 
-        values = self.values.copy()
-        values.update(
-            offset_first_index=offset_first_index,
-            offset_last_index=offset_last_index,
-            file_size=file_size,
-        )
+        values = merge_dicts(self.values, {
+            'offset_first_index': offset_first_index,
+            'offset_last_index' : offset_last_index,
+            'file_size': file_size,
+        })
         ibf_data = super(IBFFile, self).as_bytes(values)
         buffer_.write(ibf_data)
 
         # --- writing index entries for all images ----------------------------
-        for i, ibf_form_image in enumerate(self.images):
-            image_offset = offset_first_image + sum(image_sizes[:i])
-            is_last_index = (i + 1 == len(self.images))
-            current_offset = buffer_.tell()
-            offset_next_index = 0 if is_last_index else (current_offset + index_size)
+        images_in_indexblock = len(self.images)
+        img_block = 1
+        for block_idx in range(imgs_per_block):
+            img_idx = block_idx + ((img_block - 1) * imgs_per_block)
+            if img_idx >= len(self.images):
+                index_data = b'\x00' * index_size
+                buffer_.write(index_data)
+                continue
+
+            is_first_index = (block_idx == 0)
+            if img_block < index_block_count:
+                offset_next_indexblock = BatchHeader.size + (img_block * index_block_size)
+            else:
+                offset_next_indexblock = 0
+            ibf_form_image = self.images[img_idx]
+            image_offset = offset_first_image + sum(image_sizes[:img_idx])
+
             index_data = ibf_form_image.index_as_bytes(
-                offset_next_indexblock = offset_next_index,
-                image_nr               = 1,
-                image_offset           = image_offset
+                is_first_index_entry   = is_first_index,
+                offset_next_indexblock = offset_next_indexblock,
+                images_in_indexblock   = images_in_indexblock if is_first_index else 0,
+                image_nr               = (img_idx + 1),
+                image_offset           = image_offset,
             )
             buffer_.write(index_data)
+
+        img_pre_padding = b'\x00' * 256
+        buffer_.write(img_pre_padding)
 
         # --- writing the actual binary image data ----------------------------
         for ibf_form_image in self.images:
@@ -148,8 +173,7 @@ class IBFImage(BinaryFixture):
         super(IBFImage, self).__init__(values_, bin_structure, encoding=encoding)
 
     def index_as_bytes(self, **values):
-        values_ = self.values.copy()
-        values_.update(values)
+        values_ = merge_dicts(self.values, values)
         self._assert_caller_used_only_known_fields(values, self.bin_structure)
         index_data = super(IBFImage, self).as_bytes(values_)
         return index_data
