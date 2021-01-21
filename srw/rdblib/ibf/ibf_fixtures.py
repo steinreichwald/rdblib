@@ -19,7 +19,7 @@ from .ibf_format import IBFFormat, BatchHeader, ImageIndexEntry
 from ..fixture_helpers import BinaryFixture, UnclosableBytesIO
 
 
-__all__ = ['create_ibf', 'IBFFile', 'IBFImage']
+__all__ = ['create_ibf', 'dummy_tiff_data', 'IBFFile', 'IBFImage']
 
 def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, create_directory=False):
     # tiffany can not create tiff images and I'd like not to add new
@@ -35,13 +35,7 @@ def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, cre
     def _fake_tiff_image():
         return b'\x00' * 200
 
-    def _use_dummy_tiff():
-        this_module = __name__.rsplit('.', 1)[0]
-        tiff_fp = pkg_resources.resource_stream(this_module, 'dummy.tiff')
-        tiff_data = tiff_fp.read()
-        return tiff_data
-
-    tiff_data = _fake_tiff_image() if fake_tiffs else _use_dummy_tiff()
+    tiff_data = _fake_tiff_image() if fake_tiffs else dummy_tiff_data()
     if pic_nrs is None:
         pic_nrs = ('dummy',) * nr_images
     assert nr_images == len(pic_nrs)
@@ -63,6 +57,13 @@ def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, cre
     ibf_fp.write(ibf_data)
     ibf_fp.seek(0, 0)
     return ibf_fp
+
+
+def dummy_tiff_data():
+    this_module = __name__.rsplit('.', 1)[0]
+    tiff_fp = pkg_resources.resource_stream(this_module, 'dummy.tiff')
+    tiff_data = tiff_fp.read()
+    return tiff_data
 
 
 class IBFFile(BinaryFixture):
