@@ -8,8 +8,34 @@ __all__ = [
     'BatchHeader',
     'IBFFormat',
     'ImageIndexEntry',
+    'IMAGES_PER_BLOCK',
+    'INDEX_PADDING',
     'Tiff',
 ]
+
+# Eine IBF-Datei ist wie folgt aufgebaut:
+#
+#   globaler Batch-Header
+#   [1-5 Blöcke mit bis zu 64 Images]
+#
+# Jeder "Block" besteht aus:
+#   64 IndexEntries
+#   die tatsächlichen TIFF-Bilddaten
+#   256 Byte Padding (0-Bytes)
+# Falls es weniger Belege als 64 im Block gibt, werden die restlichen
+# IndexEntries mit 0-Bytes belegt. Bei den TIFF-Bilddaten gibt es aber keine
+# Platzhalter.
+#
+# Die "IndexEntries" sind eine Art "Inhaltsverzeichnis", so dass man z.B. die
+# Bilddaten für eine bestimmte PIC-Nummer abrufen kann, ohne Annahmen über das
+# TIFF-Format machen zu müssen.
+#
+# Grundidee der IBF-Datei ist es wohl, diese Datei beim Scannen kontinuierlich
+# schreiben zu können, ohne die gesamten Daten im Arbeitsspeicher halten zu
+# müssen.
+
+IMAGES_PER_BLOCK = 64
+INDEX_PADDING = 256
 
 # This class describes the proprietary IBF format (excluding the actual TIFF
 # data even though that is also included within the IBF file).
