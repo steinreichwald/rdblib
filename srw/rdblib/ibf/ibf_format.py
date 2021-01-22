@@ -105,7 +105,7 @@ class Tiff(object):
         ('datetime',          '20s'),
         ('artist',            '80s'),
         ('host_computer',     '80s'),
-        # site to here == 496
+        # size to here == 496
     )
 
 
