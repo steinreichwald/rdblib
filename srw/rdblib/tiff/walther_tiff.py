@@ -57,29 +57,29 @@ def walther_tags(*, width, height, page_name, dpi=200, dt=None, extra_tags=None)
     if dt is None:
         dt = DateTime.now()
     tags = OrderedDict([
-        (254,               0),
+        (254,               0), # NewSubfileType ("general indication of the kind of data contained in this subfile"), default = 0
         (TT.ImageWidth,     width),
         (TT.ImageLength,    height),
         (TT.BitsPerSample,  1),
         (TT.Compression,    4),
-        (262,               0),
-        (266,               1),
+        (262,               0), # Photometric Interpretation: 0 = "schwarz auf weiß"
+        (266,               1), # Fill Order: 1 = "von oben links nach unten rechts"
         (TT.DocumentName,           'REZEPT'),
         (TT.ImageDescription,       'DPI%03d_B/W' % dpi),
         (TT.ScannerManufacturer,    'Mcon Global - Michael Zeller'),
         (TT.ScannerModell,          'WALTHER HLS4'),
         (TT.StripOffsets,           TT.AUTO),
-        (274,               1),
-        (280,               0),
-        (281,               1),
-        (277,               1),
+        (274,               1), # Orientation
+        (280,               0), # MinSampleValue ("minimum component value used"), TIFF default = 0
+        (281,               1), # MaxSampleValue ("maximum component value used"), TIFF default = 2**(BitsPerSample) - 1
+        (277,               1), # Samples Per Pixel (1 = Graustufen)
         (TT.RowsPerStrip,           height),
         (TT.StripByteCounts,        TT.AUTO),
         (TT.XResolution,    dpi),
         (TT.YResolution,    dpi),
         (TT.PageName,       page_name),
-        (293,               0),
-        (296,               2),
+        (293,               0), # T6Options
+        (296,               2), # Resolution Unit (2 = "Zoll")
         (TT.Software,       'rdblib'),
         (TT.DateTime,       dt_to_string(dt)),
         (TT.Artist,         'Rechenzentrum fuer Berliner Apotheken Stein & Reichwald GmbH'),
