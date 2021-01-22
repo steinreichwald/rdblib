@@ -97,7 +97,7 @@ class TiffImage:
         # The TIFF specification mandates that the entries in the IFD sorted in
         # ascending order (TIFF 6.0 specification, page 15). However the legacy
         # Walther software violates that rule and uses a "custom" ordering
-        # (mostly ascending but some tags are out-of-place).
+        # (mostly ascending order but some tags are out-of-place).
         # Therefore the caller must be able to specify the tag order explicitely.
         # The "long" values (> 4 bytes) are placed in yet another order (though
         # that is explicitely allowed by the spec at least).
