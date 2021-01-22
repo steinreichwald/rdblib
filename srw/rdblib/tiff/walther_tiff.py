@@ -36,12 +36,12 @@ class WaltherTiff(TiffImage):
 
 def create_legacy_walther_image(*, width, height, pic, img_data, img_description, dt=None):
     legacy_tags = walther_tags(
-        width=width,
-        height=height,
-        page_name=pic,
-        dpi=200,
-        dt=dt,
-        extra_tags={
+        width      = width,
+        height     = height,
+        page_name  = pic,
+        dpi        = 200,
+        dt         = dt,
+        extra_tags = {
             TT.ImageDescription: img_description,
             TT.ScannerManufacturer: 'WALTHER DATA GmbH Scan-Solutions',
             TT.ScannerModell: 'WALTHER MDT100/SM100U Image-System',
