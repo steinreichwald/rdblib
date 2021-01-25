@@ -33,7 +33,7 @@ class TiffImageWritingTest(PythonicTestCase):
             ('%ds' % (nr_tags * TAG_SIZE), to_bytes(tag_data)),
             ('i', 0),       # next_ifd
         ))
-        expected_bytes = expected_ifd + padding(2) + img_data
+        expected_bytes = expected_ifd + padding(6) + img_data
         assert_equals(expected_bytes, tiff_img_bytes)
 
     def test_can_write_mixed_short_and_long_data(self):
@@ -75,7 +75,7 @@ class TiffImageWritingTest(PythonicTestCase):
             _tag_StripOffsets(nr_tags, expected_long_data),
             _tag_StripByteCounts(img_data),
         )
-        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + padding(2) + img_data
+        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + padding(6) + img_data
         assert_equals(expected_bytes, tiff_img_bytes)
 
     def test_can_specify_tag_order(self):
@@ -95,7 +95,7 @@ class TiffImageWritingTest(PythonicTestCase):
             ('%ds' % (nr_tags * TAG_SIZE), to_bytes(tag_data)),
             ('i', 0),       # next_ifd
         ))
-        expected_bytes = expected_ifd + padding(2) + img_data
+        expected_bytes = expected_ifd + padding(6) + img_data
         assert_equals(expected_bytes, tiff_img_bytes)
 
 
@@ -135,7 +135,7 @@ class TiffImageWritingTest(PythonicTestCase):
             _tag_StripOffsets(nr_tags, expected_long_data),
             _tag_StripByteCounts(img_data),
         )
-        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + padding(4) + img_data
+        expected_bytes = ifd_data(nr_tags, tag_data, long_data=expected_long_data) + padding(6) + img_data
         expected_ifd_bytes = expected_bytes[:offset_software]
         ifd_bytes = tiff_img_bytes[:offset_software]
         assert_equals(expected_ifd_bytes, ifd_bytes)
@@ -164,7 +164,7 @@ class TiffImageWritingTest(PythonicTestCase):
             ('%ds' % (nr_tags * TAG_SIZE), to_bytes(tag_data)),
             ('i', offset_next_ifd),       # next_ifd
         ))
-        expected_bytes = expected_ifd + padding(2) + img_data
+        expected_bytes = expected_ifd + padding(6) + img_data
         ifd_offset = calc_offset(4)
         assert_equals(expected_bytes, tiff_img_bytes)
 

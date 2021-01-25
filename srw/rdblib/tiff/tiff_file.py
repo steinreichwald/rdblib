@@ -1,7 +1,6 @@
 
 from collections import OrderedDict
 from io import BytesIO
-import math
 import struct
 
 from .tags import TiffTag, TAG_SIZE
@@ -113,7 +112,9 @@ class TiffImage:
 
         img_pre_padding = b''
         if value_strip_offsets is None:
-            strip_offset = align_to_8(long_offset)
+            # legacy TIFF library always uses a fixed 6 byte padding (even
+            # though the TIFF specification mandates word-aligned offsets).
+            strip_offset = long_offset + 6
             nr_pad_bytes = strip_offset - long_offset
             img_pre_padding = nr_pad_bytes * b'\x00'
             tag_bytes, tag_long_data = TiffTag(273, strip_offset).to_bytes()
@@ -145,12 +146,6 @@ class TiffImage:
         buffer.seek(0)
         return buffer.read()
 
-
-def align_to_8(value):
-    return math.ceil(value / 8) * 8
-
-def align_to_8_offset(value):
-    return align_to_8(value) - value
 
 def sort_by_list(values, ordering, default=-1):
     index_of = lambda v: ordering.index(v) if (v in ordering) else default

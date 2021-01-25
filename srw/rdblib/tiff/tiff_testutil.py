@@ -7,7 +7,6 @@ import struct
 from ..binary_format import BinaryFormat
 from .tag_specification import FT, TIFF_TAG as TT
 from .tags import TiffTag, TAG_SIZE
-from .tiff_file import align_to_8_offset
 
 
 __all__ = [
@@ -48,7 +47,9 @@ def calc_offset(nr_tags, long_data=b'', offset=0, *, padding=False, img_data=Non
     IFD_SIZE = 2 + (nr_tags * TAG_SIZE) + 4
     final_offset = offset + IFD_SIZE + len(long_data)
     if padding or (img_data is not None):
-        nr_pad_bytes = align_to_8_offset(final_offset)
+        # legacy TIFF library always uses a fixed 6 byte padding (even though
+        # the TIFF specification mandates word-aligned offsets).
+        nr_pad_bytes = 6
         final_offset += nr_pad_bytes
     if img_data:
         img_size = len(img_data)
