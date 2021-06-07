@@ -12,6 +12,7 @@ from ..tiff_util import get_tiff_img_data
 
 __all__ = [
     'adapt_values',
+    'blend_in_tiff_dummy',
     'calc_offset',
     'ifd_data',
     'load_tiff_img',
@@ -73,6 +74,11 @@ def path_dummy_tiff():
     rdblib_tiff_path = Path(__file__).parent
     tiff_data_path = rdblib_tiff_path / 'dummy.tiff'
     return tiff_data_path.resolve()
+
+# support for pyfakefs
+def blend_in_tiff_dummy(fs):
+    tiff_path_str = str(path_dummy_tiff())
+    fs.add_real_file(tiff_path_str)
 
 
 ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))
