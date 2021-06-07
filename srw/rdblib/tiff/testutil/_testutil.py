@@ -7,6 +7,7 @@ import struct
 from srw.rdblib.binary_format import BinaryFormat
 from ..tag_specification import FT, TIFF_TAG as TT
 from ..tags import TiffTag, TAG_SIZE
+from ..tiff_util import get_tiff_img_data
 
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     'ifd_data',
     'load_tiff_img',
     'padding',
+    'path_dummy_tiff',
     'print_mismatched_tags',
     'star_extract',
     'tag_StripByteCounts',
@@ -67,28 +69,27 @@ def ifd_data(nr_tags, tag_data, long_data=None):
     return ifd_header + (long_data or b'')
 
 
-def path_dummy_tiff_data():
+def path_dummy_tiff():
     rdblib_tiff_path = Path(__file__).parent
-    tiff_data_path = rdblib_tiff_path / 'nnf_image.tiff-data'
+    tiff_data_path = rdblib_tiff_path / 'dummy.tiff'
     return tiff_data_path.resolve()
 
 
 ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))
 
 def load_tiff_img():
-    path_img_data = path_dummy_tiff_data()
-    with path_img_data.open('rb') as img_fp:
-        img_data = img_fp.read()
+    tiff_path = path_dummy_tiff()
+    data1, data2 = get_tiff_img_data(tiff_path)
 
-    width = 1152
-    height = 840
+    width = data1.width
+    height = data1.height
     _tiff_tags = {
         TT.ImageWidth : width,
         TT.ImageLength: height,
         TT.Compression: 4,      # Compression ("Group 4 Fax")
         262           : 0,      # PhotometricInterpretation ("WhiteIsZero")
     }
-    return ImgInfo(img_data, _tiff_tags, (width, height))
+    return ImgInfo(data1.img_data, _tiff_tags, (width, height))
 
 def padding(nr_bytes):
     return nr_bytes * b'\x00'
