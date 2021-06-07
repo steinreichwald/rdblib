@@ -63,8 +63,7 @@ def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, cre
 
 
 def dummy_tiff_data():
-    this_module = __name__.rsplit('.', 1)[0]
-    tiff_fp = pkg_resources.resource_stream(this_module, 'dummy.tiff')
+    tiff_fp = pkg_resources.resource_stream('srw.rdblib.tiff.testutil', 'dummy.tiff')
     tiff_data = tiff_fp.read()
     return tiff_data
 

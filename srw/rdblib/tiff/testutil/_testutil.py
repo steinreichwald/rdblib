@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from collections import namedtuple
-import os
+from pathlib import Path
 import struct
 
-from ..binary_format import BinaryFormat
-from .tag_specification import FT, TIFF_TAG as TT
-from .tags import TiffTag, TAG_SIZE
+from srw.rdblib.binary_format import BinaryFormat
+from ..tag_specification import FT, TIFF_TAG as TT
+from ..tags import TiffTag, TAG_SIZE
 
 
 __all__ = [
@@ -14,10 +14,11 @@ __all__ = [
     'calc_offset',
     'ifd_data',
     'load_tiff_img',
+    'padding',
     'print_mismatched_tags',
     'star_extract',
-    '_tag_StripByteCounts',
-    '_tag_StripOffsets',
+    'tag_StripByteCounts',
+    'tag_StripOffsets',
     'to_bytes',
 ]
 
@@ -66,11 +67,17 @@ def ifd_data(nr_tags, tag_data, long_data=None):
     return ifd_header + (long_data or b'')
 
 
+def path_dummy_tiff_data():
+    rdblib_tiff_path = Path(__file__).parent
+    tiff_data_path = rdblib_tiff_path / 'nnf_image.tiff-data'
+    return tiff_data_path.resolve()
+
+
 ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))
 
 def load_tiff_img():
-    path_img_data = os.path.join(os.path.dirname(__file__), 'test', 'nnf_image.tiff-data')
-    with open(path_img_data, 'rb') as img_fp:
+    path_img_data = path_dummy_tiff_data()
+    with path_img_data.open('rb') as img_fp:
         img_data = img_fp.read()
 
     width = 1152
@@ -128,12 +135,12 @@ def star_extract(*args):
                 output.append(star_arg)
     return tuple(output)
 
-def _tag_StripByteCounts(img_data):
+def tag_StripByteCounts(img_data):
     # 279: StripByteCounts
     tag_spec = (('H', 279), ('H', FT.LONG), ('i', 1), ('i', len(img_data)))
     return tag_spec
 
-def _tag_StripOffsets(nr_tags, expected_long_data=b'', offset=0):
+def tag_StripOffsets(nr_tags, expected_long_data=b'', offset=0):
     offset_to_image = calc_offset(nr_tags, expected_long_data, offset=offset, padding=True)
     # 273: StripOffsets
     tag_spec = (('H', 273), ('H', FT.LONG), ('i', 1), ('i', offset_to_image))

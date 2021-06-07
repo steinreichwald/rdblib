@@ -6,7 +6,7 @@ from pythonic_testcase import *
 
 from srw.rdblib.ibf import IBFFile, IBFImage, ImageBatch, TiffHandler
 from ..tiff_file import TiffFile
-from ..tiff_testutil import load_tiff_img
+from ..testutil import load_tiff_img
 from ..walther_tiff import WaltherTiff
 
 
