@@ -15,7 +15,7 @@ __all__ = [
     'blend_in_tiff_dummy',
     'calc_offset',
     'ifd_data',
-    'load_tiff_img',
+    'load_tiff_dummy_img',
     'padding',
     'path_dummy_tiff',
     'print_mismatched_tags',
@@ -83,7 +83,7 @@ def blend_in_tiff_dummy(fs):
 
 ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))
 
-def load_tiff_img():
+def load_tiff_dummy_img():
     tiff_path = path_dummy_tiff()
     data1, data2 = get_tiff_img_data(tiff_path)
 

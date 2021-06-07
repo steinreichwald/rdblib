@@ -8,7 +8,7 @@ from pythonic_testcase import *
 from srw.rdblib.binary_format import BinaryFormat
 from ..tag_specification import FT
 from ..tiff_file import TiffFile, TiffImage
-from ..testutil import (adapt_values, calc_offset, ifd_data, load_tiff_img,
+from ..testutil import (adapt_values, calc_offset, ifd_data, load_tiff_dummy_img,
     tag_StripByteCounts, tag_StripOffsets, star_extract as _se)
 from ..tiff_util import pad_tiff_bytes
 
@@ -46,7 +46,7 @@ class TiffWritingTest(PythonicTestCase):
 
     def test_serialized_tiff_file_can_be_loaded_with_pillow(self):
         # pillow needs actual image data
-        img = load_tiff_img()
+        img = load_tiff_dummy_img()
         img.tags[269] = b'name\x00'
         (width, height) = img.size
 
@@ -64,9 +64,9 @@ class TiffWritingTest(PythonicTestCase):
         assert_equals('name', img_tags.get(269))
 
     def test_can_serialize_multi_page_tiff(self):
-        img = load_tiff_img()
+        img = load_tiff_dummy_img()
         tiff_img1 = TiffImage(tags=img.tags, img_data=img.data)
-        img2 = load_tiff_img()
+        img2 = load_tiff_dummy_img()
         tiff_img2 = TiffImage(tags=img2.tags, img_data=img2.data)
         tiff_file = TiffFile(tiff_images=[tiff_img1, tiff_img2])
         tiff_bytes = tiff_file.to_bytes()
