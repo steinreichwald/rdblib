@@ -6,7 +6,8 @@ from io import BytesIO
 from pythonic_testcase import *
 
 from .. import ImageBatch, TiffHandler
-from ..ibf_fixtures import create_ibf, IBFFile, IBFImage
+from ..ibf_fixtures import IBFFile, IBFImage
+from ..testutil import create_ibf
 
 
 class IBFFileTest(PythonicTestCase):

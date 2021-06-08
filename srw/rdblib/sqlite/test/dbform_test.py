@@ -4,11 +4,10 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from pythonic_testcase import *
 
 from sqlalchemy import and_
-from srw.rdblib import DataBunch
-from srw.rdblib.cdb import create_cdb_with_dummy_data
-from srw.rdblib.ibf import create_ibf
 
-from srw.rdblib import Batch
+from srw.rdblib import Batch, DataBunch
+from srw.rdblib.cdb import create_cdb_with_dummy_data
+from srw.rdblib.ibf.testutil import create_ibf
 from .. import create_sqlite_db, DELETE
 
 

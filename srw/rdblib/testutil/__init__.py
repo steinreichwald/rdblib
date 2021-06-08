@@ -8,7 +8,7 @@ import os
 
 from ..batch import Batch
 from ..cdb import create_cdb_with_form_values, CDBFile, CDBForm
-from ..ibf import create_ibf
+from ..ibf.testutil import create_ibf
 from ..lib import AttrDict
 from ..paths import assemble_new_path, guess_path, DataBunch
 from ..sqlite import create_sqlite_db

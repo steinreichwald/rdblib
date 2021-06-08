@@ -9,7 +9,7 @@ from schwarz.fakefs_helpers import TempFS
 
 from srw.rdblib import assemble_new_path, guess_path, DataBunch
 from srw.rdblib.cdb import create_cdb_with_dummy_data
-from srw.rdblib.ibf import create_ibf
+from srw.rdblib.ibf.testutil import create_ibf
 from .. import TaskStatus, TaskType
 from ..batch import Batch
 from ..sqlite import create_sqlite_db, db_schema, get_model, DELETE

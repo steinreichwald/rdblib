@@ -15,6 +15,7 @@ __all__ = [
     'blend_in_tiff_dummy',
     'calc_offset',
     'ifd_data',
+    'load_tiff_dummy_bytes',
     'load_tiff_dummy_img',
     'padding',
     'path_dummy_tiff',
@@ -79,6 +80,12 @@ def path_dummy_tiff():
 def blend_in_tiff_dummy(fs):
     tiff_path_str = str(path_dummy_tiff())
     fs.add_real_file(tiff_path_str)
+
+def load_tiff_dummy_bytes():
+    tiff_path = path_dummy_tiff()
+    with tiff_path.open('rb') as tiff_fp:
+        tiff_bytes = tiff_fp.read()
+    return tiff_bytes
 
 
 ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))

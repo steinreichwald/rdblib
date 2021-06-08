@@ -4,8 +4,9 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from pythonic_testcase import *
 
 from srw.rdblib.binary_format import BinaryFormat
-from ..ibf_fixtures import dummy_tiff_data, IBFFile, IBFImage
+from ..ibf_fixtures import IBFFile, IBFImage
 from ..ibf_format import IBFFormat
+from ..testutil import load_tiff_dummy_bytes
 from srw.rdblib.testutil import colorized_diff
 from srw.rdblib.utils import pad_bytes
 
@@ -14,7 +15,7 @@ class IBFCreationTest(PythonicTestCase):
     def test_can_generate_ibf_file_with_single_scan(self):
         ibf_filename = '12345678.IBF'
         scan_date = '12.02.2020'
-        tiff_data = dummy_tiff_data()
+        tiff_data = load_tiff_dummy_bytes()
 
         # we need 2 images to test the "offset_last_index" properly
         ibf_image1 = IBFImage(tiff_data, codnr='01265400123024')

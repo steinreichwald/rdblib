@@ -12,61 +12,14 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from io import BytesIO
 import math
-import os
-
-import pkg_resources
 
 from .ibf_format import (IBFFormat, BatchHeader, ImageIndexEntry,
     IMAGES_PER_BLOCK, INDEX_PADDING)
-from ..fixture_helpers import BinaryFixture, UnclosableBytesIO
+from ..fixture_helpers import BinaryFixture
 from srw.rdblib.lib import merge_dicts
 
 
-__all__ = ['create_ibf', 'dummy_tiff_data', 'IBFFile', 'IBFImage']
-
-def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, create_directory=False):
-    # tiffany can not create tiff images and I'd like not to add new
-    # dependencies (smc.freeimage needs compilation and has a few extra
-    # dependencies, PIL can't handle multi-page tiffs).
-    # Current tests don't need actual tiffs so we can just use some random
-    # binary data.
-    # However some scripts need to provide real tiffs so we have a static dummy
-    # tiff which is used if fake_tiffs is False.
-    # (Also Pillow should be able to handle multi-page tiffs so that might be
-    # good thing to explore - we'd be able to replace tiffany with the much
-    # more common Pillow).
-    def _fake_tiff_image():
-        return b'\x00' * 200
-
-    tiff_data = _fake_tiff_image() if fake_tiffs else dummy_tiff_data()
-    if pic_nrs is None:
-        pic_nrs = ('dummy',) * nr_images
-    assert nr_images == len(pic_nrs)
-    ibf_images = []
-    for pic in pic_nrs:
-        ibf_img = IBFImage(tiff_data, codnr=pic)
-        ibf_images.append(ibf_img)
-    # The PIC is also stored inside the actual TIFF image but this code can not
-    # generate these data structures currently. So far this was good enough but
-    # we might need to extend the functionality later (test stub already
-    # prepared).
-    ibf_data = IBFFile(ibf_images).as_bytes()
-    if filename is None:
-        return UnclosableBytesIO(ibf_data)
-    ibf_directory = os.path.dirname(filename)
-    if create_directory and not os.path.exists(ibf_directory):
-        os.makedirs(ibf_directory)
-    ibf_fp = open(filename, 'wb+')
-    ibf_fp.write(ibf_data)
-    ibf_fp.seek(0, 0)
-    return ibf_fp
-
-
-def dummy_tiff_data():
-    tiff_fp = pkg_resources.resource_stream('srw.rdblib.tiff.testutil', 'dummy.tiff')
-    tiff_data = tiff_fp.read()
-    return tiff_data
-
+__all__ = ['IBFFile', 'IBFImage']
 
 class IBFFile(BinaryFixture):
     def __init__(self, images, encoding=None, ibf_filename='', scan_date=''):
