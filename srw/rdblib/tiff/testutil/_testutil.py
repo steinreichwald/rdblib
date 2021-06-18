@@ -90,19 +90,35 @@ def load_tiff_dummy_bytes():
 
 ImgInfo = namedtuple('ImgInfo', ('data', 'tags', 'size'))
 
-def load_tiff_dummy_img():
+def load_tiff_dummy_img(page=None, all_pages=None):
+    if (page is None) and (all_pages is None):
+        page = 1
+    else:
+        assert bool(page) ^ all_pages
+    if not all_pages:
+        assert (page in (1, 2))
+    pages = [page] if (not all_pages) else [1, 2]
+
     tiff_path = path_dummy_tiff()
     data1, data2 = get_tiff_img_data(tiff_path)
 
-    width = data1.width
-    height = data1.height
-    _tiff_tags = {
-        TT.ImageWidth : width,
-        TT.ImageLength: height,
-        TT.Compression: 4,      # Compression ("Group 4 Fax")
-        262           : 0,      # PhotometricInterpretation ("WhiteIsZero")
-    }
-    return ImgInfo(data1.img_data, _tiff_tags, (width, height))
+    img_infos = []
+    for page in pages:
+        tiff_data = data1 if (page == 1) else data2
+        width = tiff_data.width
+        height = tiff_data.height
+        _tiff_tags = {
+            TT.ImageWidth : width,
+            TT.ImageLength: height,
+            TT.Compression: 4,      # Compression ("Group 4 Fax")
+            262           : 0,      # PhotometricInterpretation ("WhiteIsZero")
+        }
+        img_infos.append(
+            ImgInfo(tiff_data.img_data, _tiff_tags, (width, height))
+        )
+    if all_pages:
+        return img_infos
+    return img_infos[0]
 
 def padding(nr_bytes):
     return nr_bytes * b'\x00'
