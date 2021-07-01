@@ -1,6 +1,7 @@
 
 from collections import OrderedDict
 from datetime import datetime as DateTime
+import re
 
 from .tag_specification import TIFF_TAG as TT
 from .tiff_file import TiffImage
@@ -9,6 +10,7 @@ from .tiff_util import pad_tiff_bytes
 
 __all__ = [
     'create_legacy_walther_image',
+    'dt_from_string',
     'WaltherTiff'
 ]
 
@@ -23,13 +25,13 @@ tiff_long_order = (
 
 class WaltherTiff(TiffImage):
     @classmethod
-    def create(cls, *, width, height, pic, img_data, dpi=200):
+    def create(cls, *, width, height, pic, img_data, dpi=200, dt=None):
         tags = walther_tags(
             width     = width,
             height    = height,
             dpi       = dpi,
             page_name = pic,
-            dt        = DateTime.now(),
+            dt        = dt,
         )
         return WaltherTiff(tags, img_data=img_data, long_order=tiff_long_order)
 
@@ -113,3 +115,9 @@ def dt_to_string(dt):
     date_str = date_to_string(dt)
     time_str = '%02d:%02d:%02d' % (dt.hour, dt.minute, dt.second)
     return date_str + ' ' + time_str
+
+def dt_from_string(date_str):
+    match = re.search('^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$', date_str)
+    day, month, year, hour, minute, second = map(int, match.groups())
+    return DateTime(year, month, day, hour, minute, second)
+
