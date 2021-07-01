@@ -25,11 +25,11 @@ class WaltherTiff(TiffImage):
     @classmethod
     def create(cls, *, width, height, pic, img_data, dpi=200):
         tags = walther_tags(
-            width=width,
-            height=height,
-            dpi=dpi,
-            page_name=pic,
-            dt=DateTime.now()
+            width     = width,
+            height    = height,
+            dpi       = dpi,
+            page_name = pic,
+            dt        = DateTime.now(),
         )
         return WaltherTiff(tags, img_data=img_data, long_order=tiff_long_order)
 
