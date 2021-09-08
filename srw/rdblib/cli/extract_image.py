@@ -5,8 +5,8 @@ Dieses Skript extrahiert das angebene Bild aus einer IBF-Datei
 (bzw. alle Bilder, falls "--all" verwendet wurde).
 
 Usage:
-    srw-extract-image <IBF_PATH> <FORM_NR> <OUTPUT_PATH>
-    srw-extract-image [options] <IBF_PATH> <OUTPUT_PATH>
+    srw-extract-image [--tiff] [--all] <IBF_PATH> <OUTPUT_PATH>
+    srw-extract-image [--tiff] <IBF_PATH> <FORM_NR> <OUTPUT_PATH>
     srw-extract-image -h
 
 Options:
