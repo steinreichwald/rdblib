@@ -44,8 +44,14 @@ def extract_image_main():
     extract_all_images = arguments['--all']
     use_tiff = arguments['--tiff']
     ibf_arg = arguments['<IBF_PATH>']
-    form_nr = int(arguments['<FORM_NR>']) if not extract_all_images else None
     output_arg = arguments['<OUTPUT_PATH>']
+
+    form_nr = None
+    if not extract_all_images:
+        if not arguments['<FORM_NR>']:
+            sys.stderr.write('Bitte angeben, welches Image extrahiert werden soll (oder "--all" verwenden).\n')
+            sys.exit(11)
+        form_nr = int(arguments['<FORM_NR>'])
 
     ibf_path = os.path.abspath(ibf_arg)
     if not os.path.exists(ibf_path):
