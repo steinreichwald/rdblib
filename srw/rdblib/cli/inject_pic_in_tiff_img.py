@@ -9,9 +9,8 @@ from pathlib import Path
 import sys
 
 from docopt import docopt
-from PIL import Image
 
-from ..tiff import dt_from_string, get_tiff_img_data, TiffFile, WaltherTiff, TIFF_TAG as TT
+from ..tiff import inject_pic_in_tiff
 
 
 __all__ = ['inject_pic_in_tiff_img_main']
@@ -29,31 +28,7 @@ def inject_pic_in_tiff_img_main(argv=sys.argv):
         sys.stderr.write('Bitte <TARGET> angeben oder "--replace" zum Überschreiben der Originaldateien verwenden.\n')
         sys.exit(1)
 
-    pillow_img = Image.open(str(tiff_path))
-    tiff_imgs = []
-    for page_idx, tiff_info in enumerate(get_tiff_img_data(tiff_path)):
-        pillow_img.seek(page_idx)
-
-        tiff_tags = dict(pillow_img.tag_v2.items())
-        dpi_x = tiff_tags[TT.XResolution]
-        dpi_y = tiff_tags[TT.YResolution]
-        assert (dpi_x == dpi_y)
-        dt = dt_from_string(tiff_tags[TT.DateTime])
-
-        tiff_img = WaltherTiff.create(
-            width    = tiff_info.width,
-            height   = tiff_info.height,
-            # TT.XResolution from pillow returns a float, but we need int
-            dpi      = int(dpi_x),
-            img_data = tiff_info.img_data,
-            pic      = pic_str,
-            dt       = dt,
-        )
-        tiff_imgs.append(tiff_img)
-    pillow_img.close()
-
-    tf = TiffFile(tiff_images=tiff_imgs)
-    tiff_bytes = tf.to_bytes()
+    tiff_bytes = inject_pic_in_tiff(tiff_path, pic_str)
     if replace:
         output_path = tiff_path
         mode = 'wb'

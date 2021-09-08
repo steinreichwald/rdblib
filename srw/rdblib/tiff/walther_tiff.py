@@ -3,14 +3,17 @@ from collections import OrderedDict
 from datetime import datetime as DateTime
 import re
 
+from PIL import Image
+
 from .tag_specification import TIFF_TAG as TT
-from .tiff_file import TiffImage
-from .tiff_util import pad_tiff_bytes
+from .tiff_file import TiffFile, TiffImage
+from .tiff_util import get_tiff_img_data, pad_tiff_bytes
 
 
 __all__ = [
     'create_legacy_walther_image',
     'dt_from_string',
+    'inject_pic_in_tiff',
     'WaltherTiff'
 ]
 
@@ -120,4 +123,32 @@ def dt_from_string(date_str):
     match = re.search('^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$', date_str)
     day, month, year, hour, minute, second = map(int, match.groups())
     return DateTime(year, month, day, hour, minute, second)
+
+def inject_pic_in_tiff(tiff_path, pic_str):
+    pillow_img = Image.open(str(tiff_path))
+    tiff_imgs = []
+    for page_idx, tiff_info in enumerate(get_tiff_img_data(tiff_path)):
+        pillow_img.seek(page_idx)
+
+        tiff_tags = dict(pillow_img.tag_v2.items())
+        dpi_x = tiff_tags[TT.XResolution]
+        dpi_y = tiff_tags[TT.YResolution]
+        assert (dpi_x == dpi_y)
+        dt = dt_from_string(tiff_tags[TT.DateTime])
+
+        tiff_img = WaltherTiff.create(
+            width    = tiff_info.width,
+            height   = tiff_info.height,
+            # TT.XResolution from pillow returns a float, but we need int
+            dpi      = int(dpi_x),
+            img_data = tiff_info.img_data,
+            pic      = pic_str,
+            dt       = dt,
+        )
+        tiff_imgs.append(tiff_img)
+    pillow_img.close()
+
+    tf = TiffFile(tiff_images=tiff_imgs)
+    tiff_bytes = tf.to_bytes()
+    return tiff_bytes
 
