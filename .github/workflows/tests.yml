@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.6, 3.7, 3.8, 3.9, '3.10-dev']
 
     steps:
     - uses: actions/checkout@v2
@@ -21,9 +21,10 @@ jobs:
         pip install --index-url=https://www.pydica.org/dependencies/ -e .[testing]
         # fetch colorama/hexdump from public pypi
         pip install -e .[testutil]
-        pip install nose
+        # nosetests (nose v1) does not work with Python 3.10
+        pip install nose2
 
     - name: Run tests
       run: |
-        nosetests
+        nose2
 
