@@ -11,6 +11,7 @@ meaningful git commit history.
 """
 
 from .attribute_dict import *
+from .batchlib import *
 from .dict_merger import *
 from .filesize import *
 from .log_proxy import *
