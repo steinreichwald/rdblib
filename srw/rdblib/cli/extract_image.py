@@ -39,8 +39,8 @@ def _store_image(ibf, form_idx, target_path, use_tiff=False):
         img.close()
 
 
-def extract_image_main():
-    arguments = docopt(__doc__)
+def extract_image_main(argv=sys.argv):
+    arguments = docopt(__doc__, argv=argv[1:])
     extract_all_images = arguments['--all']
     use_tiff = arguments['--tiff']
     ibf_arg = arguments['<IBF_PATH>']
