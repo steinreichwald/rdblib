@@ -9,7 +9,7 @@ import os
 from ..batch import Batch
 from ..cdb import create_cdb_with_form_values, CDBFile, CDBForm
 from ..ibf.testutil import create_ibf
-from ..lib import AttrDict
+from ..lib import AttrDict, PIC
 from ..paths import assemble_new_path, guess_path, DataBunch
 from ..sqlite import create_sqlite_db
 from .bindiff import colorized_diff
@@ -135,7 +135,7 @@ def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=N
         valid_values_generator = valid_prescription_values
     _form_data = []
     for i, data in enumerate(form_data):
-        is_pic = isinstance(data, str)
+        is_pic = isinstance(data, (str, PIC))
         if is_pic:
             pic_nr = data
             extra_fields = {}
@@ -145,7 +145,7 @@ def create_cdb_and_ibf_file(cdb_path, form_data=None, *, ibf_dir=None, pic_nrs=N
         else:
             pic_nr = generate_pic(scan_nr=i+1)
             extra_fields = data
-        form_values = valid_values_generator(with_pic=pic_nr, **extra_fields)
+        form_values = valid_values_generator(with_pic=str(pic_nr), **extra_fields)
         _form_data.append(form_values)
     pic_nrs = [form_values['pic'] for form_values in _form_data]
 
