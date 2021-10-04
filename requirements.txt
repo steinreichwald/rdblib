@@ -6,6 +6,7 @@ docopt
 #     TIFFSetField: tempfile.tif: Unknown pseudo-tag 65538.
 pillow != 5.3
 pywin32 ; platform_system == 'Windows'
+schwarzlog
 six
 SmartConstants
 SQLAlchemy

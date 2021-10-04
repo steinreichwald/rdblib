@@ -2,7 +2,8 @@
 
 from timeit import default_timer as timer
 
-from ..lib import l_
+from schwarz.log_utils import l_
+
 from ..meta import WithBinaryMeta
 from ..mmap_file import MMapFile
 from ..utils import filecontent

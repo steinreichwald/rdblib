@@ -3,9 +3,9 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 import os
 
+from schwarz.log_utils import l_
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
-from srw.rdblib.lib import l_
 
 from . import model as db_schema
 from .dbform import DBForm

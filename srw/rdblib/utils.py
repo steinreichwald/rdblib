@@ -4,7 +4,9 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import mmap
 import os
 
-from .lib import l_, AttrDict
+from schwarz.log_utils import l_
+
+from .lib import AttrDict
 from .paths import get_path_from_instance
 
 

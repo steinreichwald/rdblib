@@ -6,9 +6,9 @@ import os
 import re
 
 import bitmath
+from schwarz.log_utils import l_
 
 from ..lib.filesize import format_filesize
-from ..lib import l_
 from ..lib.result import Result
 from ..mmap_file import MMapFile
 from ..utils import filecontent

@@ -14,10 +14,10 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import os
 import warnings
 
+from schwarz.log_utils import l_
 from sqlalchemy import and_
 
 from .batch_form import BatchForm
-from .lib import l_
 from .ibf import ImageBatch, TiffHandler
 from .paths import assemble_new_path, guess_path, safe_move, simple_bunch, DataBunch
 from .utils import create_backup

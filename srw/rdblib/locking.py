@@ -4,9 +4,8 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import os
 import platform
 
+from schwarz.log_utils import l_
 import six
-
-from .lib.log_proxy import l_
 
 
 is_windows = (platform.system() == 'Windows')

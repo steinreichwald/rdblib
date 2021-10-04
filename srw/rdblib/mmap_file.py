@@ -7,7 +7,8 @@ import os
 import sys
 from timeit import default_timer as timer
 
-from .lib.log_proxy import l_
+from schwarz.log_utils import l_
+
 from .locking import acquire_lock
 
 
