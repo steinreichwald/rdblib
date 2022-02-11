@@ -36,7 +36,12 @@ class PIC(_PIC):
     def __str__(self):
         return self.to_str()
 
-    def to_str(self, rz_ik_separator=None, long_ik=False):
+    def to_str(self, rz_ik_separator=None, *, long_ik=None, short_ik=None):
+        if (long_ik is None) or (long_ik is False):
+            assert (short_ik is not False)
+            long_ik = False
+        else:
+            assert (short_ik is not True)
         return generate_pic_str(**self.as_dict(), rz_ik_separator=rz_ik_separator, long_ik=long_ik)
 
     @classmethod

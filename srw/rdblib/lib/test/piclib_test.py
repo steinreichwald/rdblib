@@ -24,6 +24,7 @@ class PICTest(PythonicTestCase):
         ym = pic.guess_year_month()
         ym_pic = PIC(ym, pic.customer_id_short, pic.counter)
         assert_equals('01212300004024', str(ym_pic))
+        assert_equals('01212300004024', pic.to_str(short_ik=True))
 
     def test_from_str(self):
         pic = PIC(year=2020, month=12, customer_id_short=123, counter=4)
