@@ -6,7 +6,13 @@ from .yearmonth import YearMonth
 
 
 
-__all__ = ['generate_pic_str', 'pic_matches', 'PIC']
+__all__ = [
+    'extend_short_pic_str',
+    'generate_pic_str',
+    'pic_matches',
+    'shorten_long_pic_str',
+    'PIC',
+]
 
 IK_RZ_SHORT = '024'
 IK_RZ_LONG = f'0000{IK_RZ_SHORT}'
@@ -133,6 +139,24 @@ class PIC(_PIC):
     def __hash__(self):
         return hash(str(self))
 
+
+def shorten_long_pic_str(long_pic_str):
+    "Convert a 18-digit PIC to a 14-digit PIC in performance-optimized way."
+    assert isinstance(long_pic_str, str)
+    assert len(long_pic_str) == 18
+    assert long_pic_str.endswith(IK_RZ_LONG)
+    pic_base = long_pic_str[:-len(IK_RZ_LONG)]
+    short_pic_str = pic_base + IK_RZ_SHORT
+    return short_pic_str
+
+def extend_short_pic_str(short_pic_str):
+    "Convert a 14-digit PIC to a 18-digit PIC in performance-optimized way."
+    assert isinstance(short_pic_str, str)
+    assert len(short_pic_str) == 14
+    assert short_pic_str.endswith(IK_RZ_SHORT)
+    assert not short_pic_str.endswith(IK_RZ_LONG)
+    pic_base = short_pic_str[:-len(IK_RZ_SHORT)]
+    return pic_base + IK_RZ_LONG
 
 def pic_matches(pic_str, *, year=None, month=None, customer_id_short=None, counter=None):
     if not isinstance(pic_str, str):

@@ -4,8 +4,9 @@ from datetime import date as Date
 import freezegun
 from pythonic_testcase import *
 
+from ..piclib import (extend_short_pic_str, pic_matches, shorten_long_pic_str,
+    PIC)
 from ..yearmonth import YearMonth
-from ..piclib import pic_matches, PIC
 
 
 class PICTest(PythonicTestCase):
@@ -133,4 +134,16 @@ class PICTest(PythonicTestCase):
 
         assert_true(pic_matches(pic_str, counter=54321))
         assert_false(pic_matches(pic_str, counter=12345))
+
+    def test_can_shorten_long_pic_string(self):
+        pic = PIC(YearMonth(2021, 2), customer_id_short=123, counter=54321)
+        long_pic_str = pic.to_str(long_ik=True)
+        short_pic_str = pic.to_str(long_ik=False)
+        assert_equals(short_pic_str, shorten_long_pic_str(long_pic_str))
+
+    def test_can_extend_short_pic_string(self):
+        pic = PIC(YearMonth(2021, 2), customer_id_short=123, counter=54321)
+        short_pic_str = pic.to_str(long_ik=False)
+        long_pic_str = pic.to_str(long_ik=True)
+        assert_equals(long_pic_str, extend_short_pic_str(short_pic_str))
 
