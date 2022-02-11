@@ -13,7 +13,7 @@ _BatchID = namedtuple('_BatchID', ('customer_id_long', 'batch_counter'))
 class BatchID(_BatchID):
     @classmethod
     def from_str(cls, batch_id_str):
-        assert is_valid_batch_id(batch_id_str)
+        assert is_valid_batch_id(batch_id_str), batch_id_str
         customer_id_long = int(batch_id_str[:5])
         batch_counter = int(batch_id_str[5:])
         return cls(customer_id_long=customer_id_long, batch_counter=batch_counter)

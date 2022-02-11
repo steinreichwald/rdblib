@@ -46,7 +46,8 @@ class PIC(_PIC):
 
     @classmethod
     def from_str(cls, pic_str):
-        assert len(pic_str) in (14, 18), pic_str
+        assert isinstance(pic_str, str), f'expected str but got {repr(pic_str)}'
+        assert len(pic_str) in (14, 18), f'PIC "{pic_str}" has length {len(pic_str)}'
         is_short_ik = (len(pic_str) == 14)
         rz_ik = pic_str[11:]
         expected_ik = IK_RZ_SHORT if is_short_ik else IK_RZ_LONG
