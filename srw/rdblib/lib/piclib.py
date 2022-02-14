@@ -150,7 +150,7 @@ class PIC(_PIC):
 def shorten_long_pic_str(long_pic_str):
     "Convert a 18-digit PIC to a 14-digit PIC in performance-optimized way."
     assert isinstance(long_pic_str, str)
-    assert len(long_pic_str) == 18
+    assert len(long_pic_str) == 18, f'PIC "{long_pic_str}" has length {len(long_pic_str)}'
     assert long_pic_str.endswith(IK_RZ_LONG)
     pic_base = long_pic_str[:-len(IK_RZ_LONG)]
     short_pic_str = pic_base + IK_RZ_SHORT
@@ -159,7 +159,7 @@ def shorten_long_pic_str(long_pic_str):
 def extend_short_pic_str(short_pic_str):
     "Convert a 14-digit PIC to a 18-digit PIC in performance-optimized way."
     assert isinstance(short_pic_str, str)
-    assert len(short_pic_str) == 14
+    assert len(short_pic_str) == 14, f'PIC "{short_pic_str}" has length {len(short_pic_str)}'
     assert short_pic_str.endswith(IK_RZ_SHORT)
     assert not short_pic_str.endswith(IK_RZ_LONG)
     pic_base = short_pic_str[:-len(IK_RZ_SHORT)]

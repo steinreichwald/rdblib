@@ -148,10 +148,10 @@ class PICTest(PythonicTestCase):
         long_pic_str = pic.to_str(long_ik=True)
         assert_equals(long_pic_str, extend_short_pic_str(short_pic_str))
 
-    def test_can_strip_ik(self, short_ik):
+    def test_can_strip_ik(self):
         pic = PIC(YearMonth(2021, 2), customer_id_short=123, counter=54321)
         pic_base = str(pic)[:11]
 
         assert_equals(pic_base, strip_ik(pic.to_str(short_ik=True)))
-        assert_equals(pic_base, strip_ik(pic.to_str(long_ik=True))
+        assert_equals(pic_base, strip_ik(pic.to_str(long_ik=True)))
 
