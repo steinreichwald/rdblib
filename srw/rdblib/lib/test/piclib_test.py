@@ -5,7 +5,7 @@ import freezegun
 from pythonic_testcase import *
 
 from ..piclib import (extend_short_pic_str, pic_matches, shorten_long_pic_str,
-    PIC)
+    strip_ik, PIC)
 from ..yearmonth import YearMonth
 
 
@@ -147,4 +147,11 @@ class PICTest(PythonicTestCase):
         short_pic_str = pic.to_str(long_ik=False)
         long_pic_str = pic.to_str(long_ik=True)
         assert_equals(long_pic_str, extend_short_pic_str(short_pic_str))
+
+    def test_can_strip_ik(self, short_ik):
+        pic = PIC(YearMonth(2021, 2), customer_id_short=123, counter=54321)
+        pic_base = str(pic)[:11]
+
+        assert_equals(pic_base, strip_ik(pic.to_str(short_ik=True)))
+        assert_equals(pic_base, strip_ik(pic.to_str(long_ik=True))
 

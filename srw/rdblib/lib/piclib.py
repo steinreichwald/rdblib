@@ -11,6 +11,7 @@ __all__ = [
     'generate_pic_str',
     'pic_matches',
     'shorten_long_pic_str',
+    'strip_ik',
     'PIC',
 ]
 
@@ -219,4 +220,12 @@ def nr2str(value, length, default=None):
         nr_str = fmt % value
     assert len(nr_str) == length, f'"{nr_str}" must have {length} characters'
     return nr_str
+
+def strip_ik(pic_str):
+    assert isinstance(pic_str, str), f'expected str but got {repr(pic_str)}'
+    assert len(pic_str) in (14, 18), f'PIC "{pic_str}" has length {len(pic_str)}'
+    if len(pic_str) == 14:
+        return pic_str[:-len(IK_RZ_SHORT)]
+    else:
+        return pic_str[:-len(IK_RZ_LONG)]
 
