@@ -1,7 +1,17 @@
 # -*- coding: utf-8 -*-
+"""find-broken-form
 
+Usage:
+    find-broken-form [options] <RDB>
+
+Options:
+    --try-repair    try repair (restore overwritten fields)
+    -h, --help      Show this screen
+"""
 import os
 import sys
+
+from docopt import docopt
 
 from ..cdb import open_cdb, BatchHeader, Field, FormHeader, CDB_ENCODING
 from ..mmap_file import MMapFile
@@ -65,13 +75,12 @@ def check_for_broken_form(cdb_path, field_names=None, try_repair=False):
     return
 
 
-def find_broken_form_main():
-    if len(sys.argv) < 2:
-        sys.stderr.write('usage: %r [--try-repair] CDB\n' % sys.argv[0])
-        sys.exit(1)
-    try_repair = (len(sys.argv) >= 3) and ('--try-repair' in sys.argv)
-    cdb_index = 2 if try_repair else 1
-    cdb_path = os.path.abspath(sys.argv[cdb_index])
+def find_broken_form_main(argv=sys.argv):
+    arguments = docopt(__doc__, argv=argv[1:])
+    cdb_fn = arguments['<RDB>']
+    try_repair = arguments['--try-repair']
+
+    cdb_path = os.path.abspath(cdb_fn)
     if not os.path.isfile(cdb_path):
         sys.stderr.write('no such file "%s"\n' % sys.argv[1])
         sys.exit(2)
