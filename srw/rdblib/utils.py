@@ -12,13 +12,16 @@ from .paths import get_path_from_instance
 
 __all__ = ['create_backup', 'filecontent', 'pad_bytes']
 
-def filecontent(mmap_or_filelike):
+def filecontent(mmap_or_filelike, size=-1):
     if isinstance(mmap_or_filelike, mmap.mmap):
-        return mmap_or_filelike
-    fp = mmap_or_filelike
+        if size == -1:
+            return mmap_or_filelike
+        fp = mmap_or_filelike._file
+    else:
+        fp = mmap_or_filelike
     old_pos = fp.tell()
     fp.seek(0)
-    content = fp.read()
+    content = fp.read(size)
     fp.seek(old_pos)
     return content
 

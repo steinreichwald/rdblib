@@ -18,23 +18,30 @@ from .cdb_format import BatchHeader, Field, FormHeader, CDB_ENCODING
 __all__ = ['open_cdb']
 
 MAX_RDB_SIZE = bitmath.MiB(100)
+# in production most RDB files have 61 fields
+DEFAULT_NUMBER_FIELDS = 61
 re_fieldname = re.compile('^[A-Za-z\-_0-9]+$')
 
-def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write', log=None):
+def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write', log=None, ignore_size=False):
     log = l_(log)
     warnings = []
     is_pathlike = isinstance(cdb_path, (str, os.PathLike))
     if is_pathlike:
         filesize = bitmath.Byte(os.stat(cdb_path).st_size)
         filesize_str = format_filesize(filesize, locale='de')
-        if filesize >= MAX_RDB_SIZE:
+        if filesize >= MAX_RDB_SIZE and (not ignore_size):
             return _error('Die CDB-Datei ist defekt (%s groß)' % filesize_str, warnings=warnings, key='file.too_big')
 
         try:
             cdb_fp = MMapFile(cdb_path, access=access, log=log)
         except OSError:
             return _error('Die CDB-Datei ist vermutlich noch in Bearbeitung.', warnings=warnings, key='file.is_locked')
-        cdb_bytes = filecontent(cdb_fp)
+
+        max_size = -1
+        if ignore_size:
+            # in production each form has 61 fields
+            max_size = BatchHeader.size + 300 * (FormHeader.size + 61 * Field.size)
+        cdb_bytes = filecontent(cdb_fp, size=max_size)
     else:
         cdb_fp = cdb_path
         previous_pos = cdb_fp.tell()
@@ -58,6 +65,12 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
         msg = 'CDB enthält laut Header keine Belege (form_count=%d)' % form_count
         cdb_fp.close()
         return _error(msg, warnings=warnings, key='file.no_records')
+
+    if ignore_size:
+        expected_size = BatchHeader.size + form_count * (FormHeader.size + DEFAULT_NUMBER_FIELDS * Field.size)
+        cdb_bytes = cdb_data.read(expected_size)
+        filesize = len(cdb_bytes)
+        cdb_data = BytesIO(cdb_bytes)
 
     if not field_names:
         estimated_bytes_per_form = (filesize - BatchHeader.size) // form_count

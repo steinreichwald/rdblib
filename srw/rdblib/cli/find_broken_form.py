@@ -5,6 +5,7 @@ Usage:
     find-broken-form [options] <RDB>
 
 Options:
+    --ignore-size   ignore file size and try to find broken form anyway
     --try-repair    try repair (restore overwritten fields)
     -h, --help      Show this screen
 """
@@ -59,8 +60,8 @@ def repair_form(cdb_path, form_index, field_index, *, field_names):
     cdb_bytes.close()
 
 
-def check_for_broken_form(cdb_path, field_names=None, try_repair=False):
-    result = open_cdb(cdb_path, field_names=field_names, access='read')
+def check_for_broken_form(cdb_path, field_names=None, try_repair=False, ignore_size=False):
+    result = open_cdb(cdb_path, field_names=field_names, access='read', ignore_size=ignore_size)
     if result == False:
         can_repair_error = (result.form_index is not None) and (result.key == 'form.unknown_fields')
         if try_repair and can_repair_error:
@@ -79,10 +80,11 @@ def find_broken_form_main(argv=sys.argv):
     arguments = docopt(__doc__, argv=argv[1:])
     cdb_fn = arguments['<RDB>']
     try_repair = arguments['--try-repair']
+    ignore_size = arguments['--ignore-size']
 
     cdb_path = os.path.abspath(cdb_fn)
     if not os.path.isfile(cdb_path):
         sys.stderr.write('no such file "%s"\n' % sys.argv[1])
         sys.exit(2)
-    check_for_broken_form(cdb_path, field_names=ALL_FIELD_NAMES, try_repair=try_repair)
+    check_for_broken_form(cdb_path, field_names=ALL_FIELD_NAMES, try_repair=try_repair, ignore_size=ignore_size)
 
