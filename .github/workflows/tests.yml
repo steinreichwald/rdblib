@@ -18,9 +18,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install --index-url=https://www.pydica.org/dependencies/ -e .[testing]
-        # fetch colorama/hexdump from public pypi
-        pip install -e .[testutil]
+        pip install -e .[testing,testutil]
         # nosetests (nose v1) does not work with Python 3.10
         pip install nose2
 
