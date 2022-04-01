@@ -72,13 +72,12 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
         filesize = len(cdb_bytes)
         cdb_data = BytesIO(cdb_bytes)
 
-    if not field_names:
-        estimated_bytes_per_form = (filesize - BatchHeader.size) // form_count
-        calculated_nr_fields = (estimated_bytes_per_form - FormHeader.size) // Field.size
-        bytes_per_form = calculate_bytes_per_form(calculated_nr_fields)
+    if field_names:
+        field_count = len(field_names)
     else:
-        nr_fields = len(field_names)
-        bytes_per_form = calculate_bytes_per_form(nr_fields)
+        estimated_bytes_per_form = (filesize - BatchHeader.size) // form_count
+        field_count = (estimated_bytes_per_form - FormHeader.size) // Field.size
+    bytes_per_form = calculate_bytes_per_form(field_count)
 
     expected_file_size = BatchHeader.size + (form_count * bytes_per_form)
     extra_bytes = filesize - expected_file_size
@@ -99,6 +98,8 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
             cdb_fp.close()
             return result
         field_names = result.field_names
+        field_count = len(field_names)
+        bytes_per_form = calculate_bytes_per_form(field_count)
     if required_fields is not None:
         missing_set = set(required_fields).difference(field_names)
         if missing_set:
@@ -109,10 +110,8 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
 
     encode_ = lambda s: s.encode(CDB_ENCODING)
     b_field_names = tuple(map(encode_, field_names))
-    nr_fields_per_form = len(b_field_names)
-    bytes_per_form = calculate_bytes_per_form(nr_fields_per_form)
     calculated_form_count = (filesize - BatchHeader.size) // bytes_per_form
-    expected_file_size = calculate_filesize(calculated_form_count, nr_fields_per_form)
+    expected_file_size = calculate_filesize(calculated_form_count, field_count)
     extra_bytes = filesize - expected_file_size
     if form_count != calculated_form_count:
         msg = u'Die Datei enthält %d Belege (Header), es müssten %d Belege vorhanden sein (Dateigröße): %s Bytes zu viel'
@@ -133,16 +132,16 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
             break
         assert len(header_data) == FormHeader.size
         form_header = FormHeader.parse(header_data)
-        field_count = form_header['field_count']
-        if field_count != nr_fields_per_form:
-            msg = 'Formular #%d ist vermutlich fehlerhaft (%d Felder statt %d)' % (form_nr, field_count, nr_fields_per_form)
+        h_field_count = form_header['field_count']
+        if h_field_count != field_count:
+            msg = 'Formular #%d ist vermutlich fehlerhaft (%d Felder statt %d)' % (form_nr, h_field_count, field_count)
             cdb_fp.close()
             return _error(msg, warnings=warnings, key='form.unusual_number_of_fields', form_index=current_index)
 
         unknown_names = []
         seen_names = []
         index_of_bad_field = None
-        for i in range(field_count):
+        for i in range(h_field_count):
             field_data = cdb_data.read(Field.size)
             assert len(field_data) == Field.size
             field = Field.parse(field_data)
