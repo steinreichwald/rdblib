@@ -39,8 +39,7 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
 
         max_size = -1
         if ignore_size:
-            # in production each form has 61 fields
-            max_size = BatchHeader.size + 300 * (FormHeader.size + 61 * Field.size)
+            max_size = BatchHeader.size + 300 * calculate_bytes_per_form(DEFAULT_NUMBER_FIELDS)
         cdb_bytes = filecontent(cdb_fp, size=max_size)
     else:
         cdb_fp = cdb_path
@@ -67,7 +66,7 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
         return _error(msg, warnings=warnings, key='file.no_records')
 
     if ignore_size:
-        expected_size = BatchHeader.size + form_count * (FormHeader.size + DEFAULT_NUMBER_FIELDS * Field.size)
+        expected_size = BatchHeader.size + form_count * calculate_bytes_per_form(DEFAULT_NUMBER_FIELDS)
         cdb_bytes = cdb_data.read(expected_size)
         filesize = len(cdb_bytes)
         cdb_data = BytesIO(cdb_bytes)
