@@ -65,11 +65,18 @@ def open_cdb(cdb_path, *, field_names=None, required_fields=None, access='write'
         cdb_fp.close()
         return _error(msg, warnings=warnings, key='file.no_records')
 
-    if ignore_size:
-        expected_size = BatchHeader.size + form_count * calculate_bytes_per_form(DEFAULT_NUMBER_FIELDS)
+    expected_size = BatchHeader.size + form_count * calculate_bytes_per_form(DEFAULT_NUMBER_FIELDS)
+    if ignore_size and (form_count < 300):
+        # This is helpful if the actual file is huge, is cut to 300 forms but
+        # the batch header contains a lower form count.
+        # The code already read some bytes before to parse the batch header.
+        cdb_data.seek(0)
         cdb_bytes = cdb_data.read(expected_size)
         filesize = len(cdb_bytes)
+        assert (filesize == expected_size), f'{filesize} (CDB size) != {expected_size} (expected size)'
         cdb_data = BytesIO(cdb_bytes)
+        # seeking to the form header so the following parsing code works
+        cdb_data.seek(BatchHeader.size)
 
     if field_names:
         field_count = len(field_names)
