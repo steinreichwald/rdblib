@@ -5,7 +5,7 @@ import freezegun
 from pythonic_testcase import *
 
 from ..piclib import (extend_short_pic_str, pic_matches, shorten_long_pic_str,
-    strip_ik, PIC)
+    strip_ik, IK_RZ_LONG, PIC)
 from ..yearmonth import YearMonth
 
 
@@ -143,10 +143,19 @@ class PICTest(PythonicTestCase):
         assert_equals(short_pic_str, shorten_long_pic_str(long_pic_str))
 
     def test_can_extend_short_pic_string(self):
-        pic = PIC(YearMonth(2021, 2), customer_id_short=123, counter=54321)
+        ym = YearMonth(2021, 2)
+        pic = PIC(ym, customer_id_short=123, counter=54321)
         short_pic_str = pic.to_str(long_ik=False)
         long_pic_str = pic.to_str(long_ik=True)
         assert_equals(long_pic_str, extend_short_pic_str(short_pic_str))
+
+        pic10000 = PIC(ym, customer_id_short=123, counter=10000)
+        long_pic10000_str = pic10000.to_str(long_ik=True)
+        short_pic10000_str = pic10000.to_str(short_ik=True)
+        # PIC with counter 10000 is totally valid but it "ends with" IK_RZ_LONG
+        # This counter triggered a (faulty) assertion in 04/2022.
+        assert_true(short_pic10000_str.endswith(IK_RZ_LONG))
+        assert_equals(long_pic10000_str, extend_short_pic_str(short_pic10000_str))
 
     def test_can_strip_ik(self):
         pic = PIC(YearMonth(2021, 2), customer_id_short=123, counter=54321)

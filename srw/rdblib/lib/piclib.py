@@ -161,7 +161,6 @@ def extend_short_pic_str(short_pic_str):
     assert isinstance(short_pic_str, str)
     assert len(short_pic_str) == 14, f'PIC "{short_pic_str}" has length {len(short_pic_str)}'
     assert short_pic_str.endswith(IK_RZ_SHORT)
-    assert not short_pic_str.endswith(IK_RZ_LONG)
     pic_base = short_pic_str[:-len(IK_RZ_SHORT)]
     return pic_base + IK_RZ_LONG
 
