@@ -43,12 +43,7 @@ class IBFFileTest(PythonicTestCase):
             # currently only the TiffHandler does the complicated offset
             # calculation to parse the tiff headers.
             tiff_handler = TiffHandler(ibf_batch, i)
-            # ideally we would also test the "long_data" structures but these
-            # are inside the actual tiff image which the fixtures module can't
-            # generate currently.
-            assert_not_equals(pic, tiff_handler.long_data.rec.page_name,
-                message='if long_data contains the correct pic enable the next two asserts')
-            #assert_equals(pic, tiff_handler.long_data.rec.page_name,
-            #    message='PIC in first tiff header (unused?)')
-            #assert_equals(pic, tiff_handler.long_data2.rec.page_name,
-            #    message='PIC in second tiff header')
+            assert_equals(pic, tiff_handler.long_data.rec.page_name,
+                message='PIC in first tiff header (unused?)')
+            assert_equals(pic, tiff_handler.long_data2.rec.page_name,
+                message='PIC in second tiff header')

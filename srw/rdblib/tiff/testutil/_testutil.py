@@ -8,6 +8,7 @@ from srw.rdblib.binary_format import BinaryFormat
 from ..tag_specification import FT, TIFF_TAG as TT
 from ..tags import TiffTag, TAG_SIZE
 from ..tiff_util import get_tiff_img_data
+from ..walther_tiff import inject_pic_in_tiff
 
 
 __all__ = [
@@ -81,8 +82,10 @@ def blend_in_tiff_dummy(fs):
     tiff_path_str = str(path_dummy_tiff())
     fs.add_real_file(tiff_path_str)
 
-def load_tiff_dummy_bytes():
+def load_tiff_dummy_bytes(*, pic_str=None):
     tiff_path = path_dummy_tiff()
+    if pic_str:
+        return inject_pic_in_tiff(tiff_path, pic_str)
     with tiff_path.open('rb') as tiff_fp:
         tiff_bytes = tiff_fp.read()
     return tiff_bytes

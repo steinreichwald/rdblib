@@ -12,6 +12,8 @@ from ..tiff.testutil import load_tiff_dummy_bytes
 __all__ = ['create_ibf']
 
 def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, create_directory=False):
+    img_count = nr_images
+    pic_strs = pic_nrs
     # tiffany can not create tiff images and I'd like not to add new
     # dependencies (smc.freeimage needs compilation and has a few extra
     # dependencies, PIL can't handle multi-page tiffs).
@@ -25,13 +27,16 @@ def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, cre
     def _fake_tiff_image():
         return b'\x00' * 200
 
-    tiff_data = _fake_tiff_image() if fake_tiffs else load_tiff_dummy_bytes()
-    if pic_nrs is None:
-        pic_nrs = ('dummy',) * nr_images
-    assert nr_images == len(pic_nrs)
+    if pic_strs is None:
+        pic_strs = ('dummy',) * img_count
+    assert img_count == len(pic_strs)
     ibf_images = []
-    for pic in pic_nrs:
-        ibf_img = IBFImage(tiff_data, codnr=pic)
+    for pic_str in pic_strs:
+        if fake_tiffs:
+            tiff_data = _fake_tiff_image()
+        else:
+            tiff_data = load_tiff_dummy_bytes(pic_str=pic_str)
+        ibf_img = IBFImage(tiff_data, codnr=pic_str)
         ibf_images.append(ibf_img)
     # The PIC is also stored inside the actual TIFF image but this code can not
     # generate these data structures currently. So far this was good enough but
