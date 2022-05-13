@@ -74,19 +74,7 @@ class PIC(_PIC):
         return dict(zip(self._fields, self))
 
     def guess_year_month(self):
-        year_digits = len(str(self.year))
-        if year_digits == 2:
-            year_str = '20' + str(self.year)
-            return YearMonth(year=int(year_str), month=self.month)
-        elif year_digits != 1:
-            assert (year_digits == 4)
-            return YearMonth(year=int(self.year), month=self.month)
-
-        current_year = Date.today().year
-        decade_year = int(str(current_year)[:3] + '0')
-        guessed_year = decade_year + self.year
-        if guessed_year > current_year:
-            guessed_year -= 10
+        guessed_year = guess_year(self.year)
         return YearMonth(guessed_year, month=self.month)
 
     def __add__(self, number):
@@ -211,9 +199,26 @@ def pic_matches(pic_str, *, year=None, month=None, customer_id_short=None, count
         return False
     return True
 
+def guess_year(year):
+    year_digits = len(str(year))
+    if year_digits == 2:
+        year_str = '20' + str(year)
+        return int(year_str)
+    elif year_digits != 1:
+        assert (year_digits == 4)
+        return int(year)
+
+    assert (year_digits == 1)
+    current_year = Date.today().year
+    decade_year = int(str(current_year)[:3] + '0')
+    guessed_year = decade_year + int(year)
+    if guessed_year > current_year:
+        guessed_year -= 10
+    return guessed_year
 
 def generate_pic_str(*, year, month, customer_id_short, counter=None, rz_ik_separator=None, long_ik=None, two_digit_year=None):
-    year_str = nr2str(year, length=4)
+    guessed_year = guess_year(year)
+    year_str = nr2str(guessed_year, length=4)
     if two_digit_year:
         year_digits = year_str[-2:]
     else:

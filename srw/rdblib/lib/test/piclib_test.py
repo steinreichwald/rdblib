@@ -27,6 +27,8 @@ class PICTest(PythonicTestCase):
         assert_equals('01212300004024', str(ym_pic))
         assert_equals('01212300004024', pic.to_str(short_ik=True))
         assert_equals('201212300004024', pic.to_str(short_ik=True, two_digit_year=True))
+        pic_1digityear = pic._replace(year=0)
+        assert_equals('201212300004024', pic_1digityear.to_str(short_ik=True, two_digit_year=True))
 
     def test_from_str(self):
         pic = PIC(year=2020, month=12, customer_id_short=123, counter=4)
