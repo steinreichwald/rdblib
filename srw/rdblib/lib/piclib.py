@@ -37,24 +37,34 @@ class PIC(_PIC):
     def __str__(self):
         return self.to_str()
 
-    def to_str(self, rz_ik_separator=None, *, long_ik=None, short_ik=None):
+    def to_str(self, rz_ik_separator=None, *, long_ik=None, short_ik=None, two_digit_year=False):
         if (long_ik is None) or (long_ik is False):
             assert (short_ik is not False)
             long_ik = False
         else:
             assert (short_ik is not True)
-        return generate_pic_str(**self.as_dict(), rz_ik_separator=rz_ik_separator, long_ik=long_ik)
+        return generate_pic_str(
+            **self.as_dict(),
+            rz_ik_separator = rz_ik_separator,
+            long_ik         = long_ik,
+            two_digit_year  = two_digit_year,
+        )
 
     @classmethod
     def from_str(cls, pic_str):
         assert isinstance(pic_str, str), f'expected str but got {repr(pic_str)}'
-        assert len(pic_str) in (14, 18), f'PIC "{pic_str}" has length {len(pic_str)}'
+        assert len(pic_str) in (14, 18, 19), f'PIC "{pic_str}" has length {len(pic_str)}'
         is_short_ik = (len(pic_str) == 14)
+        if len(pic_str) == 19:
+            year = pic_str[:2]
+            pic_str = pic_str[1:]
+        else:
+            year = int(pic_str[0])
         rz_ik = pic_str[11:]
         expected_ik = IK_RZ_SHORT if is_short_ik else IK_RZ_LONG
         assert rz_ik == expected_ik, pic_str
         return cls(
-            year              = int(pic_str[0]),
+            year              = year,
             month             = int(pic_str[1:3]),
             customer_id_short = int(pic_str[3:6]),
             counter           = int(pic_str[6:11])
@@ -64,9 +74,13 @@ class PIC(_PIC):
         return dict(zip(self._fields, self))
 
     def guess_year_month(self):
-        is_one_digit_year = (len(str(self.year)) == 1)
-        if not is_one_digit_year:
-            return YearMonth(year=self.year, month=self.month)
+        year_digits = len(str(self.year))
+        if year_digits == 2:
+            year_str = '20' + str(self.year)
+            return YearMonth(year=int(year_str), month=self.month)
+        elif year_digits != 1:
+            assert (year_digits == 4)
+            return YearMonth(year=int(self.year), month=self.month)
 
         current_year = Date.today().year
         decade_year = int(str(current_year)[:3] + '0')
@@ -198,14 +212,18 @@ def pic_matches(pic_str, *, year=None, month=None, customer_id_short=None, count
     return True
 
 
-def generate_pic_str(*, year, month, customer_id_short, counter=None, rz_ik_separator=None, long_ik=None):
-    year_digit = nr2str(year, length=4)[-1]
+def generate_pic_str(*, year, month, customer_id_short, counter=None, rz_ik_separator=None, long_ik=None, two_digit_year=None):
+    year_str = nr2str(year, length=4)
+    if two_digit_year:
+        year_digits = year_str[-2:]
+    else:
+        year_digits = year_str[-1]
     months_digits = nr2str(month, length=2, default='?')
     customer_str = nr2str(customer_id_short, length=3)
     counter_str = nr2str(counter, length=5, default='#')
     rz_ik_separator = (rz_ik_separator or '')
     ik_rz = IK_RZ_LONG if long_ik else IK_RZ_SHORT
-    return f'{year_digit}{months_digits}{customer_str}{counter_str}{rz_ik_separator}{ik_rz}'
+    return f'{year_digits}{months_digits}{customer_str}{counter_str}{rz_ik_separator}{ik_rz}'
 
 def nr2str(value, length, default=None):
     if isinstance(value, bytes):
@@ -222,7 +240,7 @@ def nr2str(value, length, default=None):
 
 def strip_ik(pic_str):
     assert isinstance(pic_str, str), f'expected str but got {repr(pic_str)}'
-    assert len(pic_str) in (14, 18), f'PIC "{pic_str}" has length {len(pic_str)}'
+    assert len(pic_str) in (14, 18, 19), f'PIC "{pic_str}" has length {len(pic_str)}'
     if len(pic_str) == 14:
         return pic_str[:-len(IK_RZ_SHORT)]
     else:

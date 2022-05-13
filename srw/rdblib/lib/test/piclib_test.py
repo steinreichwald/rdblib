@@ -20,11 +20,13 @@ class PICTest(PythonicTestCase):
         assert_equals('01212300004024', pic.to_str())
         assert_equals('01212300004024', str(pic))
         assert_equals('012123000040000024', pic.to_str(long_ik=True))
+        assert_equals('2012123000040000024', pic.to_str(long_ik=True, two_digit_year=True))
 
         ym = pic.guess_year_month()
         ym_pic = PIC(ym, pic.customer_id_short, pic.counter)
         assert_equals('01212300004024', str(ym_pic))
         assert_equals('01212300004024', pic.to_str(short_ik=True))
+        assert_equals('201212300004024', pic.to_str(short_ik=True, two_digit_year=True))
 
     def test_from_str(self):
         pic = PIC(year=2020, month=12, customer_id_short=123, counter=4)
@@ -38,6 +40,15 @@ class PICTest(PythonicTestCase):
         pic_str = pic.to_str(long_ik=True)
         assert_length(18, pic_str)
         assert_equals(pic, PIC.from_str(pic_str))
+
+    def test_from_str_two_digit_year(self):
+        pic = PIC(year=2021, month=8, customer_id_short=123, counter=4)
+        pic_str = pic.to_str(long_ik=True, two_digit_year=True)
+        assert_length(19, pic_str)
+        assert_equals(
+            PIC(year='21', month=8, customer_id_short=123, counter=4),
+            PIC.from_str(pic_str)
+        )
 
     def test_can_increment_counter(self):
         pic = PIC(year=2020, month=12, customer_id_short=123, counter=4)
@@ -61,6 +72,11 @@ class PICTest(PythonicTestCase):
             d04_202x = Date(y_d, 4, 1)
             with freezegun.freeze_time(d04_202x):
                 assert_equals(YearMonth(2021, 4), _p(year=1), message=f'in {y_d}')
+
+        with freezegun.freeze_time(Date(2021, 4, 1)):
+            assert_equals(YearMonth(2011, 4), _p(year='11'), message=f'in 2011')
+            assert_equals(YearMonth(2021, 4), _p(year='21'), message=f'in 2021')
+            assert_equals(YearMonth(2031, 4), _p(year='31'), message=f'in 2031')
 
     def test_can_check_for_equality(self):
         pic1 = PIC(year=2020, month=10, customer_id_short=23, counter=41)
