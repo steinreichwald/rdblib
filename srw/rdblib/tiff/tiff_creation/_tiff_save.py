@@ -1,9 +1,9 @@
 # ,----------------------------------------------------------------------------
-# code copied from pillow 9.1.1 (src/PIL/TiffImagePlugin.py)
+# code copied from pillow 8.4.0 (src/PIL/TiffImagePlugin.py)
 #
 # Copyright (c) 1997-2006 by Secret Labs AB.  All rights reserved.
 # Copyright (c) 1995-1997 by Fredrik Lundh
-# Copyright © 2010-2022 by Alex Clark and contributors
+# Copyright © 2010-2021 by Alex Clark and contributors
 #
 #
 # Like PIL, Pillow is licensed under the open source HPND License:
@@ -30,27 +30,22 @@
 
 import io
 import itertools
-import logging
 import os
 
 from PIL import Image, ImageOps
 from PIL.ImageFile import ImageFile
 # importing all symbols individually so we notice immediately when we rely
 # on a newer version of pillow
-from PIL.TiffImagePlugin import (ImageFileDirectory_v1, ImageFileDirectory_v2,
-    TiffTags,
+from PIL.TiffImagePlugin import (logger, ImageFileDirectory_v1,
+    ImageFileDirectory_v2, TiffTags,
     ARTIST, BITSPERSAMPLE, COLORMAP, COMPRESSION, COMPRESSION_INFO_REV,
     COPYRIGHT, DATE_TIME, EXTRASAMPLES, ICCPROFILE, IFDRational,
     IMAGEDESCRIPTION, IMAGELENGTH, IMAGEWIDTH, IPTC_NAA_CHUNK, JPEGQUALITY,
     PHOTOMETRIC_INTERPRETATION, PHOTOSHOP_CHUNK, PLANAR_CONFIGURATION,
     REFERENCEBLACKWHITE, RESOLUTION_UNIT, ROWSPERSTRIP, SAMPLEFORMAT,
     SAMPLESPERPIXEL, SAVE_INFO, SOFTWARE, STRIPBYTECOUNTS, STRIPOFFSETS,
-    TILEOFFSETS, TRANSFERFUNCTION, X_RESOLUTION, Y_RESOLUTION, WRITE_LIBTIFF,
+    SUBIFD, TRANSFERFUNCTION, X_RESOLUTION, Y_RESOLUTION, WRITE_LIBTIFF,
     XMP)
-
-# upstream commit 8794610c ("Block TIFFTAG_SUBIFD")
-# pillow >= 8.1.0
-SUBIFD = 330
 
 # pillow >= 8.4.0
 # upstream commit 63879f04 ("Make TIFF strip size configurable")
@@ -66,8 +61,6 @@ TILEBYTECOUNTS = 325
 
 
 __all__ = []
-
-logger = logging.getLogger('PIL.TiffImagePlugin')
 
 def _save(im, fp, filename):
 
@@ -92,7 +85,7 @@ def _save(im, fp, filename):
     libtiff = WRITE_LIBTIFF or compression != "raw"
 
     # required for color libtiff images
-    ifd[PLANAR_CONFIGURATION] = 1
+    ifd[PLANAR_CONFIGURATION] = getattr(im, "_planar_configuration", 1)
 
     ifd[IMAGEWIDTH] = im.size[0]
     ifd[IMAGELENGTH] = im.size[1]
@@ -206,7 +199,7 @@ def _save(im, fp, filename):
     strip_byte_counts = 1 if stride == 0 else stride * rows_per_strip
     strips_per_image = (im.size[1] + rows_per_strip - 1) // rows_per_strip
     ifd[ROWSPERSTRIP] = rows_per_strip
-    if strip_byte_counts >= 2**16:
+    if strip_byte_counts >= 2 ** 16:
         ifd.tagtype[STRIPBYTECOUNTS] = TiffTags.LONG
     ifd[STRIPBYTECOUNTS] = (strip_byte_counts,) * (strips_per_image - 1) + (
         stride * im.size[1] - strip_byte_counts * (strips_per_image - 1),
@@ -224,7 +217,6 @@ def _save(im, fp, filename):
         }.items():
             ifd.setdefault(tag, value)
 
-    blocklist = [TILEWIDTH, TILELENGTH, TILEOFFSETS, TILEBYTECOUNTS]
     if libtiff:
         if "quality" in encoderinfo:
             quality = encoderinfo["quality"]
@@ -248,14 +240,17 @@ def _save(im, fp, filename):
 
         # optional types for non core tags
         types = {}
+        # SAMPLEFORMAT is determined by the image format and should not be copied
+        # from legacy_ifd.
         # STRIPOFFSETS and STRIPBYTECOUNTS are added by the library
         # based on the data in the strip.
         # The other tags expect arrays with a certain length (fixed or depending on
         # BITSPERSAMPLE, etc), passing arrays with a different length will result in
         # segfaults. Block these tags until we add extra validation.
         # SUBIFD may also cause a segfault.
-        blocklist += [
+        blocklist = [
             REFERENCEBLACKWHITE,
+            SAMPLEFORMAT,
             STRIPBYTECOUNTS,
             STRIPOFFSETS,
             TRANSFERFUNCTION,
@@ -271,14 +266,9 @@ def _save(im, fp, filename):
         legacy_ifd = {}
         if hasattr(im, "tag"):
             legacy_ifd = im.tag.to_v2()
-
-        # SAMPLEFORMAT is determined by the image format and should not be copied
-        # from legacy_ifd.
-        supplied_tags = {**getattr(im, "tag_v2", {}), **legacy_ifd}
-        if SAMPLEFORMAT in supplied_tags:
-            del supplied_tags[SAMPLEFORMAT]
-
-        for tag, value in itertools.chain(ifd.items(), supplied_tags.items()):
+        for tag, value in itertools.chain(
+            ifd.items(), getattr(im, "tag_v2", {}).items(), legacy_ifd.items()
+        ):
             # Libtiff can only process certain core items without adding
             # them to the custom dictionary.
             # Custom items are supported for int, float, unicode, string and byte
@@ -302,9 +292,6 @@ def _save(im, fp, filename):
                     atts[tag] = float(value)
                 else:
                     atts[tag] = value
-
-        if SAMPLEFORMAT in atts and len(atts[SAMPLEFORMAT]) == 1:
-            atts[SAMPLEFORMAT] = atts[SAMPLEFORMAT][0]
 
         logger.debug("Converted items: %s" % sorted(atts.items()))
 
@@ -334,8 +321,6 @@ def _save(im, fp, filename):
             raise OSError(f"encoder error {s} when writing image file")
 
     else:
-        for tag in blocklist:
-            del ifd[tag]
         offset = ifd.save(fp)
 
         ImageFile._save(
