@@ -69,6 +69,7 @@ TiffTags = {
     281: TTSpec('MaxSampleValue', FT.SHORT),
     282: TTSpec('XResolution', FT.RATIONAL),
     283: TTSpec('YResolution', FT.RATIONAL),
+    284: TTSpec('PlanarConfiguration', FT.SHORT), # not used by Walther, only Pillow
     285: TTSpec('PageName', FT.ASCII),          # "name of the page from which this image was scanned"
     293: TTSpec('T6Options', FT.LONG),
     # 296: TIFF specification says SHORT but the legacy software uses LONG
@@ -103,6 +104,7 @@ class TIFF_TAG:
     MaxSampleValue      = 281
     XResolution         = 282
     YResolution         = 283
+    PlanarConfiguration = 284   # pillow only, not used by Walther
     PageName            = 285
     T6Options           = 293
     ResolutionUnit      = 296
