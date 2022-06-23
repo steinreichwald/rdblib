@@ -1,5 +1,6 @@
 
 from collections import namedtuple
+from io import BytesIO
 
 from PIL import Image
 
@@ -22,31 +23,45 @@ def pad_tiff_bytes(value, length):
     return padded_data
 
 
-def get_tiff_img_data(tiff_path):
+def get_tiff_img_data(tiff_path_or_fp):
     """Return the actual tiff image data (without tiff tags and other tiff
     metadata for a given 2-page tiff file with tags)."""
-    with tiff_path.open('rb') as tiff_fp:
+    if hasattr(tiff_path_or_fp, 'read'):
+        tiff_fp = tiff_path_or_fp
         tiff_bytes = tiff_fp.read()
+        tiff_fp.seek(0)
+    else:
+        tiff_path = tiff_path_or_fp
+        with tiff_path.open('rb') as tiff_fp:
+            tiff_bytes = tiff_fp.read()
+        tiff_fp = BytesIO(tiff_bytes)
 
     _data = []
-    with Image.open(str(tiff_path)) as tiff_img:
-        _data1 = _tiff_img_data(tiff_img, tiff_bytes)
-        _data.append(_data1)
-        tiff_img.seek(1)
-        _data2 = _tiff_img_data(tiff_img, tiff_bytes)
-        _data.append(_data2)
+    with Image.open(tiff_fp) as tiff_img:
+        img_count = tiff_img.n_frames
+        for img_idx in range(img_count):
+            tiff_img.seek(img_idx)
+            _tiff_data = _tiff_img_data(tiff_img, tiff_bytes)
+            _data.append(_tiff_data)
+
+    if len(_data) == 1:
+        return _data[0]
     return _data
 
 
 TiffData = namedtuple('TiffData', ('width', 'height', 'img_data'))
 
 def _tiff_img_data(tiff_img, tiff_bytes):
-    tags1 = dict(zip(tiff_img.tag_v2.keys(), tiff_img.tag_v2.values()))
-    img_offset = tags1[TT.StripOffsets][0]
-    size = tags1[TT.StripByteCounts][0]
+    tags = dict(zip(tiff_img.tag_v2.keys(), tiff_img.tag_v2.values()))
+    strip_offsets = tags[TT.StripOffsets]
+    assert len(strip_offsets) == 1
+    img_offset, = strip_offsets
+    strip_byte_counts = tags[TT.StripByteCounts]
+    assert len(strip_byte_counts) == 1
+    size, = strip_byte_counts
 
-    width = tags1[TT.ImageWidth]
-    height = tags1[TT.ImageLength]
+    width = tags[TT.ImageWidth]
+    height = tags[TT.ImageLength]
     img_data = tiff_bytes[img_offset:img_offset + size]
     return TiffData(width, height, img_data)
 
