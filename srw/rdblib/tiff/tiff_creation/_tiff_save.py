@@ -191,8 +191,10 @@ def _save(im, fp, filename):
         ifd[COLORMAP] = tuple(v * 256 for v in lut)
     # data orientation
     stride = len(bits) * ((im.size[0] * bits[0] + 7) // 8)
-    # aim for given strip size (64 KB by default) when using libtiff writer
-    if libtiff:
+    if ROWSPERSTRIP in info:
+        rows_per_strip = info[ROWSPERSTRIP]
+    elif libtiff:
+        # aim for given strip size (64 KB by default) when using libtiff writer
         rows_per_strip = 1 if stride == 0 else min(STRIP_SIZE // stride, im.size[1])
         # JPEG encoder expects multiple of 8 rows
         if compression == "jpeg":
