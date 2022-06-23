@@ -12,6 +12,7 @@ from .tiff_util import get_tiff_img_data, pad_tiff_bytes
 
 __all__ = [
     'create_legacy_walther_image',
+    'create_walther_image_generated_by_srw',
     'dt_from_string',
     'inject_pic_in_tiff',
     'WaltherTiff'
@@ -56,6 +57,27 @@ def create_legacy_walther_image(*, width, height, pic, img_data, img_description
         }
     )
     return WaltherTiff(legacy_tags, img_data=img_data, long_order=tiff_long_order)
+
+
+def create_walther_image_generated_by_srw(*, tiff_data, pic, img_description='REZEPT', dt=None):
+    if hasattr(pic, 'to_str'):
+        pic_str = pic.to_str(short_ik=True)
+    else:
+        pic_str = pic
+    legacy_tags = walther_tags(
+        width      = tiff_data.width,
+        height     = tiff_data.height,
+        page_name  = pic_str,
+        dpi        = 200,
+        dt         = dt,
+        extra_tags = {
+            TT.ImageDescription: img_description,
+            TT.ScannerManufacturer: 'SRW',
+            TT.ScannerModell: 'SRW/Python',
+            TT.Artist: 'Rechenzentrum für Berliner Apotheken Stein & Reichwald GmbH'.encode('latin1'),
+        },
+    )
+    return WaltherTiff(legacy_tags, img_data=tiff_data.img_data, long_order=tiff_long_order)
 
 
 def walther_tags(*, width, height, page_name, dpi=200, dt=None, extra_tags=None):
