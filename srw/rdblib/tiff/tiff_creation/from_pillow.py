@@ -9,14 +9,15 @@ from ..tiff_util import get_tiff_img_data
 
 __all__ = ['as_bw_image', 'pil_image_as_walther_tiff']
 
-def pil_image_as_walther_tiff(img, pic):
+def pil_image_as_walther_tiff(img, pic, ebnr=None):
+    img_description = f'EBNR_{ebnr}' if ebnr else 'REZEPT'
     bw_img = as_bw_image(img)
     tiff_fp = _serialize_as_tiff_image(bw_img)
     tiff_data = get_tiff_img_data(tiff_fp)
     walther_tiff = create_walther_image_generated_by_srw(
         tiff_data       = tiff_data,
         pic             = pic,
-        img_description = 'REZEPT',
+        img_description = img_description,
     )
     return walther_tiff
 

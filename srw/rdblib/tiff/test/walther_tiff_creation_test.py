@@ -22,7 +22,7 @@ class WaltherTiffCreationTest(PythonicTestCase):
         d.text((600, 750), 'foobar', fill='black')
 
         pic = PIC(year=2022, month=6, customer_id_short=123, counter=42)
-        walther_tiff = pil_image_as_walther_tiff(img, pic)
+        walther_tiff = pil_image_as_walther_tiff(img, pic, ebnr=12345)
         tiff_file = TiffFile(tiff_images=[walther_tiff, walther_tiff])
         tiff_bytes = tiff_file.to_bytes()
         tiff_fp = BytesIO(tiff_bytes)
@@ -38,6 +38,7 @@ class WaltherTiffCreationTest(PythonicTestCase):
             'Rechenzentrum für Berliner Apotheken Stein & Reichwald GmbH',
             tiff_tags[TT.Artist].rstrip('\x00')
         )
+        assert_equals('EBNR_12345', tiff_tags[TT.ImageDescription].rstrip('\x00'))
 
         ibf = create_image_batch_with_tiffs([tiff_bytes])
         form_idx = 0
