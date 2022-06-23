@@ -81,23 +81,31 @@ TiffTags = {
 
 
 class TIFF_TAG:
+    NewSubfileType      = 254
     ImageWidth          = 256
     ImageLength         = 257
     BitsPerSample       = 258
     Compression         = 259
+    PhotometricInterpretation = 262
+    FillOrder           = 266
 
     DocumentName        = 269
     ImageDescription    = 270
     ScannerManufacturer = 271
     ScannerModell       = 272
     StripOffsets        = 273
+    Orientation         = 274
 
+    SamplesPerPixel     = 277
     RowsPerStrip        = 278
     StripByteCounts     = 279
-
+    MinSampleValue      = 280
+    MaxSampleValue      = 281
     XResolution         = 282
     YResolution         = 283
     PageName            = 285
+    T6Options           = 293
+    ResolutionUnit      = 296
     Software            = 305
     DateTime            = 306
     Artist              = 315
