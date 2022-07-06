@@ -8,9 +8,9 @@ from ..lib import PIC
 from .tag_specification import TIFF_TAG as TT
 
 
-__all__ = ['pic_from_tiff']
+__all__ = ['pic_str_from_tiff', 'pic_from_tiff']
 
-def pic_from_tiff(tiff_path_or_bytes, *, strip=True):
+def pic_str_from_tiff(tiff_path_or_bytes, *, strip=True):
     pillow_img = _build_pillow_img_from_data(tiff_path_or_bytes)
 
     img1_tags = dict(pillow_img.tag_v2.items())
@@ -22,6 +22,10 @@ def pic_from_tiff(tiff_path_or_bytes, *, strip=True):
 
     raw_pic_str = pic_str_img2
     pic_str = raw_pic_str.rstrip('\x00') if strip else raw_pic_str
+    return pic_str
+
+def pic_from_tiff(tiff_path_or_bytes, *, strip=True):
+    pic_str = pic_str_from_tiff(tiff_path_or_bytes, strip=strip)
     return PIC.from_str(pic_str)
 
 def is_pillow_img(obj):

@@ -2,13 +2,18 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import os
+from pathlib import Path
 
 from ddt import ddt as DataDrivenTestCase, data
 from pythonic_testcase import *
+from schwarz.fakefs_helpers import TempFS
 
 import srw.rdblib
+from ..testutil import create_ibf_with_tiffs
+from srw.rdblib.lib import PIC
 from .. import ImageBatch, TiffHandler
 from ...paths import guess_path
+from srw.rdblib.tiff.testutil import create_dual_page_tiff_file
 
 
 # XXX add some tests for images. They are completely missing, and cdb_tool
@@ -20,11 +25,15 @@ CDB_PATH = os.path.join(DATABASE_PATH, '00099201.CDB')
 
 @DataDrivenTestCase
 class TiffHandlerTest(PythonicTestCase):
+    def setUp(self):
+        self.fs = TempFS.set_up(test=self)
+        self.data_dir = Path(self.fs.create_directory('data'))
+
     @data('write', 'copy')
     def test_tiff_access(self, access):
-        if not os.path.exists(CDB_PATH):
-            raise SkipTest('private data not available')
-        fname = guess_path(CDB_PATH, 'IBF')
+        ibf_path = self._create_ibf(n_images=1)
+
+        fname = str(ibf_path)
         imbatch = ImageBatch(fname, access=access)
         th = TiffHandler(imbatch, 0)
         assert_equals(27, th.ifd.rec.num_tags)
@@ -49,3 +58,16 @@ class TiffHandlerTest(PythonicTestCase):
         undone = th.long_data2.rec.page_name
         th.long_data.update_rec(page_name = undone)
         th.update()
+
+    # --- internal helpers ----------------------------------------------------
+    def _create_ibf(self, n_images=1):
+        assert (n_images == 1)
+        pic = PIC(year=2022, month=6, customer_id_short=123, counter=42)
+        pic_str = pic.to_str(short_ik=True)
+        tiff_file = create_dual_page_tiff_file(pic_str)
+        tiff_bytes = tiff_file.to_bytes()
+        ibf_path = self.data_dir / '00099201.IBF'
+
+        create_ibf_with_tiffs([tiff_bytes], ibf_path=ibf_path)
+        return ibf_path
+

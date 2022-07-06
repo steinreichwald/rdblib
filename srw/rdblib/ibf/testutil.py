@@ -6,6 +6,7 @@ from pathlib import Path
 
 from ..fixture_helpers import UnclosableBytesIO
 from .ibf_fixtures import IBFFile, IBFImage
+from ..tiff import pic_str_from_tiff
 from ..tiff.testutil import load_tiff_dummy_bytes
 
 
@@ -13,7 +14,12 @@ __all__ = ['create_ibf', 'create_ibf_with_tiffs']
 
 def create_ibf_with_tiffs(tiffs, *, ibf_path=None, create_directory=False):
     ibf_images = []
-    for (pic_str, tiff_bytes) in tiffs:
+    for tiff in tiffs:
+        if isinstance(tiff, (tuple, list)):
+            pic_str, tiff_bytes = tiff
+        else:
+            tiff_bytes = tiff
+            pic_str = pic_str_from_tiff(tiff_bytes)
         ibf_img = IBFImage(tiff_bytes, codnr=pic_str)
         ibf_images.append(ibf_img)
 
