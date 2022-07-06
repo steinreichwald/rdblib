@@ -2,14 +2,33 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-import os
+from pathlib import Path
 
 from ..fixture_helpers import UnclosableBytesIO
 from .ibf_fixtures import IBFFile, IBFImage
 from ..tiff.testutil import load_tiff_dummy_bytes
 
 
-__all__ = ['create_ibf']
+__all__ = ['create_ibf', 'create_ibf_with_tiffs']
+
+def create_ibf_with_tiffs(tiffs, *, ibf_path=None, create_directory=False):
+    ibf_images = []
+    for (pic_str, tiff_bytes) in tiffs:
+        ibf_img = IBFImage(tiff_bytes, codnr=pic_str)
+        ibf_images.append(ibf_img)
+
+    ibf_data = IBFFile(ibf_images).as_bytes()
+    if ibf_path is None:
+        return UnclosableBytesIO(ibf_data)
+
+    ibf_path = Path(ibf_path)
+    ibf_directory = ibf_path.parent
+    if create_directory and not ibf_directory.exists():
+        ibf_directory.mkdir(parents=True, exist_ok=True)
+    ibf_fp = ibf_path.open('wb+')
+    ibf_fp.write(ibf_data)
+    ibf_fp.seek(0, 0)
+    return ibf_fp
 
 def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, create_directory=False):
     img_count = nr_images
@@ -30,26 +49,17 @@ def create_ibf(nr_images=1, *, pic_nrs=None, filename=None, fake_tiffs=True, cre
     if pic_strs is None:
         pic_strs = ('dummy',) * img_count
     assert img_count == len(pic_strs)
-    ibf_images = []
-    for pic_str in pic_strs:
-        if fake_tiffs:
-            tiff_data = _fake_tiff_image()
-        else:
-            tiff_data = load_tiff_dummy_bytes(pic_str=pic_str)
-        ibf_img = IBFImage(tiff_data, codnr=pic_str)
-        ibf_images.append(ibf_img)
+    tiffs = []
     # The PIC is also stored inside the actual TIFF image but this code can not
     # generate these data structures currently. So far this was good enough but
     # we might need to extend the functionality later (test stub already
     # prepared).
-    ibf_data = IBFFile(ibf_images).as_bytes()
-    if filename is None:
-        return UnclosableBytesIO(ibf_data)
-    ibf_directory = os.path.dirname(filename)
-    if create_directory and not os.path.exists(ibf_directory):
-        os.makedirs(ibf_directory)
-    ibf_fp = open(filename, 'wb+')
-    ibf_fp.write(ibf_data)
-    ibf_fp.seek(0, 0)
-    return ibf_fp
+    for pic_str in pic_strs:
+        if fake_tiffs:
+            tiff_bytes = _fake_tiff_image()
+        else:
+            tiff_bytes = load_tiff_dummy_bytes(pic_str=pic_str)
+        tiffs.append((pic_str, tiff_bytes))
+    ibf_path = Path(filename) if filename else None
+    return create_ibf_with_tiffs(tiffs, ibf_path=ibf_path, create_directory=create_directory)
 
