@@ -4,6 +4,8 @@ from ..meta import WithBinaryMeta
 from .ibf_format import Tiff
 
 
+__all__ = ['pic_str_from_image_batch', 'TiffHandler']
+
 # rudimentary Tiff support
 class TiffHandler(object):
 
@@ -69,3 +71,13 @@ class TiffHandler(object):
             buffer[offset:offset + len(data)] = data
             long_data.edited_fields.clear()
             self.filecontent.flush()
+
+def pic_str_from_image_batch(ibf, *, img_idx):
+    th0 = TiffHandler(ibf, img_idx)
+    pic1 = th0.long_data.rec.page_name
+    pic2 = th0.long_data2.rec.page_name
+    if pic1 == 'DELETED':
+        return pic2
+    assert pic1 == pic2, f'"{pic1}" != "{pic2}"'
+    return pic1
+
