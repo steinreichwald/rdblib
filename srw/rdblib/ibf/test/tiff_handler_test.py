@@ -36,14 +36,14 @@ class TiffHandlerTest(PythonicTestCase):
         ibf_path = self._create_ibf(n_images=2)
 
         fname = str(ibf_path)
-        imbatch = ImageBatch(fname, access=access)
-        th = TiffHandler(imbatch, 0)
+        ibf = ImageBatch(fname, access=access)
+        th = TiffHandler(ibf, 0)
         th.long_data.update_rec(page_name = 'DELETED')
         th.update()
-        th = TiffHandler(imbatch, 1)
+        th = TiffHandler(ibf, 1)
         assert_not_equals('DELETED', th.long_data.rec.page_name)
 
-        th = TiffHandler(imbatch, 0)
+        th = TiffHandler(ibf, 0)
         assert_equals('DELETED', th.long_data.rec.page_name)
         undone = th.long_data2.rec.page_name
         th.long_data.update_rec(page_name = undone)
